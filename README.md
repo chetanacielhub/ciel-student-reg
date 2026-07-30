@@ -259,3 +259,4 @@ where slug = 'innovation-challenge-2026';
 
 Before a large public event, consider adding rate limiting or CAPTCHA to signup, a privacy-policy link, consent wording approved by the institution, an admin audit log, team-size limits, a registration deadline, and a transactional email confirming final registration.
 # ciel-student-reg
+# ciel-student-reg
