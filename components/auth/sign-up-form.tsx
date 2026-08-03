@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   AlertCircle,
-  Check,
   Eye,
   EyeOff,
   LoaderCircle,
@@ -13,6 +12,7 @@ import {
   Mail,
   Phone,
   UserRound,
+  ArrowRight,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { getSiteUrl } from "@/lib/site-url";
@@ -36,13 +36,6 @@ export function SignUpForm() {
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
-  const passwordRules = [
-    { label: "8+ characters", valid: values.password.length >= 8 },
-    { label: "Uppercase letter", valid: /[A-Z]/.test(values.password) },
-    { label: "Lowercase letter", valid: /[a-z]/.test(values.password) },
-    { label: "One number", valid: /[0-9]/.test(values.password) },
-  ];
 
   function updateValue(field: keyof typeof values, value: string) {
     setValues((current) => ({ ...current, [field]: value }));
@@ -86,7 +79,7 @@ export function SignUpForm() {
     }
 
     if (data.session) {
-      router.replace("/register");
+      router.replace("/apply");
       router.refresh();
       return;
     }
@@ -95,197 +88,149 @@ export function SignUpForm() {
   }
 
   return (
-    <form className="form-stack" onSubmit={handleSubmit} noValidate>
+    <form onSubmit={handleSubmit} noValidate style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       {formError ? (
-        <div className="alert alert-error" role="alert">
-          <AlertCircle size={18} aria-hidden="true" />
+        <div className="alert alert-error" role="alert" style={{ padding: "8px 12px", fontSize: 13 }}>
+          <AlertCircle size={16} aria-hidden="true" />
           <span>{formError}</span>
         </div>
       ) : null}
 
-      <div className="field">
-        <label className="field-label" htmlFor="fullName">
-          Full name
-        </label>
-        <div className="input-wrap">
-          <UserRound className="input-icon" size={18} aria-hidden="true" />
-          <input
-            className="input input-with-icon"
-            id="fullName"
-            name="fullName"
-            type="text"
-            autoComplete="name"
-            placeholder="Your full name"
-            value={values.fullName}
-            onChange={(event) => updateValue("fullName", event.target.value)}
-            aria-invalid={Boolean(errors.fullName)}
-            aria-describedby={errors.fullName ? "fullName-error" : undefined}
-          />
+      {/* Row 1: Full Name & Phone */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div>
+          <label style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 600, display: "block", marginBottom: 4 }}>
+            Full Name
+          </label>
+          <div className="input-wrap">
+            <UserRound className="input-icon" size={16} aria-hidden="true" />
+            <input
+              className="input input-with-icon"
+              style={{ padding: "10px 12px 10px 38px", fontSize: 13.5 }}
+              name="fullName"
+              type="text"
+              placeholder="Rohan Sharma"
+              value={values.fullName}
+              onChange={(e) => updateValue("fullName", e.target.value)}
+            />
+          </div>
+          {errors.fullName ? <p className="field-error" style={{ fontSize: 11, marginTop: 3 }}>{errors.fullName}</p> : null}
         </div>
-        {errors.fullName ? (
-          <p className="field-error" id="fullName-error">
-            <AlertCircle size={14} aria-hidden="true" />
-            {errors.fullName}
-          </p>
-        ) : null}
+
+        <div>
+          <label style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 600, display: "block", marginBottom: 4 }}>
+            Phone (+91)
+          </label>
+          <div className="input-wrap">
+            <Phone className="input-icon" size={16} aria-hidden="true" />
+            <input
+              className="input input-with-icon"
+              style={{ padding: "10px 12px 10px 38px", fontSize: 13.5 }}
+              name="phone"
+              type="tel"
+              placeholder="+919876543210"
+              value={values.phone}
+              onChange={(e) => updateValue("phone", e.target.value.replace(/\s/g, ""))}
+            />
+          </div>
+          {errors.phone ? <p className="field-error" style={{ fontSize: 11, marginTop: 3 }}>{errors.phone}</p> : null}
+        </div>
       </div>
 
-      <div className="field">
-        <label className="field-label" htmlFor="email">
-          Gmail address
+      {/* Row 2: Email */}
+      <div>
+        <label style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 600, display: "block", marginBottom: 4 }}>
+          Email Address
         </label>
         <div className="input-wrap">
-          <Mail className="input-icon" size={18} aria-hidden="true" />
+          <Mail className="input-icon" size={16} aria-hidden="true" />
           <input
             className="input input-with-icon"
-            id="email"
+            style={{ padding: "10px 12px 10px 38px", fontSize: 13.5 }}
             name="email"
             type="email"
-            inputMode="email"
-            autoComplete="email"
             placeholder="you@gmail.com"
             value={values.email}
-            onChange={(event) => updateValue("email", event.target.value)}
-            aria-invalid={Boolean(errors.email)}
-            aria-describedby={errors.email ? "email-error" : undefined}
+            onChange={(e) => updateValue("email", e.target.value)}
           />
         </div>
-        {errors.email ? (
-          <p className="field-error" id="email-error">
-            <AlertCircle size={14} aria-hidden="true" />
-            {errors.email}
-          </p>
-        ) : null}
+        {errors.email ? <p className="field-error" style={{ fontSize: 11, marginTop: 3 }}>{errors.email}</p> : null}
       </div>
 
-      <div className="field">
-        <label className="field-label" htmlFor="phone">
-          Phone number
-        </label>
-        <div className="input-wrap">
-          <Phone className="input-icon" size={18} aria-hidden="true" />
-          <input
-            className="input input-with-icon"
-            id="phone"
-            name="phone"
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            placeholder="+919876543210"
-            value={values.phone}
-            onChange={(event) => updateValue("phone", event.target.value.replace(/\s/g, ""))}
-            aria-invalid={Boolean(errors.phone)}
-            aria-describedby={errors.phone ? "phone-error" : "phone-help"}
-          />
-        </div>
-        {errors.phone ? (
-          <p className="field-error" id="phone-error">
-            <AlertCircle size={14} aria-hidden="true" />
-            {errors.phone}
-          </p>
-        ) : (
-          <p className="field-help" id="phone-help">
-            Include the country code, for example +91.
-          </p>
-        )}
-      </div>
-
-      <div className="form-row">
-        <div className="field">
-          <label className="field-label" htmlFor="password">
+      {/* Row 3: Password & Confirm */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div>
+          <label style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 600, display: "block", marginBottom: 4 }}>
             Password
           </label>
           <div className="input-wrap">
-            <LockKeyhole className="input-icon" size={18} aria-hidden="true" />
+            <LockKeyhole className="input-icon" size={16} aria-hidden="true" />
             <input
               className="input input-with-icon input-with-action"
-              id="password"
+              style={{ padding: "10px 12px 10px 38px", fontSize: 13.5 }}
               name="password"
               type={showPassword ? "text" : "password"}
-              autoComplete="new-password"
-              placeholder="Create password"
+              placeholder="Min. 8 chars"
               value={values.password}
-              onChange={(event) => updateValue("password", event.target.value)}
-              aria-invalid={Boolean(errors.password)}
-              aria-describedby={errors.password ? "password-error" : "password-rules"}
+              onChange={(e) => updateValue("password", e.target.value)}
             />
             <button
               className="input-action"
               type="button"
-              onClick={() => setShowPassword((current) => !current)}
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              onClick={() => setShowPassword((c) => !c)}
+              style={{ right: 8 }}
             >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
           </div>
-          {errors.password ? (
-            <p className="field-error" id="password-error">
-              <AlertCircle size={14} aria-hidden="true" />
-              {errors.password}
-            </p>
-          ) : null}
+          {errors.password ? <p className="field-error" style={{ fontSize: 11, marginTop: 3 }}>{errors.password}</p> : null}
         </div>
 
-        <div className="field">
-          <label className="field-label" htmlFor="confirmPassword">
-            Confirm password
+        <div>
+          <label style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 600, display: "block", marginBottom: 4 }}>
+            Confirm Password
           </label>
           <div className="input-wrap">
-            <LockKeyhole className="input-icon" size={18} aria-hidden="true" />
+            <LockKeyhole className="input-icon" size={16} aria-hidden="true" />
             <input
               className="input input-with-icon"
-              id="confirmPassword"
+              style={{ padding: "10px 12px 10px 38px", fontSize: 13.5 }}
               name="confirmPassword"
               type={showPassword ? "text" : "password"}
-              autoComplete="new-password"
               placeholder="Repeat password"
               value={values.confirmPassword}
-              onChange={(event) => updateValue("confirmPassword", event.target.value)}
-              aria-invalid={Boolean(errors.confirmPassword)}
-              aria-describedby={errors.confirmPassword ? "confirmPassword-error" : undefined}
+              onChange={(e) => updateValue("confirmPassword", e.target.value)}
             />
           </div>
-          {errors.confirmPassword ? (
-            <p className="field-error" id="confirmPassword-error">
-              <AlertCircle size={14} aria-hidden="true" />
-              {errors.confirmPassword}
-            </p>
-          ) : null}
+          {errors.confirmPassword ? <p className="field-error" style={{ fontSize: 11, marginTop: 3 }}>{errors.confirmPassword}</p> : null}
         </div>
       </div>
 
-      <div className="password-rules" id="password-rules">
-        {passwordRules.map((rule) => (
-          <span
-            className={`password-rule${rule.valid ? " password-rule-valid" : ""}`}
-            key={rule.label}
-          >
-            <Check size={13} aria-hidden="true" />
-            {rule.label}
-          </span>
-        ))}
-      </div>
-
-      <button className="button button-primary button-wide" type="submit" disabled={submitting}>
+      <button
+        className="button button-primary button-wide"
+        type="submit"
+        disabled={submitting}
+        style={{ marginTop: 8, padding: 12, fontSize: 14 }}
+      >
         {submitting ? (
           <>
-            <LoaderCircle className="spinner" size={18} aria-hidden="true" />
-            Creating account…
+            <LoaderCircle className="spinner" size={16} />
+            Creating Account...
           </>
         ) : (
-          "Create account and continue"
+          <>
+            Create Account &amp; Proceed
+            <ArrowRight size={16} />
+          </>
         )}
       </button>
 
-      <p className="form-note">
-        By creating an account, you agree that the event administrators may use
-        your registration details to coordinate this event.
-      </p>
-
-      <div className="form-divider">Already registered?</div>
-      <Link className="button button-secondary button-wide" href="/auth/sign-in">
-        Sign in to your account
-      </Link>
+      <div style={{ textAlign: "center", marginTop: 8, fontSize: 13, color: "var(--text-muted)" }}>
+        Already have an account?{" "}
+        <Link href="/auth/sign-in" style={{ color: "var(--ciel-gold-bright)", fontWeight: 600, textDecoration: "underline" }}>
+          Sign In
+        </Link>
+      </div>
     </form>
   );
 }

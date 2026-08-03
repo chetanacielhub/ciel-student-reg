@@ -1,7 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const protectedPrefixes = ["/register", "/dashboard", "/admin"];
+// Only user portal routes are protected by user Supabase auth.
+// Admin routes (/admin, /admin/dashboard) use isolated admin session cookies via requireAdminSession().
+const protectedPrefixes = ["/register", "/dashboard"];
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });

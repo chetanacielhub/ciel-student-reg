@@ -1,4 +1,5 @@
-import { CheckCircle2, LockKeyhole, UsersRound } from "lucide-react";
+import { CheckCircle2, Lightbulb, LockKeyhole, Rocket, UsersRound } from "lucide-react";
+import { Logo } from "@/components/ui/logo";
 
 export function AuthSide({ mode }: { mode: "sign-up" | "sign-in" }) {
   const signingUp = mode === "sign-up";
@@ -6,53 +7,58 @@ export function AuthSide({ mode }: { mode: "sign-up" | "sign-in" }) {
   return (
     <aside className="auth-side">
       <div className="auth-copy">
-        <span className="eyebrow">Event registration portal</span>
+        <div style={{ marginBottom: "36px" }}>
+          <Logo />
+        </div>
+        <span className="eyebrow" style={{ marginBottom: "20px" }}>
+          {signingUp ? "Incubation Portal" : "Participant Portal"}
+        </span>
         <h1>
           {signingUp
-            ? "Your event registration starts here."
-            : "Welcome back to your team."}
+            ? "Begin Your Innovation Journey."
+            : "Welcome Back to CIEL."}
         </h1>
         <p>
           {signingUp
-            ? "Create one verified account, complete the smart registration form, and see your teammates together in one secure profile."
-            : "Sign in to finish your registration, view your project, and see every member connected to your team."}
+            ? "Create a verified account to submit your incubation application, form a team, and access the CIEL innovation ecosystem."
+            : "Sign in to view your application status, team profile, project dashboard, and mentorship resources."}
         </p>
 
         <div className="auth-features">
           <div className="auth-feature">
             <div className="auth-feature-icon">
-              <LockKeyhole size={18} aria-hidden="true" />
+              <LockKeyhole size={19} aria-hidden="true" />
             </div>
             <div>
-              <strong>Secure Supabase Auth</strong>
-              <span>Email confirmation, protected sessions, and database RLS.</span>
+              <strong>Secure Authentication</strong>
+              <span>Email verified access with protected database sessions and row-level security.</span>
             </div>
           </div>
 
           <div className="auth-feature">
             <div className="auth-feature-icon">
-              <UsersRound size={18} aria-hidden="true" />
+              <UsersRound size={19} aria-hidden="true" />
             </div>
             <div>
-              <strong>Automatic team connection</strong>
-              <span>Members join the team their leader has already registered.</span>
+              <strong>Team Collaboration</strong>
+              <span>Leaders create the team name; members join instantly using the same name.</span>
             </div>
           </div>
 
           <div className="auth-feature">
             <div className="auth-feature-icon">
-              <CheckCircle2 size={18} aria-hidden="true" />
+              <Rocket size={19} aria-hidden="true" />
             </div>
             <div>
-              <strong>No duplicate registration</strong>
-              <span>One account and roll number per event, enforced in PostgreSQL.</span>
+              <strong>Innovation Access</strong>
+              <span>Unlock seed grants, makerspace labs, mentorship, and investor connects.</span>
             </div>
           </div>
         </div>
       </div>
 
       <span className="auth-side-footer">
-        Designed for institution-wide innovation events.
+        CIEL — Centre for Innovation & Entrepreneurship Learning
       </span>
     </aside>
   );

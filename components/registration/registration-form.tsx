@@ -6,23 +6,34 @@ import {
   AlertCircle,
   ArrowLeft,
   ArrowRight,
-  Check,
+  Award,
+  Briefcase,
+  Building2,
   CheckCircle2,
+  Compass,
+  FileCheck2,
+  GraduationCap,
+  HelpCircle,
   Info,
+  Layers,
   Lightbulb,
   LoaderCircle,
   LockKeyhole,
+  Rocket,
   ShieldCheck,
+  Sparkles,
+  UserCheck,
   UserRound,
   UsersRound,
   Zap,
 } from "lucide-react";
-import { registerForEvent } from "@/app/register/actions";
+import { registerForEvent } from "@/app/(site)/register/actions";
+import { FadeIn, ScaleIn } from "@/components/ui/motion";
 import type {
   ClassOption,
   Institution,
-  RegistrationInput,
   RegistrationRole,
+  UserCategory,
 } from "@/lib/types";
 
 type FieldName =
@@ -32,11 +43,41 @@ type FieldName =
   | "role"
   | "teamName"
   | "problemStatement"
+  | "userCategory"
   | "form";
 
 type Errors = Partial<Record<FieldName, string>>;
 
-const roleOptions: Array<{
+const DEFAULT_INSTITUTIONS: Institution[] = [
+  { id: "inst-1", code: "CIT", name: "Chetana Institute of Technology" },
+  { id: "inst-2", code: "CSM", name: "Chetana School of Management" },
+  { id: "inst-3", code: "EXT", name: "External / Partner Institution" },
+];
+
+const DEFAULT_CLASSES: ClassOption[] = [
+  { id: "class-1", institution_id: "inst-1", name: "Computer Science & Engineering", sort_order: 1 },
+  { id: "class-2", institution_id: "inst-1", name: "Electronics & IoT Engineering", sort_order: 2 },
+  { id: "class-3", institution_id: "inst-2", name: "MBA Technology Management", sort_order: 1 },
+  { id: "class-4", institution_id: "inst-3", name: "General / Independent Founder", sort_order: 1 },
+];
+
+const CATEGORY_OPTIONS: Array<{
+  value: UserCategory;
+  label: string;
+  desc: string;
+  icon: typeof GraduationCap;
+}> = [
+  { value: "student", label: "Student Innovator", desc: "Undergraduate / Postgraduate student founder", icon: GraduationCap },
+  { value: "entrepreneur", label: "Early-Stage Founder", desc: "Individual founder with startup idea", icon: Lightbulb },
+  { value: "startup", label: "Registered Startup", desc: "Incorporated startup seeking acceleration", icon: Rocket },
+  { value: "msme", label: "MSME Enterprise", desc: "Small / medium business seeking innovation partner", icon: Building2 },
+  { value: "industry_partner", label: "Industry Executive", desc: "Corporate / industry partner representative", icon: Briefcase },
+  { value: "investor", label: "Angel / VC Investor", desc: "Investor seeking deal flow & syndicate access", icon: Zap },
+  { value: "mentor", label: "Subject Advisor / Mentor", desc: "Domain expert guiding incubated ventures", icon: UserCheck },
+  { value: "social_innovator", label: "Social Innovator / NGO", desc: "Rural impact & non-profit innovator", icon: Sparkles },
+];
+
+const ROLE_OPTIONS: Array<{
   value: RegistrationRole;
   title: string;
   description: string;
@@ -45,37 +86,65 @@ const roleOptions: Array<{
   {
     value: "team_leader",
     title: "Team leader",
-    description:
-      "Create the official team and problem statement. Your members join after you submit.",
+    description: "Create the official team and problem statement. Your members join after you submit.",
     icon: UsersRound,
   },
   {
     value: "team_member",
     title: "Team member",
-    description:
-      "Join an existing team using exactly the same name entered by your leader.",
+    description: "Join an existing team using exactly the same name entered by your leader.",
     icon: UserRound,
   },
   {
     value: "solo",
     title: "Solo participant",
-    description:
-      "Register your own project and continue as a one-person team for this event.",
+    description: "Register your own project and continue as a one-person team for this event.",
     icon: Zap,
   },
 ];
 
-const roleLabels: Record<RegistrationRole, string> = {
-  team_leader: "Team leader",
-  team_member: "Team member",
-  solo: "Solo participant",
-};
+export function RegistrationHelp() {
+  return (
+    <aside className="luxury-card" style={{ padding: 32, position: "sticky", top: 100 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+        <ShieldCheck size={22} className="text-gold" />
+        <h3 style={{ fontSize: 18, color: "var(--text-white)", margin: 0, fontFamily: "var(--font-serif-family)" }}>
+          Incubation Support
+        </h3>
+      </div>
+
+      <p style={{ fontSize: 13.5, color: "var(--text-secondary)", lineHeight: 1.6, marginBottom: 20 }}>
+        Submitting your venture application grants your project immediate access to CIEL institutional review.
+      </p>
+
+      <ul style={{ display: "flex", flexDirection: "column", gap: 14, padding: 0, margin: 0, listStyle: "none", fontSize: 13.5, color: "var(--text-secondary)" }}>
+        <li style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+          <CheckCircle2 size={17} style={{ color: "var(--ciel-gold)", flexShrink: 0, marginTop: 2 }} />
+          <span><strong>Seed Support:</strong> Up to ₹5 Lakhs in prototype grants.</span>
+        </li>
+        <li style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+          <CheckCircle2 size={17} style={{ color: "var(--ciel-gold)", flexShrink: 0, marginTop: 2 }} />
+          <span><strong>Makerspace Access:</strong> 3D printers, IoT kits &amp; PCB workbenches.</span>
+        </li>
+        <li style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+          <CheckCircle2 size={17} style={{ color: "var(--ciel-gold)", flexShrink: 0, marginTop: 2 }} />
+          <span><strong>IPR Assistance:</strong> Patent prior art search &amp; filing counsel.</span>
+        </li>
+      </ul>
+
+      <div style={{ marginTop: 24, paddingTop: 18, borderTop: "1px solid var(--line)", fontSize: 12, color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 8 }}>
+        <LockKeyhole size={14} className="text-gold" />
+        <span>SSL Encrypted &amp; Institutional Governance Protected</span>
+      </div>
+    </aside>
+  );
+}
 
 export function RegistrationForm({
   eventSlug,
   eventTitle,
-  institutions,
-  classes,
+  institutions: propInstitutions,
+  classes: propClasses,
 }: {
   eventSlug: string;
   eventTitle: string;
@@ -84,519 +153,427 @@ export function RegistrationForm({
 }) {
   const router = useRouter();
   const [step, setStep] = useState(1);
+
+  const institutionsList = propInstitutions.length > 0 ? propInstitutions : DEFAULT_INSTITUTIONS;
+  const classesList = propClasses.length > 0 ? propClasses : DEFAULT_CLASSES;
+
   const [values, setValues] = useState({
-    institutionId: "",
+    userCategory: "student" as UserCategory,
+    institutionId: institutionsList[0]?.id || "",
     classId: "",
     rollNumber: "",
-    role: "" as RegistrationRole | "",
+    role: "team_leader" as RegistrationRole,
     teamName: "",
     problemStatement: "",
   });
+
   const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
 
   const availableClasses = useMemo(
-    () => classes.filter((item) => item.institution_id === values.institutionId),
-    [classes, values.institutionId],
+    () => classesList.filter((item) => item.institution_id === values.institutionId),
+    [classesList, values.institutionId]
   );
 
-  const selectedInstitution = institutions.find(
-    (item) => item.id === values.institutionId,
-  );
-  const selectedClass = classes.find((item) => item.id === values.classId);
-  const isMember = values.role === "team_member";
-  const needsProblem =
-    values.role === "team_leader" || values.role === "solo";
-
-  function updateValue<K extends keyof typeof values>(
-    field: K,
-    value: (typeof values)[K],
-  ) {
-    setValues((current) => ({ ...current, [field]: value }));
-    setErrors((current) => ({ ...current, [field]: undefined, form: undefined }));
-  }
-
-  function validateAcademicStep() {
+  function validateStep(targetStep: number): boolean {
     const nextErrors: Errors = {};
-    if (!values.institutionId) nextErrors.institutionId = "Select your institution.";
-    if (!values.classId) nextErrors.classId = "Select your class.";
-    if (!values.rollNumber.trim()) nextErrors.rollNumber = "Enter your roll number.";
+
+    if (targetStep >= 1) {
+      if (!values.userCategory) nextErrors.userCategory = "Select a participant category.";
+      if (!values.role) nextErrors.role = "Select your participation role.";
+    }
+
+    if (targetStep >= 2) {
+      if (!values.institutionId) nextErrors.institutionId = "Select your institution / campus.";
+      if (!values.classId) nextErrors.classId = "Select your department or class.";
+      if (!values.rollNumber.trim()) {
+        nextErrors.rollNumber = "Enter your roll number or official ID.";
+      }
+    }
+
+    if (targetStep >= 3) {
+      if (!values.teamName.trim()) {
+        nextErrors.teamName =
+          values.role === "team_member"
+            ? "Enter the exact team name registered by your leader."
+            : "Enter your team or project name.";
+      }
+
+      if (
+        (values.role === "team_leader" || values.role === "solo") &&
+        !values.problemStatement.trim()
+      ) {
+        nextErrors.problemStatement =
+          "Describe your problem statement or venture idea (minimum 15 characters).";
+      } else if (
+        (values.role === "team_leader" || values.role === "solo") &&
+        values.problemStatement.trim().length < 15
+      ) {
+        nextErrors.problemStatement =
+          "Problem statement is too short. Provide a clear description (at least 15 characters).";
+      }
+    }
+
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   }
 
-  function validateRoleStep() {
-    if (!values.role) {
-      setErrors({ role: "Select how you are registering." });
-      return false;
+  function handleNext() {
+    if (validateStep(step)) {
+      setStep((current) => Math.min(current + 1, 3));
     }
-    setErrors({});
-    return true;
   }
 
-  function goNext() {
-    if (step === 1 && validateAcademicStep()) setStep(2);
-    if (step === 2 && validateRoleStep()) setStep(3);
+  function handleBack() {
+    setErrors({});
+    setStep((current) => Math.max(current - 1, 1));
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (step < 3) {
-      goNext();
-      return;
-    }
-
-    const nextErrors: Errors = {};
-    if (!values.teamName.trim()) {
-      nextErrors.teamName = isMember
-        ? "Enter your team name exactly as your leader registered it."
-        : "Enter your team or project name.";
-    }
-    if (needsProblem && values.problemStatement.trim().length < 10) {
-      nextErrors.problemStatement =
-        "Describe the problem in at least 10 characters.";
-    }
-
-    if (Object.keys(nextErrors).length > 0) {
-      setErrors(nextErrors);
-      return;
-    }
-
+    if (!validateStep(3)) return;
     if (!values.role) return;
-
-    const input: RegistrationInput = {
-      eventSlug,
-      institutionId: values.institutionId,
-      classId: values.classId,
-      rollNumber: values.rollNumber,
-      role: values.role,
-      teamName: values.teamName,
-      problemStatement: needsProblem ? values.problemStatement : undefined,
-    };
 
     setSubmitting(true);
     setErrors({});
-    const result = await registerForEvent(input);
+
+    const result = await registerForEvent({
+      eventSlug,
+      institutionId: values.institutionId,
+      classId: values.classId,
+      rollNumber: values.rollNumber.trim(),
+      role: values.role,
+      teamName: values.teamName.trim(),
+      problemStatement:
+        values.role === "team_member"
+          ? undefined
+          : values.problemStatement.trim(),
+    });
+
+    setSubmitting(false);
 
     if (!result.ok) {
-      setSubmitting(false);
-      setErrors({ [result.field ?? "form"]: result.message });
+      setErrors({
+        [result.field ?? "form"]: result.message,
+      });
 
-      if (
+      if (result.field === "role" || result.field === "userCategory") setStep(1);
+      else if (
         result.field === "institutionId" ||
         result.field === "classId" ||
         result.field === "rollNumber"
       ) {
-        setStep(1);
-      } else if (result.field === "role") {
         setStep(2);
+      } else {
+        setStep(3);
       }
       return;
     }
 
-    router.replace("/dashboard?registered=1");
+    router.push("/dashboard?registered=1");
     router.refresh();
   }
 
-  return (
-    <form className="form-card" onSubmit={handleSubmit} noValidate>
-      <header className="form-header">
-        <div className="form-header-row">
-          <div>
-            <span className="live-pill">
-              <span className="live-dot" />
-              Secure registration
-            </span>
-            <h1>{eventTitle}</h1>
-            <p>
-              Complete the form once. Your participation type determines the
-              fields you see and the team profile created after submission.
-            </p>
-          </div>
-          <ShieldCheck size={34} aria-hidden="true" />
-        </div>
-      </header>
+  const progressPercent = step === 1 ? 33 : step === 2 ? 66 : 100;
 
-      <div className="stepper" aria-label="Registration progress">
-        {["Student details", "Participation", "Team or project"].map(
-          (label, index) => {
-            const number = index + 1;
-            const complete = step > number;
-            const active = step === number;
-            return (
-              <div
-                className={`step-item${active ? " step-item-active" : ""}${
-                  complete ? " step-item-complete" : ""
-                }`}
-                key={label}
-                aria-current={active ? "step" : undefined}
-              >
-                <span className="step-number">
-                  {complete ? <Check size={15} aria-hidden="true" /> : number}
-                </span>
-                <span>{label}</span>
-              </div>
-            );
-          },
-        )}
+  return (
+    <article className="luxury-card" style={{ padding: 40, border: "1px solid var(--ciel-gold-border)" }}>
+      {/* Header Banner */}
+      <div style={{ marginBottom: 28, borderBottom: "1px solid var(--line)", paddingBottom: 24 }}>
+        <span className="eyebrow" style={{ marginBottom: 6 }}>
+          <Sparkles size={14} className="text-gold" />
+          Institutional Application Portal
+        </span>
+        <h1 style={{ fontSize: 32, margin: "6px 0 8px", fontFamily: "var(--font-serif-family)", color: "var(--text-white)" }}>
+          CIEL Incubation &amp; Venture Application
+        </h1>
+        <p style={{ fontSize: 14.5, color: "var(--text-secondary)", margin: 0 }}>
+          {eventTitle} · Stage-gated evaluation for seed funding, prototyping labs &amp; patent support.
+        </p>
       </div>
 
-      <div className="form-body">
+      {/* Progress Bar & Steps */}
+      <div style={{ marginBottom: 36 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10, fontSize: 13, color: "var(--text-secondary)" }}>
+          <span>Stage {step} of 3</span>
+          <span style={{ color: "var(--ciel-gold-bright)", fontWeight: 700 }}>{progressPercent}% Completed</span>
+        </div>
+        <div style={{ height: 6, background: "rgba(255,255,255,0.08)", borderRadius: 3, overflow: "hidden" }}>
+          <div style={{ height: "100%", width: `${progressPercent}%`, background: "linear-gradient(90deg, #D4AF37 0%, #F5D77F 100%)", transition: "width 0.4s ease" }} />
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} noValidate>
         {errors.form ? (
-          <div className="alert alert-error" role="alert" style={{ marginBottom: 22 }}>
+          <div className="alert alert-error" style={{ marginBottom: 24 }}>
             <AlertCircle size={18} aria-hidden="true" />
             <span>{errors.form}</span>
           </div>
         ) : null}
 
-        {step === 1 ? (
-          <section>
-            <div className="form-section-heading">
-              <h2>Your academic details</h2>
-              <p>
-                Class options change automatically after you select an institution.
+        {/* STEP 1: CATEGORY & ROLE */}
+        {step === 1 && (
+          <ScaleIn key="step-1">
+            <div>
+              <h2 style={{ fontSize: 22, color: "var(--text-white)", marginBottom: 4, fontFamily: "var(--font-serif-family)" }}>
+                Step 1: Institutional Profile &amp; Role
+              </h2>
+              <p style={{ fontSize: 14, color: "var(--text-secondary)", marginBottom: 24 }}>
+                Select your participant category and specify your venture role.
               </p>
-            </div>
 
-            <div className="form-stack" style={{ marginTop: 0 }}>
-              <div className="field">
-                <label className="field-label" htmlFor="institution">
-                  Institution
+              {/* Category Grid */}
+              <div className="form-group" style={{ marginBottom: 28 }}>
+                <label style={{ fontSize: 13, color: "var(--ciel-gold-bright)", fontWeight: 600, display: "block", marginBottom: 12 }}>
+                  1. Participant Category
                 </label>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+                  {CATEGORY_OPTIONS.map((cat) => {
+                    const IconComp = cat.icon;
+                    const isSelected = values.userCategory === cat.value;
+                    return (
+                      <div
+                        key={cat.value}
+                        onClick={() => setValues((v) => ({ ...v, userCategory: cat.value }))}
+                        style={{
+                          padding: 16,
+                          cursor: "pointer",
+                          background: isSelected ? "rgba(212, 175, 55, 0.16)" : "rgba(255,255,255,0.03)",
+                          border: isSelected ? "1.5px solid var(--ciel-gold)" : "1px solid var(--line)",
+                          borderRadius: 10,
+                          display: "flex",
+                          gap: 12,
+                          alignItems: "center",
+                          transition: "all 0.2s ease",
+                          boxShadow: isSelected ? "0 4px 20px rgba(212, 175, 55, 0.15)" : "none",
+                        }}
+                      >
+                        <div style={{ color: isSelected ? "var(--ciel-gold-bright)" : "var(--text-muted)", flexShrink: 0 }}>
+                          <IconComp size={22} />
+                        </div>
+                        <div>
+                          <strong style={{ fontSize: 14, color: "var(--text-white)", display: "block" }}>{cat.label}</strong>
+                          <span style={{ fontSize: 11.5, color: "var(--text-muted)" }}>{cat.desc}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Role Grid */}
+              <div className="form-group" style={{ marginBottom: 28 }}>
+                <label style={{ fontSize: 13, color: "var(--ciel-gold-bright)", fontWeight: 600, display: "block", marginBottom: 12 }}>
+                  2. Participation Role
+                </label>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+                  {ROLE_OPTIONS.map((opt) => {
+                    const IconComp = opt.icon;
+                    const isSelected = values.role === opt.value;
+                    return (
+                      <div
+                        key={opt.value}
+                        onClick={() => {
+                          setValues((v) => ({ ...v, role: opt.value }));
+                          setErrors((e) => ({ ...e, role: undefined }));
+                        }}
+                        style={{
+                          padding: 16,
+                          cursor: "pointer",
+                          background: isSelected ? "rgba(212, 175, 55, 0.16)" : "rgba(255,255,255,0.03)",
+                          border: isSelected ? "1.5px solid var(--ciel-gold)" : "1px solid var(--line)",
+                          borderRadius: 10,
+                          display: "flex",
+                          gap: 12,
+                          alignItems: "flex-start",
+                          transition: "all 0.2s ease",
+                        }}
+                      >
+                        <div style={{ color: isSelected ? "var(--ciel-gold-bright)" : "var(--text-muted)", marginTop: 2, flexShrink: 0 }}>
+                          <IconComp size={22} />
+                        </div>
+                        <div>
+                          <strong style={{ fontSize: 14, color: "var(--text-white)", display: "block" }}>{opt.title}</strong>
+                          <span style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.4, display: "block" }}>{opt.description}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {errors.role ? <p className="field-error" style={{ marginTop: 8 }}>{errors.role}</p> : null}
+              </div>
+
+              <div style={{ marginTop: 36, display: "flex", justifyContent: "flex-end" }}>
+                <button className="ref-btn-primary" type="button" onClick={handleNext}>
+                  Continue to Academic Profile
+                  <ArrowRight size={17} />
+                </button>
+              </div>
+            </div>
+          </ScaleIn>
+        )}
+
+        {/* STEP 2: ACADEMIC PROFILE */}
+        {step === 2 && (
+          <ScaleIn key="step-2">
+            <div>
+              <h2 style={{ fontSize: 22, color: "var(--text-white)", marginBottom: 4, fontFamily: "var(--font-serif-family)" }}>
+                Step 2: Academic &amp; Institutional Profile
+              </h2>
+              <p style={{ fontSize: 14, color: "var(--text-secondary)", marginBottom: 24 }}>
+                Provide your verified campus or corporate affiliation.
+              </p>
+
+              <div className="form-group" style={{ marginBottom: 20 }}>
+                <label htmlFor="institutionId" style={{ fontSize: 13, color: "var(--text-secondary)", display: "block", marginBottom: 8 }}>Institution / Campus</label>
                 <select
+                  id="institutionId"
                   className="select"
-                  id="institution"
+                  style={{ width: "100%", padding: "12px 16px", borderRadius: 8 }}
                   value={values.institutionId}
-                  onChange={(event) => {
-                    setValues((current) => ({
-                      ...current,
-                      institutionId: event.target.value,
-                      classId: "",
-                    }));
-                    setErrors((current) => ({
-                      ...current,
-                      institutionId: undefined,
-                      classId: undefined,
-                    }));
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setValues((v) => ({ ...v, institutionId: val, classId: "" }));
+                    setErrors((err) => ({ ...err, institutionId: undefined }));
                   }}
-                  aria-invalid={Boolean(errors.institutionId)}
                 >
-                  <option value="">Select your institution</option>
-                  {institutions.map((institution) => (
-                    <option key={institution.id} value={institution.id}>
-                      {institution.name}
+                  {institutionsList.map((inst) => (
+                    <option key={inst.id} value={inst.id}>
+                      {inst.name} ({inst.code})
                     </option>
                   ))}
                 </select>
-                {errors.institutionId ? (
-                  <p className="field-error">
-                    <AlertCircle size={14} aria-hidden="true" />
-                    {errors.institutionId}
-                  </p>
-                ) : null}
+                {errors.institutionId ? <p className="field-error" style={{ marginTop: 6 }}>{errors.institutionId}</p> : null}
               </div>
 
-              <div className="form-row">
-                <div className="field">
-                  <label className="field-label" htmlFor="class">
-                    Class
-                  </label>
-                  <select
-                    className="select"
-                    id="class"
-                    value={values.classId}
-                    onChange={(event) => updateValue("classId", event.target.value)}
-                    disabled={!values.institutionId}
-                    aria-invalid={Boolean(errors.classId)}
-                  >
-                    <option value="">
-                      {values.institutionId
-                        ? "Select your class"
-                        : "Select institution first"}
+              <div className="form-group" style={{ marginBottom: 20 }}>
+                <label htmlFor="classId" style={{ fontSize: 13, color: "var(--text-secondary)", display: "block", marginBottom: 8 }}>Department / Program</label>
+                <select
+                  id="classId"
+                  className="select"
+                  style={{ width: "100%", padding: "12px 16px", borderRadius: 8 }}
+                  value={values.classId}
+                  onChange={(e) => {
+                    setValues((v) => ({ ...v, classId: e.target.value }));
+                    setErrors((err) => ({ ...err, classId: undefined }));
+                  }}
+                >
+                  <option value="">-- Select Department / Program --</option>
+                  {(availableClasses.length > 0 ? availableClasses : classesList).map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
                     </option>
-                    {availableClasses.map((classOption) => (
-                      <option key={classOption.id} value={classOption.id}>
-                        {classOption.name}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.classId ? (
-                    <p className="field-error">
-                      <AlertCircle size={14} aria-hidden="true" />
-                      {errors.classId}
-                    </p>
-                  ) : null}
-                </div>
+                  ))}
+                </select>
+                {errors.classId ? <p className="field-error" style={{ marginTop: 6 }}>{errors.classId}</p> : null}
+              </div>
 
-                <div className="field">
-                  <label className="field-label" htmlFor="rollNumber">
-                    Roll number
-                  </label>
-                  <input
-                    className="input"
-                    id="rollNumber"
-                    type="text"
-                    inputMode="text"
-                    placeholder="Enter your roll number"
-                    value={values.rollNumber}
-                    onChange={(event) => updateValue("rollNumber", event.target.value)}
-                    aria-invalid={Boolean(errors.rollNumber)}
-                  />
-                  {errors.rollNumber ? (
-                    <p className="field-error">
-                      <AlertCircle size={14} aria-hidden="true" />
-                      {errors.rollNumber}
-                    </p>
-                  ) : null}
-                </div>
+              <div className="form-group" style={{ marginBottom: 20 }}>
+                <label htmlFor="rollNumber" style={{ fontSize: 13, color: "var(--text-secondary)", display: "block", marginBottom: 8 }}>Roll Number / Official Campus ID</label>
+                <input
+                  id="rollNumber"
+                  type="text"
+                  className="input"
+                  placeholder="e.g. 2026-COMP-042"
+                  style={{ padding: "12px 16px", borderRadius: 8 }}
+                  value={values.rollNumber}
+                  onChange={(e) => {
+                    setValues((v) => ({ ...v, rollNumber: e.target.value }));
+                    setErrors((err) => ({ ...err, rollNumber: undefined }));
+                  }}
+                />
+                {errors.rollNumber ? <p className="field-error" style={{ marginTop: 6 }}>{errors.rollNumber}</p> : null}
+              </div>
+
+              <div style={{ marginTop: 36, display: "flex", justifyContent: "space-between" }}>
+                <button className="ref-btn-secondary" type="button" onClick={handleBack}>
+                  <ArrowLeft size={17} /> Back
+                </button>
+                <button className="ref-btn-primary" type="button" onClick={handleNext}>
+                  Continue to Venture Details
+                  <ArrowRight size={17} />
+                </button>
               </div>
             </div>
-          </section>
-        ) : null}
+          </ScaleIn>
+        )}
 
-        {step === 2 ? (
-          <section>
-            <div className="form-section-heading">
-              <h2>How are you registering?</h2>
-              <p>
-                Choose one option. The final step changes based on your selection.
+        {/* STEP 3: VENTURE & SUBMISSION */}
+        {step === 3 && (
+          <ScaleIn key="step-3">
+            <div>
+              <h2 style={{ fontSize: 22, color: "var(--text-white)", marginBottom: 4, fontFamily: "var(--font-serif-family)" }}>
+                Step 3: Venture &amp; Submission
+              </h2>
+              <p style={{ fontSize: 14, color: "var(--text-secondary)", marginBottom: 24 }}>
+                Specify your team name and problem statement for incubation evaluation.
               </p>
-            </div>
 
-            <div className="role-grid">
-              {roleOptions.map((option) => {
-                const Icon = option.icon;
-                const selected = values.role === option.value;
-                return (
-                  <label
-                    className={`role-option${selected ? " role-option-selected" : ""}`}
-                    key={option.value}
-                  >
-                    <input
-                      type="radio"
-                      name="role"
-                      value={option.value}
-                      checked={selected}
-                      onChange={() => updateValue("role", option.value)}
-                    />
-                    <span className="role-radio" />
-                    <span className="role-option-icon">
-                      <Icon size={20} aria-hidden="true" />
-                    </span>
-                    <h3>{option.title}</h3>
-                    <p>{option.description}</p>
-                  </label>
-                );
-              })}
-            </div>
-
-            {errors.role ? (
-              <p className="field-error" style={{ marginTop: 14 }}>
-                <AlertCircle size={14} aria-hidden="true" />
-                {errors.role}
-              </p>
-            ) : null}
-          </section>
-        ) : null}
-
-        {step === 3 ? (
-          <section>
-            <div className="form-section-heading">
-              <h2>{isMember ? "Join your registered team" : "Your team or project"}</h2>
-              <p>
-                {isMember
-                  ? "Your form ends after the exact team name. We will connect you to the leader’s team."
-                  : "Name your team or project and describe the problem you plan to solve."}
-              </p>
-            </div>
-
-            {isMember ? (
-              <div className="alert alert-warning" style={{ marginBottom: 22 }}>
-                <Info size={18} aria-hidden="true" />
-                <span>
-                  Enter the team name <strong>exactly</strong>, including capital
-                  letters and spaces. If it is not found, ask your team leader to
-                  register first.
-                </span>
-              </div>
-            ) : null}
-
-            <div className="form-stack" style={{ marginTop: 0 }}>
-              <div className="field">
-                <label className="field-label" htmlFor="teamName">
-                  {isMember ? "Exact team name" : "Team / project name"}
+              <div className="form-group" style={{ marginBottom: 20 }}>
+                <label htmlFor="teamName" style={{ fontSize: 13, color: "var(--text-secondary)", display: "block", marginBottom: 8 }}>
+                  {values.role === "team_member" ? "Leader's Registered Team Name" : "Venture / Team Name"}
                 </label>
                 <input
-                  className="input"
                   id="teamName"
                   type="text"
-                  autoComplete="off"
-                  placeholder={
-                    isMember
-                      ? "Type the name exactly as your leader entered it"
-                      : "Example: AquaSense"
-                  }
+                  className="input"
+                  placeholder={values.role === "team_member" ? "e.g. AgriTech Innovators" : "e.g. Quantum Telemetry Systems"}
+                  style={{ padding: "12px 16px", borderRadius: 8 }}
                   value={values.teamName}
-                  onChange={(event) => updateValue("teamName", event.target.value)}
-                  aria-invalid={Boolean(errors.teamName)}
+                  onChange={(e) => {
+                    setValues((v) => ({ ...v, teamName: e.target.value }));
+                    setErrors((err) => ({ ...err, teamName: undefined }));
+                  }}
                 />
-                {errors.teamName ? (
-                  <p className="field-error">
-                    <AlertCircle size={14} aria-hidden="true" />
-                    {errors.teamName}
-                  </p>
-                ) : isMember ? (
-                  <p className="field-help">This lookup is case-sensitive.</p>
-                ) : null}
+                {errors.teamName ? <p className="field-error" style={{ marginTop: 6 }}>{errors.teamName}</p> : null}
               </div>
 
-              {needsProblem ? (
-                <div className="field">
-                  <label className="field-label" htmlFor="problemStatement">
-                    Add your problem
-                    <span className="field-label-optional">10–3,000 characters</span>
+              {(values.role === "team_leader" || values.role === "solo") && (
+                <div className="form-group" style={{ marginBottom: 20 }}>
+                  <label htmlFor="problemStatement" style={{ fontSize: 13, color: "var(--text-secondary)", display: "block", marginBottom: 8 }}>
+                    Problem Statement &amp; Venture Summary
                   </label>
                   <textarea
-                    className="textarea"
                     id="problemStatement"
-                    placeholder="What real problem are you solving, who experiences it, and why does it matter?"
+                    rows={4}
+                    className="input"
+                    placeholder="Describe the target problem, proposed technological solution, and commercial impact (minimum 15 characters)..."
+                    style={{ resize: "vertical", padding: "12px 16px", borderRadius: 8 }}
                     value={values.problemStatement}
-                    onChange={(event) =>
-                      updateValue("problemStatement", event.target.value.slice(0, 3000))
-                    }
-                    aria-invalid={Boolean(errors.problemStatement)}
+                    onChange={(e) => {
+                      setValues((v) => ({ ...v, problemStatement: e.target.value }));
+                      setErrors((err) => ({ ...err, problemStatement: undefined }));
+                    }}
                   />
-                  <div className="char-count">
-                    {values.problemStatement.length.toLocaleString("en-IN")} / 3,000
-                  </div>
                   {errors.problemStatement ? (
-                    <p className="field-error">
-                      <AlertCircle size={14} aria-hidden="true" />
-                      {errors.problemStatement}
-                    </p>
+                    <p className="field-error" style={{ marginTop: 6 }}>{errors.problemStatement}</p>
                   ) : null}
                 </div>
-              ) : null}
-
-              {!isMember ? (
-                <div>
-                  <div className="form-section-heading" style={{ marginBottom: 16 }}>
-                    <h2 style={{ fontSize: "1.15rem" }}>Review before submitting</h2>
-                  </div>
-                  <div className="review-grid">
-                    <div className="review-item">
-                      <span>Institution</span>
-                      <strong>{selectedInstitution?.name ?? "Not selected"}</strong>
-                    </div>
-                    <div className="review-item">
-                      <span>Class & roll number</span>
-                      <strong>
-                        {selectedClass?.name ?? "Not selected"} · {values.rollNumber}
-                      </strong>
-                    </div>
-                    <div className="review-item">
-                      <span>Registration type</span>
-                      <strong>{values.role ? roleLabels[values.role] : "Not selected"}</strong>
-                    </div>
-                    <div className="review-item">
-                      <span>Team / project</span>
-                      <strong>{values.teamName || "Not entered"}</strong>
-                    </div>
-                    <div className="review-item review-item-wide">
-                      <span>Problem statement</span>
-                      <p>{values.problemStatement || "Not entered"}</p>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          </section>
-        ) : null}
-
-        <div className="form-footer-actions">
-          {step > 1 ? (
-            <button
-              className="button button-secondary"
-              type="button"
-              onClick={() => {
-                setErrors({});
-                setStep((current) => Math.max(1, current - 1));
-              }}
-              disabled={submitting}
-            >
-              <ArrowLeft size={17} aria-hidden="true" />
-              Previous
-            </button>
-          ) : (
-            <span />
-          )}
-
-          {step < 3 ? (
-            <button className="button button-primary" type="submit">
-              Continue
-              <ArrowRight size={17} aria-hidden="true" />
-            </button>
-          ) : (
-            <button className="button button-primary" type="submit" disabled={submitting}>
-              {submitting ? (
-                <>
-                  <LoaderCircle className="spinner" size={18} aria-hidden="true" />
-                  Submitting…
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 size={18} aria-hidden="true" />
-                  {isMember
-                    ? "Join team and submit"
-                    : values.role === "solo"
-                      ? "Register solo project"
-                      : "Create team and submit"}
-                </>
               )}
-            </button>
-          )}
-        </div>
-      </div>
-    </form>
-  );
-}
 
-export function RegistrationHelp() {
-  return (
-    <aside className="side-stack">
-      <section className="side-card">
-        <h3>
-          <Lightbulb size={18} aria-hidden="true" />
-          Correct order
-        </h3>
-        <ul className="side-list">
-          <li>
-            <CheckCircle2 size={16} aria-hidden="true" />
-            Team leader creates the team first.
-          </li>
-          <li>
-            <CheckCircle2 size={16} aria-hidden="true" />
-            Members use the exact registered name.
-          </li>
-          <li>
-            <CheckCircle2 size={16} aria-hidden="true" />
-            Everyone appears in one shared profile.
-          </li>
-        </ul>
-      </section>
-
-      <section className="side-card">
-        <h3>
-          <LockKeyhole size={18} aria-hidden="true" />
-          Data protection
-        </h3>
-        <p>
-          Students can only see their own profile and people assigned to the same
-          team. Event admins can review all registrations through the protected
-          admin dashboard.
-        </p>
-      </section>
-    </aside>
+              <div style={{ marginTop: 36, display: "flex", justifyContent: "space-between" }}>
+                <button className="ref-btn-secondary" type="button" onClick={handleBack}>
+                  <ArrowLeft size={17} /> Back
+                </button>
+                <button className="ref-btn-primary" type="submit" disabled={submitting}>
+                  {submitting ? (
+                    <>
+                      <LoaderCircle className="spinner" size={18} />
+                      Submitting Application...
+                    </>
+                  ) : (
+                    <>
+                      Submit Incubation Application
+                      <CheckCircle2 size={18} />
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </ScaleIn>
+        )}
+      </form>
+    </article>
   );
 }

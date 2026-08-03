@@ -1,4 +1,5 @@
-import { requireAdmin } from "@/lib/auth";
+import { requireAdminSession } from "@/lib/admin-auth";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { EVENT_SLUG } from "@/lib/config";
 
 type RawRegistration = {
@@ -23,7 +24,8 @@ function csvCell(value: unknown) {
 }
 
 export async function GET() {
-  const { supabase } = await requireAdmin();
+  await requireAdminSession();
+  const supabase = createAdminClient();
   const { data: event } = await supabase
     .from("events")
     .select("id,slug")

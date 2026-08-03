@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
+  ArrowRight,
   Eye,
   EyeOff,
   LoaderCircle,
@@ -50,7 +51,7 @@ export function SignInForm({ nextPath }: { nextPath: string }) {
       setFormError(
         error.message.toLowerCase().includes("email not confirmed")
           ? "Confirm your email address before signing in."
-          : "The email or password is incorrect.",
+          : "The email address or password is incorrect.",
       );
       return;
     }
@@ -60,23 +61,23 @@ export function SignInForm({ nextPath }: { nextPath: string }) {
   }
 
   return (
-    <form className="form-stack" onSubmit={handleSubmit} noValidate>
+    <form onSubmit={handleSubmit} noValidate style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {formError ? (
-        <div className="alert alert-error" role="alert">
-          <AlertCircle size={18} aria-hidden="true" />
+        <div className="alert alert-error" role="alert" style={{ padding: "8px 12px", fontSize: 13 }}>
+          <AlertCircle size={16} aria-hidden="true" />
           <span>{formError}</span>
         </div>
       ) : null}
 
-      <div className="field">
-        <label className="field-label" htmlFor="email">
-          Gmail address
+      <div>
+        <label style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 600, display: "block", marginBottom: 6 }}>
+          Email Address
         </label>
         <div className="input-wrap">
-          <Mail className="input-icon" size={18} aria-hidden="true" />
+          <Mail className="input-icon" size={17} aria-hidden="true" />
           <input
             className="input input-with-icon"
-            id="email"
+            style={{ padding: "11px 14px 11px 40px", fontSize: 14 }}
             name="email"
             type="email"
             autoComplete="email"
@@ -87,70 +88,68 @@ export function SignInForm({ nextPath }: { nextPath: string }) {
               setErrors((current) => ({ ...current, email: undefined }));
               setFormError("");
             }}
-            aria-invalid={Boolean(errors.email)}
           />
         </div>
-        {errors.email ? (
-          <p className="field-error">
-            <AlertCircle size={14} aria-hidden="true" />
-            {errors.email}
-          </p>
-        ) : null}
+        {errors.email ? <p className="field-error" style={{ fontSize: 11.5, marginTop: 4 }}>{errors.email}</p> : null}
       </div>
 
-      <div className="field">
-        <label className="field-label" htmlFor="password">
-          Password
-        </label>
+      <div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+          <label style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 600 }}>
+            Password
+          </label>
+          <Link href="/forgot-password" style={{ fontSize: 12, color: "var(--ciel-gold-bright)", textDecoration: "none" }}>
+            Forgot Password?
+          </Link>
+        </div>
         <div className="input-wrap">
-          <LockKeyhole className="input-icon" size={18} aria-hidden="true" />
+          <LockKeyhole className="input-icon" size={17} aria-hidden="true" />
           <input
             className="input input-with-icon input-with-action"
-            id="password"
+            style={{ padding: "11px 14px 11px 40px", fontSize: 14 }}
             name="password"
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"
-            placeholder="Your password"
+            placeholder="••••••••"
             value={password}
             onChange={(event) => {
               setPassword(event.target.value);
               setErrors((current) => ({ ...current, password: undefined }));
               setFormError("");
             }}
-            aria-invalid={Boolean(errors.password)}
           />
           <button
             className="input-action"
             type="button"
             onClick={() => setShowPassword((current) => !current)}
-            aria-label={showPassword ? "Hide password" : "Show password"}
+            style={{ right: 10 }}
           >
-            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         </div>
-        {errors.password ? (
-          <p className="field-error">
-            <AlertCircle size={14} aria-hidden="true" />
-            {errors.password}
-          </p>
-        ) : null}
+        {errors.password ? <p className="field-error" style={{ fontSize: 11.5, marginTop: 4 }}>{errors.password}</p> : null}
       </div>
 
-      <button className="button button-primary button-wide" type="submit" disabled={submitting}>
+      <button className="button button-primary button-wide" type="submit" disabled={submitting} style={{ marginTop: 6, padding: 12, fontSize: 14 }}>
         {submitting ? (
           <>
-            <LoaderCircle className="spinner" size={18} aria-hidden="true" />
-            Signing in…
+            <LoaderCircle className="spinner" size={17} aria-hidden="true" />
+            Signing In...
           </>
         ) : (
-          "Sign in and continue"
+          <>
+            Sign In to Dashboard
+            <ArrowRight size={17} />
+          </>
         )}
       </button>
 
-      <div className="form-divider">New to this event?</div>
-      <Link className="button button-secondary button-wide" href="/auth/sign-up">
-        Create your registration account
-      </Link>
+      <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid var(--line)", textAlign: "center", fontSize: 13, color: "var(--text-secondary)" }}>
+        Don&apos;t have an account yet?{" "}
+        <Link href="/auth/sign-up" style={{ color: "var(--ciel-gold-bright)", fontWeight: 600, textDecoration: "underline" }}>
+          Create Innovator Account
+        </Link>
+      </div>
     </form>
   );
 }
