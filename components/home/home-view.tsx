@@ -52,12 +52,12 @@ type HomeViewProps = {
 };
 
 const ANGLED_PANELS = [
-  { id: "img1" },
-  { id: "img2" },
-  { id: "img3" },
-  { id: "img4" },
-  { id: "img5" },
-  { id: "img6" },
+  { id: "img1", src: "/img1.png", label: "Innovation Lab", badge: "Prototyping" },
+  { id: "img2", src: "/img2.png", label: "Venture Pitch", badge: "Funding" },
+  { id: "img3", src: "/img3.jpeg", label: "Biotech & R&D", badge: "Research" },
+  { id: "img4", src: "/img4.png", label: "Co-Working Hub", badge: "Ideation" },
+  { id: "img5", src: "/img5.png", label: "Smart AgriTech", badge: "Impact" },
+  { id: "img6", src: "/img6.png", label: "Demo Day", badge: "Excellence" },
 ];
 
 const TESTIMONIALS = [
@@ -84,40 +84,58 @@ const TESTIMONIALS = [
   },
 ];
 
-function AngledImagePanel({ id }: { id: string }) {
-  const [imgSrc, setImgSrc] = useState<string | null>(`/${id}.png`);
+function AngledImagePanel({
+  id,
+  src,
+  label,
+  badge,
+  index,
+}: {
+  id: string;
+  src?: string;
+  label?: string;
+  badge?: string;
+  index: number;
+}) {
+  const [imgSrc, setImgSrc] = useState<string | null>(src ?? `/${id}.png`);
   const [attempts, setAttempts] = useState(0);
 
   function handleError(e: React.SyntheticEvent<HTMLImageElement, Event>) {
+    const basePath = src ? src.replace(/\.[^.]+$/, "") : `/${id}`;
     if (attempts === 0) {
       setAttempts(1);
-      setImgSrc(`/${id}.jpg`);
+      setImgSrc(`${basePath}.jpg`);
     } else if (attempts === 1) {
       setAttempts(2);
-      setImgSrc(`/${id}.jpeg`);
+      setImgSrc(`${basePath}.jpeg`);
     } else if (attempts === 2) {
       setAttempts(3);
-      setImgSrc(`/${id}.webp`);
-    } else if (attempts === 3) {
-      setAttempts(4);
-      setImgSrc(`/${id}`);
+      setImgSrc(`${basePath}.webp`);
     } else {
-      setImgSrc(null); // Keep container blank
+      setImgSrc(null);
     }
   }
 
   return (
-    <div className="angled-panel">
+    <div className={`angled-panel angled-panel-stagger-${index % 2}`}>
       {imgSrc ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={imgSrc}
-          alt={`Collage panel ${id}`}
+          alt={label || `Collage panel ${id}`}
           className="angled-panel-img"
           onError={handleError}
         />
       ) : (
         <div className="angled-panel-placeholder" />
+      )}
+      <div className="angled-panel-overlay" />
+      <div className="angled-panel-shine" />
+      {label && (
+        <div className="angled-panel-caption">
+          {badge && <span className="angled-panel-badge">{badge}</span>}
+          <span className="angled-panel-title">{label}</span>
+        </div>
       )}
     </div>
   );
@@ -173,8 +191,15 @@ export function HomeView({ event }: HomeViewProps) {
           {/* Right Hero Collage: 6 Angled Image Panels */}
           <FadeIn delay={0.3}>
             <div className="ref-angled-grid" aria-label="CIEL Innovation Collage">
-              {ANGLED_PANELS.map((p) => (
-                <AngledImagePanel key={p.id} id={p.id} />
+              {ANGLED_PANELS.map((p, idx) => (
+                <AngledImagePanel
+                  key={p.id}
+                  id={p.id}
+                  src={p.src}
+                  label={p.label}
+                  badge={p.badge}
+                  index={idx}
+                />
               ))}
             </div>
           </FadeIn>

@@ -8,15 +8,21 @@ type LogoProps = {
 
 export function Logo({ className = "", size = "medium" }: LogoProps) {
   const heightMap = {
-    small: "48px",
-    medium: "64px",
-    large: "84px",
+    small: "100px",
+    medium: "140px",
+    large: "190px",
   };
 
   const maxWidthMap = {
-    small: "220px",
-    medium: "280px",
-    large: "360px",
+    small: "380px",
+    medium: "520px",
+    large: "700px",
+  };
+
+  const marginMap = {
+    small: "-15px 0",
+    medium: "-30px 0",
+    large: "-50px 0",
   };
 
   return (
@@ -30,18 +36,22 @@ export function Logo({ className = "", size = "medium" }: LogoProps) {
         padding: "0",
         margin: "0",
         textDecoration: "none",
+        position: "relative",
+        zIndex: 10,
       }}
     >
       <Image
         src="/logo.png"
         alt="CIEL Logo"
-        width={340}
-        height={85}
+        width={520}
+        height={140}
         priority
         style={{
           height: heightMap[size],
           width: "auto",
           maxWidth: maxWidthMap[size],
+          margin: marginMap[size],
+          transform: "translateY(10px)",
           objectFit: "contain",
           borderRadius: 0,
           clipPath: "none",
