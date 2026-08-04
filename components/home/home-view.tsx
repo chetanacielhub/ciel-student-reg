@@ -39,6 +39,7 @@ import {
   StaggerContainer,
   StaggerItem,
   GoldenParticleBackground,
+  CounterAnimation,
 } from "@/components/ui/motion";
 import {
   CIEL_METRICS,
@@ -52,12 +53,12 @@ type HomeViewProps = {
 };
 
 const ANGLED_PANELS = [
-  { id: "img1", src: "/img1.png", label: "Innovation Lab", badge: "Prototyping" },
-  { id: "img2", src: "/img2.png", label: "Venture Pitch", badge: "Funding" },
-  { id: "img3", src: "/img3.jpeg", label: "Biotech & R&D", badge: "Research" },
-  { id: "img4", src: "/img4.png", label: "Co-Working Hub", badge: "Ideation" },
-  { id: "img5", src: "/img5.png", label: "Smart AgriTech", badge: "Impact" },
-  { id: "img6", src: "/img6.png", label: "Demo Day", badge: "Excellence" },
+  { id: "img1", src: "/img1.png" },
+  { id: "img2", src: "/img2.png" },
+  { id: "img3", src: "/img3.jpeg" },
+  { id: "img4", src: "/img4.png" },
+  { id: "img5", src: "/img5.png" },
+  { id: "img6", src: "/img6.png" },
 ];
 
 const TESTIMONIALS = [
@@ -84,24 +85,13 @@ const TESTIMONIALS = [
   },
 ];
 
-function AngledImagePanel({
-  id,
-  src,
-  label,
-  badge,
-  index,
-}: {
-  id: string;
-  src?: string;
-  label?: string;
-  badge?: string;
-  index: number;
-}) {
+function AngledImagePanel({ id, src }: { id: string; src?: string }) {
   const [imgSrc, setImgSrc] = useState<string | null>(src ?? `/${id}.png`);
   const [attempts, setAttempts] = useState(0);
 
   function handleError(e: React.SyntheticEvent<HTMLImageElement, Event>) {
-    const basePath = src ? src.replace(/\.[^.]+$/, "") : `/${id}`;
+    // Extract base path without extension for fallback attempts
+    const basePath = src ? src.replace(/\.[^.]+$/, '') : `/${id}`;
     if (attempts === 0) {
       setAttempts(1);
       setImgSrc(`${basePath}.jpg`);
@@ -111,31 +101,26 @@ function AngledImagePanel({
     } else if (attempts === 2) {
       setAttempts(3);
       setImgSrc(`${basePath}.webp`);
+    } else if (attempts === 3) {
+      setAttempts(4);
+      setImgSrc(`${basePath}`);
     } else {
-      setImgSrc(null);
+      setImgSrc(null); // Keep container blank
     }
   }
 
   return (
-    <div className={`angled-panel angled-panel-stagger-${index % 2}`}>
+    <div className="angled-panel">
       {imgSrc ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={imgSrc}
-          alt={label || `Collage panel ${id}`}
+          alt={`Collage panel ${id}`}
           className="angled-panel-img"
           onError={handleError}
         />
       ) : (
         <div className="angled-panel-placeholder" />
-      )}
-      <div className="angled-panel-overlay" />
-      <div className="angled-panel-shine" />
-      {label && (
-        <div className="angled-panel-caption">
-          {badge && <span className="angled-panel-badge">{badge}</span>}
-          <span className="angled-panel-title">{label}</span>
-        </div>
       )}
     </div>
   );
@@ -191,15 +176,8 @@ export function HomeView({ event }: HomeViewProps) {
           {/* Right Hero Collage: 6 Angled Image Panels */}
           <FadeIn delay={0.3}>
             <div className="ref-angled-grid" aria-label="CIEL Innovation Collage">
-              {ANGLED_PANELS.map((p, idx) => (
-                <AngledImagePanel
-                  key={p.id}
-                  id={p.id}
-                  src={p.src}
-                  label={p.label}
-                  badge={p.badge}
-                  index={idx}
-                />
+              {ANGLED_PANELS.map((p) => (
+                <AngledImagePanel key={p.id} id={p.id} src={p.src} />
               ))}
             </div>
           </FadeIn>
@@ -235,25 +213,33 @@ export function HomeView({ event }: HomeViewProps) {
             <div className="ref-kpi-card">
               <div className="ref-kpi-item">
                 <div style={{ marginBottom: 6 }}><Users size={18} className="text-gold" /></div>
-                <div className="ref-kpi-num">500+</div>
+                <div className="ref-kpi-num">
+                  <CounterAnimation value="500+" />
+                </div>
                 <div className="ref-kpi-label">Student Innovators</div>
               </div>
 
               <div className="ref-kpi-item">
                 <div style={{ marginBottom: 6 }}><Rocket size={18} className="text-gold" /></div>
-                <div className="ref-kpi-num">50+</div>
+                <div className="ref-kpi-num">
+                  <CounterAnimation value="50+" />
+                </div>
                 <div className="ref-kpi-label">Ideas Incubated</div>
               </div>
 
               <div className="ref-kpi-item">
                 <div style={{ marginBottom: 6 }}><Building2 size={18} className="text-gold" /></div>
-                <div className="ref-kpi-num">20+</div>
+                <div className="ref-kpi-num">
+                  <CounterAnimation value="20+" />
+                </div>
                 <div className="ref-kpi-label">Industry Partners</div>
               </div>
 
               <div className="ref-kpi-item">
                 <div style={{ marginBottom: 6 }}><Trophy size={18} className="text-gold" /></div>
-                <div className="ref-kpi-num">∞</div>
+                <div className="ref-kpi-num">
+                  <CounterAnimation value="∞" />
+                </div>
                 <div className="ref-kpi-label">Possibilities</div>
               </div>
             </div>

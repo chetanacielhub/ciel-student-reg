@@ -1,7 +1,7 @@
 "use client";
 
-import { motion, HTMLMotionProps } from "framer-motion";
-import { ReactNode } from "react";
+import { motion, HTMLMotionProps, useInView, animate } from "framer-motion";
+import { ReactNode, useEffect, useRef, useState, useCallback } from "react";
 
 interface MotionProps extends HTMLMotionProps<"div"> {
   children: ReactNode;
@@ -80,6 +80,99 @@ export function StaggerItem({ children, className = "", style, ...props }: Motio
     >
       {children}
     </motion.div>
+  );
+}
+
+interface CounterAnimationProps {
+  value: string | number;
+  duration?: number;
+  className?: string;
+}
+
+/** Animated Counter component that counts up numbers when scrolled into view */
+export function CounterAnimation({
+  value,
+  duration = 2,
+  className = "",
+}: CounterAnimationProps) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const isInView = useInView(ref, { once: true, margin: "-20px" });
+  const strVal = String(value);
+  const isInfinity = strVal.includes("∞");
+
+  // Determine initial display value
+  const match = strVal.match(/^([^0-9.]*)([0-9.,]+)(.*)$/);
+  const prefix = match ? match[1] || "" : "";
+  const numStr = match ? match[2].replace(/,/g, "") : "";
+  const suffix = match ? match[3] || "" : "";
+  const targetNum = match ? parseFloat(numStr) : NaN;
+
+  const [displayValue, setDisplayValue] = useState(() => {
+    if (isInfinity) return "∞";
+    if (!isNaN(targetNum)) {
+      return `${prefix}0${suffix}`;
+    }
+    return strVal;
+  });
+
+  const runAnimation = useCallback(() => {
+    if (isInfinity || isNaN(targetNum)) return;
+
+    const hasDecimal = numStr.includes(".");
+    const decimalPlaces = hasDecimal ? numStr.split(".")[1].length : 0;
+
+    const controls = animate(0, targetNum, {
+      duration,
+      ease: [0.16, 1, 0.3, 1], // Smooth cubic-bezier ease out
+      onUpdate: (latest) => {
+        const formattedNum = hasDecimal
+          ? latest.toFixed(decimalPlaces)
+          : Math.floor(latest).toLocaleString();
+        setDisplayValue(`${prefix}${formattedNum}${suffix}`);
+      },
+    });
+
+    return () => controls.stop();
+  }, [isInfinity, targetNum, numStr, prefix, suffix, duration]);
+
+  useEffect(() => {
+    if (isInView && !isInfinity && !isNaN(targetNum)) {
+      const cleanup = runAnimation();
+      return () => cleanup?.();
+    }
+  }, [isInView, isInfinity, targetNum, runAnimation]);
+
+  if (isInfinity) {
+    return (
+      <motion.span
+        ref={ref}
+        className={className}
+        initial={{ opacity: 0, scale: 0.3, rotate: -90 }}
+        animate={
+          isInView
+            ? { opacity: 1, scale: 1, rotate: 0 }
+            : { opacity: 0, scale: 0.3, rotate: -90 }
+        }
+        whileHover={{ scale: 1.3, rotate: 180, color: "#d4af37" }}
+        transition={{ type: "spring", stiffness: 240, damping: 12 }}
+        style={{ display: "inline-block", cursor: "default" }}
+      >
+        ∞
+      </motion.span>
+    );
+  }
+
+  return (
+    <motion.span
+      ref={ref}
+      className={className}
+      onMouseEnter={runAnimation}
+      whileHover={{ scale: 1.08 }}
+      transition={{ type: "spring", stiffness: 350, damping: 15 }}
+      style={{ display: "inline-block", cursor: "pointer" }}
+    >
+      {displayValue}
+    </motion.span>
   );
 }
 
