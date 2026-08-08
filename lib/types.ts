@@ -137,11 +137,31 @@ export type MentorItem = {
 export type DownloadItem = {
   id: string;
   title: string;
-  category: "policy" | "manual" | "form" | "report" | "template";
+  category: "policy" | "manual" | "form" | "report" | "template" | string;
   fileSize: string;
-  format: "PDF" | "DOCX" | "ZIP";
+  format: "PDF" | "DOCX" | "ZIP" | string;
   updatedAt: string;
   description: string;
+  fileUrl?: string;
+};
+
+export type CielEventItem = {
+  id: string;
+  title: string;
+  category: string;
+  date: string;
+  time: string;
+  venue: string;
+  desc: string;
+  posterUrl?: string;
+};
+
+export type NewsItem = {
+  id: string;
+  title: string;
+  date: string;
+  category: string;
+  summary: string;
 };
 
 export type StudentCouncilLeadItem = {

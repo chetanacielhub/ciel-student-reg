@@ -1,10 +1,12 @@
-"use client";
-
 import Link from "next/link";
 import { Download, FileText, FolderDown } from "lucide-react";
-import { CIEL_DOWNLOADS } from "@/lib/ciel-data";
+import { getDownloadDocs } from "@/lib/dynamic-store";
 
-export default function DownloadsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function DownloadsPage() {
+  const downloads = await getDownloadDocs();
+
   return (
     <div className="shell page-section">
       <div className="section-heading">
@@ -19,7 +21,7 @@ export default function DownloadsPage() {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 64 }}>
-        {CIEL_DOWNLOADS.map((doc) => (
+        {downloads.map((doc) => (
           <article
             key={doc.id}
             className="luxury-card"
@@ -50,15 +52,27 @@ export default function DownloadsPage() {
               </div>
             </div>
 
-            <button
-              className="button button-primary button-small"
-              type="button"
-              onClick={() => {
-                alert(`Downloading ${doc.title} (${doc.format})`);
-              }}
-            >
-              <Download size={15} /> Download {doc.format}
-            </button>
+            {doc.fileUrl ? (
+              <a
+                className="button button-primary button-small"
+                href={doc.fileUrl}
+                download
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Download size={15} /> Download {doc.format}
+              </a>
+            ) : (
+              <button
+                className="button button-primary button-small"
+                type="button"
+                onClick={() => {
+                  alert(`Downloading ${doc.title} (${doc.format})`);
+                }}
+              >
+                <Download size={15} /> Download {doc.format}
+              </button>
+            )}
           </article>
         ))}
       </div>

@@ -49,7 +49,7 @@ import {
   Zap,
 } from "lucide-react";
 import { CIEL_DOWNLOADS } from "@/lib/ciel-data";
-import type { GovernanceCommitteeItem, MentorItem, StudentCouncilLeadItem, VentureProjectItem } from "@/lib/types";
+import type { GovernanceCommitteeItem, MentorItem, StudentCouncilLeadItem, VentureProjectItem, CielEventItem, NewsItem, DownloadItem } from "@/lib/types";
 import { LinkedInIcon } from "@/components/ui/linkedin-icon";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -101,6 +101,9 @@ type Props = {
   initialMentors?: MentorItem[];
   initialCouncil?: StudentCouncilLeadItem[];
   initialGovernance?: GovernanceCommitteeItem[];
+  initialEvents?: CielEventItem[];
+  initialNews?: NewsItem[];
+  initialDownloads?: DownloadItem[];
   stats: AdminStats;
   eventTitle: string;
 };
@@ -1663,6 +1666,567 @@ function ERPProjectsTab({ initialProjects = [] }: { initialProjects?: VenturePro
   );
 }
 
+// ─── EVENTS ERP TAB ─────────────────────────────────────────────────────────
+
+function ERPEventsTab({ initialEvents = [] }: { initialEvents?: CielEventItem[] }) {
+  const [events, setEvents] = useState<CielEventItem[]>(initialEvents);
+  const [isAdding, setIsAdding] = useState(false);
+  const [uploadingPoster, setUploadingPoster] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const posterInputRef = useRef<HTMLInputElement>(null);
+
+  const [form, setForm] = useState({
+    title: "",
+    category: "Hackathon",
+    date: "",
+    time: "",
+    venue: "",
+    desc: "",
+    posterUrl: "",
+  });
+
+  async function handlePosterUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingPoster(true);
+
+    try {
+      const data = new FormData();
+      data.append("image", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body: data });
+      const json = await res.json();
+      if (res.ok && json.url) {
+        setForm((prev) => ({ ...prev, posterUrl: json.url }));
+      } else {
+        alert(json.error || "Poster upload failed");
+      }
+    } catch {
+      alert("Error uploading poster");
+    } finally {
+      setUploadingPoster(false);
+    }
+  }
+
+  async function handleAddEvent(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.title || !form.date) {
+      alert("Title and Date are required");
+      return;
+    }
+    setSubmitting(true);
+
+    try {
+      const res = await fetch("/api/admin/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const json = await res.json();
+      if (res.ok && json.event) {
+        setEvents((prev) => [json.event, ...prev]);
+        setForm({ title: "", category: "Hackathon", date: "", time: "", venue: "", desc: "", posterUrl: "" });
+        setIsAdding(false);
+      } else {
+        alert(json.error || "Failed to add event");
+      }
+    } catch {
+      alert("Error adding event");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Are you sure you want to delete this event?")) return;
+    try {
+      const res = await fetch(`/api/admin/events?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (res.ok) {
+        setEvents((prev) => prev.filter((e) => e.id !== id));
+      }
+    } catch {
+      alert("Failed to delete event");
+    }
+  }
+
+  return (
+    <div className="adm-tab-content">
+      <div className="adm-section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h2>Events &amp; Hackathons Management</h2>
+          <p>Configure campus competitions, workshops, and upload optional posters</p>
+        </div>
+        <button className="adm-btn adm-btn-primary" onClick={() => setIsAdding(!isAdding)}>
+          <Plus size={16} /> {isAdding ? "Close Form" : "Add New Event"}
+        </button>
+      </div>
+
+      {isAdding && (
+        <div className="adm-table-wrap" style={{ padding: 24, marginBottom: 24 }}>
+          <h3 style={{ fontSize: 16, color: "var(--text-white)", marginBottom: 16 }}>Add New Event</h3>
+          <form onSubmit={handleAddEvent} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <div>
+                <label className="field-label">Event Title *</label>
+                <input className="input" required placeholder="CIEL Annual Hackathon 2026" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+              </div>
+
+              <div>
+                <label className="field-label">Category</label>
+                <select className="adm-select" style={{ width: "100%" }} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+                  <option value="Hackathon">Hackathon</option>
+                  <option value="Workshop">Workshop</option>
+                  <option value="Demo Day">Demo Day</option>
+                  <option value="Ideathon">Ideathon</option>
+                  <option value="Bootcamp">Bootcamp</option>
+                  <option value="Masterclass">Masterclass</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+              <div>
+                <label className="field-label">Date *</label>
+                <input className="input" required placeholder="March 15-16, 2026" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+              </div>
+
+              <div>
+                <label className="field-label">Time</label>
+                <input className="input" placeholder="09:00 AM - 05:00 PM" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} />
+              </div>
+
+              <div>
+                <label className="field-label">Venue</label>
+                <input className="input" placeholder="CIEL Prototyping Labs" value={form.venue} onChange={(e) => setForm({ ...form, venue: e.target.value })} />
+              </div>
+            </div>
+
+            <div>
+              <label className="field-label">Event Description</label>
+              <textarea className="input" rows={3} placeholder="Event details and registration instructions..." value={form.desc} onChange={(e) => setForm({ ...form, desc: e.target.value })} />
+            </div>
+
+            <div>
+              <label className="field-label">Event Poster Image (Optional)</label>
+              <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                <input type="file" ref={posterInputRef} accept="image/*" style={{ display: "none" }} onChange={handlePosterUpload} />
+                <button type="button" className="adm-btn adm-btn-outline" onClick={() => posterInputRef.current?.click()} disabled={uploadingPoster}>
+                  <Upload size={14} /> {uploadingPoster ? "Uploading Poster..." : "Upload Poster Image"}
+                </button>
+                {form.posterUrl && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <img src={form.posterUrl} alt="Poster preview" style={{ width: 40, height: 40, borderRadius: 6, objectFit: "cover" }} />
+                    <span style={{ fontSize: 12, color: "#34D399" }}>Poster Uploaded!</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button type="button" className="adm-btn adm-btn-outline" onClick={() => setIsAdding(false)}>Cancel</button>
+              <button type="submit" className="adm-btn adm-btn-primary" disabled={submitting}>
+                {submitting ? "Saving..." : "Publish Event"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      <div className="adm-table-wrap">
+        <table className="adm-table">
+          <thead>
+            <tr>
+              <th>Poster</th>
+              <th>Event Title</th>
+              <th>Category</th>
+              <th>Date &amp; Time</th>
+              <th>Venue</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {events.length === 0 ? (
+              <tr><td colSpan={6} style={{ textAlign: "center", padding: 24, color: "var(--text-muted)" }}>No events configured yet.</td></tr>
+            ) : (
+              events.map((ev) => (
+                <tr key={ev.id}>
+                  <td>
+                    {ev.posterUrl ? (
+                      <img src={ev.posterUrl} alt={ev.title} style={{ width: 44, height: 44, borderRadius: 6, objectFit: "cover" }} />
+                    ) : (
+                      <div style={{ width: 44, height: 44, borderRadius: 6, background: "rgba(255,255,255,0.06)", display: "grid", placeItems: "center" }}>
+                        <Calendar size={18} />
+                      </div>
+                    )}
+                  </td>
+                  <td>
+                    <strong style={{ color: "var(--text-white)", display: "block" }}>{ev.title}</strong>
+                    <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{ev.desc.slice(0, 60)}...</span>
+                  </td>
+                  <td><span className="badge badge-brand">{ev.category}</span></td>
+                  <td>
+                    <span style={{ display: "block", color: "var(--ciel-gold-bright)" }}>{ev.date}</span>
+                    <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{ev.time}</span>
+                  </td>
+                  <td>{ev.venue}</td>
+                  <td>
+                    <button className="adm-icon-btn text-danger" title="Delete Event" onClick={() => handleDelete(ev.id)}>
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ─── NEWS ERP TAB ───────────────────────────────────────────────────────────
+
+function ERPNewsTab({ initialNews = [] }: { initialNews?: NewsItem[] }) {
+  const [news, setNews] = useState<NewsItem[]>(initialNews);
+  const [isAdding, setIsAdding] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const [form, setForm] = useState({
+    title: "",
+    category: "Funding Disbursement",
+    date: "",
+    summary: "",
+  });
+
+  async function handleAddNews(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.title || !form.summary) {
+      alert("Title and Summary are required");
+      return;
+    }
+    setSubmitting(true);
+
+    try {
+      const res = await fetch("/api/admin/news", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const json = await res.json();
+      if (res.ok && json.news) {
+        setNews((prev) => [json.news, ...prev]);
+        setForm({ title: "", category: "Funding Disbursement", date: "", summary: "" });
+        setIsAdding(false);
+      } else {
+        alert(json.error || "Failed to add announcement");
+      }
+    } catch {
+      alert("Error adding announcement");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Are you sure you want to delete this announcement?")) return;
+    try {
+      const res = await fetch(`/api/admin/news?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (res.ok) {
+        setNews((prev) => prev.filter((n) => n.id !== id));
+      }
+    } catch {
+      alert("Failed to delete news item");
+    }
+  }
+
+  return (
+    <div className="adm-tab-content">
+      <div className="adm-section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h2>News &amp; Announcements Management</h2>
+          <p>Publish press bulletins, funding updates, and institutional news</p>
+        </div>
+        <button className="adm-btn adm-btn-primary" onClick={() => setIsAdding(!isAdding)}>
+          <Plus size={16} /> {isAdding ? "Close Form" : "Publish Announcement"}
+        </button>
+      </div>
+
+      {isAdding && (
+        <div className="adm-table-wrap" style={{ padding: 24, marginBottom: 24 }}>
+          <h3 style={{ fontSize: 16, color: "var(--text-white)", marginBottom: 16 }}>New Press Announcement</h3>
+          <form onSubmit={handleAddNews} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
+              <div>
+                <label className="field-label">Headline / Title *</label>
+                <input className="input" required placeholder="CIEL Startup Wins ₹25L Seed Fund" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+              </div>
+
+              <div>
+                <label className="field-label">Category</label>
+                <select className="adm-select" style={{ width: "100%" }} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+                  <option value="Funding Disbursement">Funding Disbursement</option>
+                  <option value="Strategic Partnership">Strategic Partnership</option>
+                  <option value="Infrastructure">Infrastructure</option>
+                  <option value="Patent Grant">Patent Grant</option>
+                  <option value="Award &amp; Recognition">Award &amp; Recognition</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="field-label">Date</label>
+              <input className="input" placeholder="February 01, 2026" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+            </div>
+
+            <div>
+              <label className="field-label">Announcement Summary / Excerpt *</label>
+              <textarea className="input" rows={3} required placeholder="Summary of press release..." value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} />
+            </div>
+
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button type="button" className="adm-btn adm-btn-outline" onClick={() => setIsAdding(false)}>Cancel</button>
+              <button type="submit" className="adm-btn adm-btn-primary" disabled={submitting}>
+                {submitting ? "Publishing..." : "Publish Announcement"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      <div className="adm-table-wrap">
+        <table className="adm-table">
+          <thead>
+            <tr>
+              <th>Headline</th>
+              <th>Category</th>
+              <th>Date</th>
+              <th>Summary</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {news.length === 0 ? (
+              <tr><td colSpan={5} style={{ textAlign: "center", padding: 24, color: "var(--text-muted)" }}>No news items published.</td></tr>
+            ) : (
+              news.map((n) => (
+                <tr key={n.id}>
+                  <td><strong style={{ color: "var(--text-white)" }}>{n.title}</strong></td>
+                  <td><span className="badge badge-brand">{n.category}</span></td>
+                  <td><span style={{ color: "var(--ciel-gold-bright)" }}>{n.date}</span></td>
+                  <td style={{ fontSize: 13, color: "var(--text-secondary)", maxWidth: 300 }}>{n.summary}</td>
+                  <td>
+                    <button className="adm-icon-btn text-danger" title="Delete News" onClick={() => handleDelete(n.id)}>
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ─── DOWNLOADS ERP TAB ──────────────────────────────────────────────────────
+
+function ERPDownloadsTab({ initialDownloads = [] }: { initialDownloads?: DownloadItem[] }) {
+  const [downloads, setDownloads] = useState<DownloadItem[]>(initialDownloads);
+  const [isAdding, setIsAdding] = useState(false);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const docInputRef = useRef<HTMLInputElement>(null);
+
+  const [form, setForm] = useState({
+    title: "",
+    category: "policy",
+    format: "PDF",
+    fileSize: "1.5 MB",
+    description: "",
+    fileUrl: "",
+  });
+
+  async function handleDocFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingDoc(true);
+
+    try {
+      const data = new FormData();
+      data.append("image", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body: data });
+      const json = await res.json();
+      if (res.ok && json.url) {
+        setForm((prev) => ({
+          ...prev,
+          fileUrl: json.url,
+          format: file.name.split(".").pop()?.toUpperCase() || "PDF",
+          fileSize: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+        }));
+      } else {
+        alert(json.error || "File upload failed");
+      }
+    } catch {
+      alert("Error uploading document");
+    } finally {
+      setUploadingDoc(false);
+    }
+  }
+
+  async function handleAddDoc(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.title || !form.description) {
+      alert("Title and Description are required");
+      return;
+    }
+    setSubmitting(true);
+
+    try {
+      const res = await fetch("/api/admin/downloads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const json = await res.json();
+      if (res.ok && json.download) {
+        setDownloads((prev) => [json.download, ...prev]);
+        setForm({ title: "", category: "policy", format: "PDF", fileSize: "1.5 MB", description: "", fileUrl: "" });
+        setIsAdding(false);
+      } else {
+        alert(json.error || "Failed to add document");
+      }
+    } catch {
+      alert("Error adding document");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Are you sure you want to delete this policy manual?")) return;
+    try {
+      const res = await fetch(`/api/admin/downloads?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (res.ok) {
+        setDownloads((prev) => prev.filter((d) => d.id !== id));
+      }
+    } catch {
+      alert("Failed to delete document");
+    }
+  }
+
+  return (
+    <div className="adm-tab-content">
+      <div className="adm-section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h2>Policy Manuals &amp; Documents Repository</h2>
+          <p>Upload and manage institutional policies, IPR handbooks, and pitch templates</p>
+        </div>
+        <button className="adm-btn adm-btn-primary" onClick={() => setIsAdding(!isAdding)}>
+          <Plus size={16} /> {isAdding ? "Close Form" : "Upload New Policy Document"}
+        </button>
+      </div>
+
+      {isAdding && (
+        <div className="adm-table-wrap" style={{ padding: 24, marginBottom: 24 }}>
+          <h3 style={{ fontSize: 16, color: "var(--text-white)", marginBottom: 16 }}>Upload Policy Manual or Document</h3>
+          <form onSubmit={handleAddDoc} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
+              <div>
+                <label className="field-label">Document Title *</label>
+                <input className="input" required placeholder="CIEL Incubation & Seed Support Policy Handbook" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+              </div>
+
+              <div>
+                <label className="field-label">Category</label>
+                <select className="adm-select" style={{ width: "100%" }} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+                  <option value="policy">Policy Handbook</option>
+                  <option value="manual">Operational Manual</option>
+                  <option value="form">Application Form</option>
+                  <option value="report">Impact Report</option>
+                  <option value="template">Pitch Template</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="field-label">Description *</label>
+              <textarea className="input" rows={2} required placeholder="Summary of terms, equity share, and guidelines..." value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            </div>
+
+            <div>
+              <label className="field-label">Policy File Document (PDF / DOCX / ZIP)</label>
+              <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                <input type="file" ref={docInputRef} accept=".pdf,.doc,.docx,.zip" style={{ display: "none" }} onChange={handleDocFileUpload} />
+                <button type="button" className="adm-btn adm-btn-outline" onClick={() => docInputRef.current?.click()} disabled={uploadingDoc}>
+                  <Upload size={14} /> {uploadingDoc ? "Uploading Document..." : "Choose File to Upload"}
+                </button>
+                {form.fileUrl && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <FileText size={16} className="text-gold" />
+                    <span style={{ fontSize: 12, color: "#34D399" }}>Uploaded! ({form.format} - {form.fileSize})</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button type="button" className="adm-btn adm-btn-outline" onClick={() => setIsAdding(false)}>Cancel</button>
+              <button type="submit" className="adm-btn adm-btn-primary" disabled={submitting}>
+                {submitting ? "Saving..." : "Publish Document"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      <div className="adm-table-wrap">
+        <table className="adm-table">
+          <thead>
+            <tr>
+              <th>Document Title</th>
+              <th>Category</th>
+              <th>Format</th>
+              <th>Size</th>
+              <th>Updated</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {downloads.length === 0 ? (
+              <tr><td colSpan={6} style={{ textAlign: "center", padding: 24, color: "var(--text-muted)" }}>No policy documents uploaded.</td></tr>
+            ) : (
+              downloads.map((doc) => (
+                <tr key={doc.id}>
+                  <td>
+                    <strong style={{ color: "var(--text-white)", display: "block" }}>{doc.title}</strong>
+                    <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{doc.description}</span>
+                  </td>
+                  <td><span className="badge badge-brand" style={{ textTransform: "uppercase" }}>{doc.category}</span></td>
+                  <td><span className="badge badge-neutral">{doc.format}</span></td>
+                  <td>{doc.fileSize}</td>
+                  <td><span style={{ color: "var(--ciel-gold-bright)" }}>{doc.updatedAt}</span></td>
+                  <td>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      {doc.fileUrl ? (
+                        <a href={doc.fileUrl} download target="_blank" rel="noreferrer" className="adm-icon-btn text-gold" title="Download Document">
+                          <Download size={16} />
+                        </a>
+                      ) : null}
+                      <button className="adm-icon-btn text-danger" title="Delete Document" onClick={() => handleDelete(doc.id)}>
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 // ─── MAIN ADMIN ERP COMPONENT ───────────────────────────────────────────────
 
 export function AdminDashboardClient({
@@ -1672,6 +2236,9 @@ export function AdminDashboardClient({
   initialMentors = [],
   initialCouncil = [],
   initialGovernance = [],
+  initialEvents = [],
+  initialNews = [],
+  initialDownloads = [],
   stats,
   eventTitle,
 }: Props) {
@@ -1720,15 +2287,15 @@ export function AdminDashboardClient({
           </button>
 
           <button className={`adm-nav-item ${activeTab === "events" ? "active" : ""}`} onClick={() => setActiveTab("events")}>
-            <Calendar size={16} /> Events
+            <Calendar size={16} /> Events <span className="adm-nav-badge">{initialEvents.length}</span>
           </button>
 
           <button className={`adm-nav-item ${activeTab === "news" ? "active" : ""}`} onClick={() => setActiveTab("news")}>
-            <Newspaper size={16} /> News
+            <Newspaper size={16} /> News <span className="adm-nav-badge">{initialNews.length}</span>
           </button>
 
           <button className={`adm-nav-item ${activeTab === "downloads" ? "active" : ""}`} onClick={() => setActiveTab("downloads")}>
-            <Download size={16} /> Downloads
+            <Download size={16} /> Downloads <span className="adm-nav-badge">{initialDownloads.length}</span>
           </button>
 
           <button className={`adm-nav-item ${activeTab === "partners" ? "active" : ""}`} onClick={() => setActiveTab("partners")}>
@@ -1791,24 +2358,9 @@ export function AdminDashboardClient({
         {activeTab === "mentors" && <ERPMentorsTab initialMentors={initialMentors} />}
         {activeTab === "student-council" && <ERPCouncilTab initialCouncil={initialCouncil} />}
         {activeTab === "governance" && <ERPGovernanceTab initialGovernance={initialGovernance} />}
-        {activeTab === "events" && (
-          <div className="adm-tab-content">
-            <div className="adm-section-head"><h2>Events &amp; Hackathons Management</h2><p>Configure campus competitions and workshop posters</p></div>
-            <div className="adm-table-wrap" style={{ padding: 24 }}><p style={{ color: "var(--text-white)" }}>Event: {eventTitle} (Active)</p></div>
-          </div>
-        )}
-        {activeTab === "news" && (
-          <div className="adm-tab-content">
-            <div className="adm-section-head"><h2>News &amp; Media Releases</h2><p>Publish announcements on the public portal</p></div>
-            <div className="adm-table-wrap" style={{ padding: 24 }}><p style={{ color: "var(--text-secondary)" }}>Manage institutional press announcements.</p></div>
-          </div>
-        )}
-        {activeTab === "downloads" && (
-          <div className="adm-tab-content">
-            <div className="adm-section-head"><h2>Policy Downloads Management</h2><p>Upload and manage PDF handbooks &amp; IP templates</p></div>
-            <div className="adm-table-wrap" style={{ padding: 24 }}><p style={{ color: "var(--text-secondary)" }}>Repository files: {CIEL_DOWNLOADS.length} documents published.</p></div>
-          </div>
-        )}
+        {activeTab === "events" && <ERPEventsTab initialEvents={initialEvents} />}
+        {activeTab === "news" && <ERPNewsTab initialNews={initialNews} />}
+        {activeTab === "downloads" && <ERPDownloadsTab initialDownloads={initialDownloads} />}
         {activeTab === "partners" && (
           <div className="adm-tab-content">
             <div className="adm-section-head"><h2>Corporate MoUs &amp; Partners</h2><p>Manage industry alliances and seed syndicates</p></div>

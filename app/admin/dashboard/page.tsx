@@ -120,10 +120,14 @@ export default async function AdminDashboardPage() {
   const images = await getGalleryImages();
 
   // ── Fetch dynamic store items ─────────────────────────────────────────────
-  const [initialMentors, initialCouncil, initialGovernance] = await Promise.all([
+  const { getCielEvents, getNewsItems, getDownloadDocs } = await import("@/lib/dynamic-store");
+  const [initialMentors, initialCouncil, initialGovernance, initialEvents, initialNews, initialDownloads] = await Promise.all([
     getMentors(),
     getStudentCouncilLeads(),
     getGovernanceCommittees(),
+    getCielEvents(),
+    getNewsItems(),
+    getDownloadDocs(),
   ]);
 
   // ── Stats ─────────────────────────────────────────────────────────────────
@@ -139,6 +143,9 @@ export default async function AdminDashboardPage() {
     mentorCount: initialMentors.length,
     councilCount: initialCouncil.length,
     governanceCount: initialGovernance.length,
+    eventsCount: initialEvents.length,
+    newsCount: initialNews.length,
+    downloadsCount: initialDownloads.length,
   };
 
   return (
@@ -149,6 +156,9 @@ export default async function AdminDashboardPage() {
       initialMentors={initialMentors}
       initialCouncil={initialCouncil}
       initialGovernance={initialGovernance}
+      initialEvents={initialEvents}
+      initialNews={initialNews}
+      initialDownloads={initialDownloads}
       stats={stats}
       eventTitle={event?.title ?? "CIEL Incubation Program"}
     />

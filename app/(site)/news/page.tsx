@@ -8,31 +8,13 @@ export const metadata: Metadata = {
     "Latest news, patent grants, funding disbursements, and press announcements from CIEL Innovation Hub.",
 };
 
-const NEWS_ITEMS = [
-  {
-    id: "n-1",
-    title: "CIEL Incubated Startup AgriTech Dynamics Secures ₹25 Lakhs Seed Grant",
-    date: "February 01, 2026",
-    category: "Funding Disbursement",
-    summary: "The student-led IoT farming startup successfully completed Stage 2 evaluation and secured seed support for field deployment.",
-  },
-  {
-    id: "n-2",
-    title: "Chetana Institute Inks MoU with National Research Development Corporation",
-    date: "January 18, 2026",
-    category: "Strategic Partnership",
-    summary: "New partnership facilitates joint technology transfer, patent commercialization, and prior art database access for student inventors.",
-  },
-  {
-    id: "n-3",
-    title: "CIEL Prototyping Cell Adds High-Precision 3D Printers & IoT Testbench",
-    date: "December 14, 2025",
-    category: "Infrastructure",
-    summary: "Expanded makerspace capacity enables simultaneous hardware prototyping for over 30 incubated teams.",
-  },
-];
+import { getNewsItems } from "@/lib/dynamic-store";
 
-export default function NewsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function NewsPage() {
+  const newsItems = await getNewsItems();
+
   return (
     <div className="shell page-section">
       <div className="section-heading">
@@ -47,7 +29,7 @@ export default function NewsPage() {
       </div>
 
       <div className="grid-2" style={{ marginBottom: 64 }}>
-        {NEWS_ITEMS.map((item) => (
+        {newsItems.map((item) => (
           <article className="luxury-card" key={item.id}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
               <span className="badge badge-brand">{item.category}</span>

@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
-import { CIEL_MENTORS, GOVERNANCE_COMMITTEES, STUDENT_COUNCIL_LEADS } from "./ciel-data";
-import type { GovernanceCommitteeItem, JourneyMilestone, MentorItem, StudentCouncilLeadItem, VentureProjectItem, UserProfileItem } from "./types";
+import { CIEL_MENTORS, GOVERNANCE_COMMITTEES, STUDENT_COUNCIL_LEADS, CIEL_DOWNLOADS } from "./ciel-data";
+import type { GovernanceCommitteeItem, JourneyMilestone, MentorItem, StudentCouncilLeadItem, VentureProjectItem, UserProfileItem, CielEventItem, NewsItem, DownloadItem } from "./types";
 import { createAdminClient } from "./supabase/admin";
 
 type StoreData = {
@@ -11,6 +11,9 @@ type StoreData = {
   projects?: VentureProjectItem[];
   userProfiles?: UserProfileItem[];
   registrations?: any[];
+  events?: CielEventItem[];
+  news?: NewsItem[];
+  downloads?: DownloadItem[];
 };
 
 const STORE_PATH = path.join(process.cwd(), "data", "ciel-store.json");
@@ -51,6 +54,9 @@ async function ensureStore(): Promise<StoreData> {
       projects: Array.isArray(parsed.projects) ? parsed.projects : [],
       userProfiles: Array.isArray(parsed.userProfiles) ? parsed.userProfiles : [],
       registrations: Array.isArray(parsed.registrations) ? parsed.registrations : [],
+      events: Array.isArray(parsed.events) ? parsed.events : [],
+      news: Array.isArray(parsed.news) ? parsed.news : [],
+      downloads: Array.isArray(parsed.downloads) ? parsed.downloads : CIEL_DOWNLOADS,
     };
   } catch {
     const initial = getInitialData();
@@ -625,4 +631,143 @@ export async function addStoreRegistration(reg: any): Promise<void> {
   if (!store.registrations) store.registrations = [];
   store.registrations.push(reg);
   await saveStore(store);
+}
+
+// ─── EVENTS MANAGEMENT ───────────────────────────────────────────────────
+
+export async function getCielEvents(): Promise<CielEventItem[]> {
+  const store = await ensureStore();
+  return store.events || [
+    {
+      id: "ev-1",
+      title: "CIEL Annual Innovation Hackathon 2026",
+      category: "Hackathon",
+      date: "March 15-16, 2026",
+      time: "36-Hour Hackathon",
+      venue: "CIEL Prototyping Labs & Makerspace",
+      desc: "Join 500+ student coders, hardware builders, and designers competing for ₹2.5 Lakhs in seed grants and incubation slots.",
+    },
+    {
+      id: "ev-2",
+      title: "IPR & Patent Disclosure Workshop",
+      category: "Workshop",
+      date: "April 02, 2026",
+      time: "02:00 PM - 05:00 PM",
+      venue: "Auditorium & Virtual Stream",
+      desc: "Master prior art searching, provisional patent drafting, and university IP ownership terms led by senior patent attorneys.",
+    },
+    {
+      id: "ev-3",
+      title: "Investor Demo Day & Venture Syndicate",
+      category: "Demo Day",
+      date: "April 28, 2026",
+      time: "10:00 AM - 04:00 PM",
+      venue: "Grand Executive Hall",
+      desc: "Graduating cohort startups present before 25+ angel investors, VC partners, and corporate pilot evaluators.",
+    },
+  ];
+}
+
+export async function addCielEvent(event: Omit<CielEventItem, "id">): Promise<CielEventItem> {
+  const newEvent: CielEventItem = {
+    ...event,
+    id: `ev-${Date.now()}`,
+  };
+
+  const store = await ensureStore();
+  if (!store.events) store.events = [];
+  store.events.unshift(newEvent);
+  await saveStore(store);
+  return newEvent;
+}
+
+export async function deleteCielEvent(id: string): Promise<boolean> {
+  const store = await ensureStore();
+  if (store.events) {
+    store.events = store.events.filter((e) => e.id !== id);
+    await saveStore(store);
+  }
+  return true;
+}
+
+// ─── NEWS & ANNOUNCEMENTS MANAGEMENT ─────────────────────────────────────
+
+export async function getNewsItems(): Promise<NewsItem[]> {
+  const store = await ensureStore();
+  return store.news && store.news.length > 0
+    ? store.news
+    : [
+        {
+          id: "n-1",
+          title: "CIEL Incubated Startup AgriTech Dynamics Secures ₹25 Lakhs Seed Grant",
+          date: "February 01, 2026",
+          category: "Funding Disbursement",
+          summary: "The student-led IoT farming startup successfully completed Stage 2 evaluation and secured seed support for field deployment.",
+        },
+        {
+          id: "n-2",
+          title: "Chetana Institute Inks MoU with National Research Development Corporation",
+          date: "January 18, 2026",
+          category: "Strategic Partnership",
+          summary: "New partnership facilitates joint technology transfer, patent commercialization, and prior art database access for student inventors.",
+        },
+        {
+          id: "n-3",
+          title: "CIEL Prototyping Cell Adds High-Precision 3D Printers & IoT Testbench",
+          date: "December 14, 2025",
+          category: "Infrastructure",
+          summary: "Expanded makerspace capacity enables simultaneous hardware prototyping for over 30 incubated teams.",
+        },
+      ];
+}
+
+export async function addNewsItem(news: Omit<NewsItem, "id">): Promise<NewsItem> {
+  const newNews: NewsItem = {
+    ...news,
+    id: `n-${Date.now()}`,
+  };
+
+  const store = await ensureStore();
+  if (!store.news) store.news = [];
+  store.news.unshift(newNews);
+  await saveStore(store);
+  return newNews;
+}
+
+export async function deleteNewsItem(id: string): Promise<boolean> {
+  const store = await ensureStore();
+  if (store.news) {
+    store.news = store.news.filter((n) => n.id !== id);
+    await saveStore(store);
+  }
+  return true;
+}
+
+// ─── POLICY MANUALS & DOCUMENTS MANAGEMENT ────────────────────────────────
+
+export async function getDownloadDocs(): Promise<DownloadItem[]> {
+  const store = await ensureStore();
+  return store.downloads && store.downloads.length > 0 ? store.downloads : CIEL_DOWNLOADS;
+}
+
+export async function addDownloadDoc(doc: Omit<DownloadItem, "id">): Promise<DownloadItem> {
+  const newDoc: DownloadItem = {
+    ...doc,
+    id: `d-${Date.now()}`,
+  };
+
+  const store = await ensureStore();
+  if (!store.downloads) store.downloads = [...CIEL_DOWNLOADS];
+  store.downloads.unshift(newDoc);
+  await saveStore(store);
+  return newDoc;
+}
+
+export async function deleteDownloadDoc(id: string): Promise<boolean> {
+  const store = await ensureStore();
+  if (store.downloads) {
+    store.downloads = store.downloads.filter((d) => d.id !== id);
+    await saveStore(store);
+  }
+  return true;
 }

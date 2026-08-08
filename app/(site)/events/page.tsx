@@ -8,37 +8,13 @@ export const metadata: Metadata = {
     "Upcoming hackathons, ideation workshops, mentor office hours, and Demo Days at CIEL Innovation Hub.",
 };
 
-const UPCOMING_EVENTS = [
-  {
-    id: "ev-1",
-    title: "CIEL Annual Innovation Hackathon 2026",
-    category: "Hackathon",
-    date: "March 15-16, 2026",
-    time: "36-Hour Hackathon",
-    venue: "CIEL Prototyping Labs & Makerspace",
-    desc: "Join 500+ student coders, hardware builders, and designers competing for ₹2.5 Lakhs in seed grants and incubation slots.",
-  },
-  {
-    id: "ev-2",
-    title: "IPR & Patent Disclosure Workshop",
-    category: "Workshop",
-    date: "April 02, 2026",
-    time: "02:00 PM - 05:00 PM",
-    venue: "Auditorium & Virtual Stream",
-    desc: "Master prior art searching, provisional patent drafting, and university IP ownership terms led by senior patent attorneys.",
-  },
-  {
-    id: "ev-3",
-    title: "Investor Demo Day & Venture Syndicate",
-    category: "Demo Day",
-    date: "April 28, 2026",
-    time: "10:00 AM - 04:00 PM",
-    venue: "Grand Executive Hall",
-    desc: "Graduating cohort startups present before 25+ angel investors, VC partners, and corporate pilot evaluators.",
-  },
-];
+import { getCielEvents } from "@/lib/dynamic-store";
 
-export default function EventsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function EventsPage() {
+  const events = await getCielEvents();
+
   return (
     <div className="shell page-section">
       <div className="section-heading">
@@ -53,8 +29,18 @@ export default function EventsPage() {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 24, marginBottom: 64 }}>
-        {UPCOMING_EVENTS.map((ev) => (
+        {events.map((ev) => (
           <article className="event-card" key={ev.id}>
+            {ev.posterUrl ? (
+              <div style={{ marginBottom: 16, borderRadius: 12, overflow: "hidden", maxHeight: 320, backgroundColor: "#0F172A" }}>
+                <img
+                  src={ev.posterUrl}
+                  alt={ev.title}
+                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                />
+              </div>
+            ) : null}
+
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12, flexWrap: "wrap", gap: 10 }}>
               <div>
                 <span className="badge badge-brand" style={{ marginBottom: 6 }}>{ev.category}</span>
