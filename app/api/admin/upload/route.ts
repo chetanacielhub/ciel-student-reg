@@ -22,9 +22,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No image file provided." }, { status: 400 });
     }
 
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    if (file.type && !file.type.startsWith("image/") && !file.type.startsWith("application/")) {
       return NextResponse.json(
-        { error: "Only JPEG, PNG, WebP, GIF and AVIF images are allowed." },
+        { error: "Invalid file format. Please upload an image or document file." },
         { status: 400 }
       );
     }

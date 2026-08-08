@@ -44,20 +44,37 @@ export function SignInForm({ nextPath }: { nextPath: string }) {
     }
 
     setSubmitting(true);
-    const { error } = await supabase.auth.signInWithPassword(parsed.data);
 
-    if (error) {
-      setSubmitting(false);
-      setFormError(
-        error.message.toLowerCase().includes("email not confirmed")
-          ? "Confirm your email address before signing in."
-          : "The email address or password is incorrect.",
-      );
-      return;
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(parsed.data),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        setSubmitting(false);
+        setFormError(json.error || "Sign in failed. Check your email and password.");
+        return;
+      }
+
+      router.replace(json.redirect || nextPath);
+      router.refresh();
+    } catch {
+      // Fallback to direct Supabase client sign-in
+      const { error } = await supabase.auth.signInWithPassword(parsed.data);
+
+      if (error) {
+        setSubmitting(false);
+        setFormError("The email address or password is incorrect.");
+        return;
+      }
+
+      router.replace(nextPath);
+      router.refresh();
     }
-
-    router.replace(nextPath);
-    router.refresh();
   }
 
   return (

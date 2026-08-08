@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import { CIEL_MENTORS, GOVERNANCE_COMMITTEES, STUDENT_COUNCIL_LEADS } from "./ciel-data";
-import type { GovernanceCommitteeItem, JourneyMilestone, MentorItem, StudentCouncilLeadItem, VentureProjectItem } from "./types";
+import type { GovernanceCommitteeItem, JourneyMilestone, MentorItem, StudentCouncilLeadItem, VentureProjectItem, UserProfileItem } from "./types";
 import { createAdminClient } from "./supabase/admin";
 
 type StoreData = {
@@ -9,6 +9,8 @@ type StoreData = {
   studentCouncil: StudentCouncilLeadItem[];
   governance: GovernanceCommitteeItem[];
   projects?: VentureProjectItem[];
+  userProfiles?: UserProfileItem[];
+  registrations?: any[];
 };
 
 const STORE_PATH = path.join(process.cwd(), "data", "ciel-store.json");
@@ -46,6 +48,9 @@ async function ensureStore(): Promise<StoreData> {
       mentors: Array.isArray(parsed.mentors) ? parsed.mentors : getInitialData().mentors,
       studentCouncil: Array.isArray(parsed.studentCouncil) ? parsed.studentCouncil : getInitialData().studentCouncil,
       governance: Array.isArray(parsed.governance) ? parsed.governance : getInitialData().governance,
+      projects: Array.isArray(parsed.projects) ? parsed.projects : [],
+      userProfiles: Array.isArray(parsed.userProfiles) ? parsed.userProfiles : [],
+      registrations: Array.isArray(parsed.registrations) ? parsed.registrations : [],
     };
   } catch {
     const initial = getInitialData();
@@ -464,4 +469,160 @@ export async function updateAdminProjectGrantStatus(
   }
 
   return null;
+}
+
+// ─── USER PROFILES (Database & Store Credential Persistence) ──────────────
+
+export async function getStoreProfiles(): Promise<UserProfileItem[]> {
+  let dbProfiles: UserProfileItem[] = [];
+
+  try {
+    const supabase = createAdminClient();
+    const { data: p1 } = await supabase.from("profiles").select("*");
+    if (p1 && p1.length > 0) {
+      dbProfiles.push(
+        ...p1.map((p: any) => ({
+          id: p.id,
+          full_name: p.full_name || p.fullName || "Innovator",
+          email: p.email ? p.email.toLowerCase().trim() : null,
+          phone: p.phone || null,
+          password: p.password || undefined,
+          created_at: p.created_at || new Date().toISOString(),
+        }))
+      );
+    }
+  } catch {
+    // Ignore DB missing table
+  }
+
+  try {
+    const supabase = createAdminClient();
+    const { data: p2 } = await supabase.from("user_profiles").select("*");
+    if (p2 && p2.length > 0) {
+      dbProfiles.push(
+        ...p2.map((p: any) => ({
+          id: p.id,
+          full_name: p.full_name || p.fullName || "Innovator",
+          email: p.email ? p.email.toLowerCase().trim() : null,
+          phone: p.phone || null,
+          password: p.password || undefined,
+          created_at: p.created_at || new Date().toISOString(),
+        }))
+      );
+    }
+  } catch {
+    // Ignore DB missing table
+  }
+
+  const store = await ensureStore();
+  const localProfiles = store.userProfiles || [];
+
+  // Merge database profiles and local profiles by email
+  const mergedMap = new Map<string, UserProfileItem>();
+
+  for (const p of [...localProfiles, ...dbProfiles]) {
+    if (p.email) {
+      const key = p.email.toLowerCase().trim();
+      const existing = mergedMap.get(key);
+      if (!existing) {
+        mergedMap.set(key, p);
+      } else {
+        // Prefer record with password
+        mergedMap.set(key, {
+          ...existing,
+          ...p,
+          password: p.password || existing.password,
+        });
+      }
+    }
+  }
+
+  return Array.from(mergedMap.values());
+}
+
+export async function addStoreProfile(profile: UserProfileItem): Promise<void> {
+  const store = await ensureStore();
+  if (!store.userProfiles) store.userProfiles = [];
+
+  const cleanProfile: UserProfileItem = {
+    ...profile,
+    email: profile.email ? profile.email.toLowerCase().trim() : null,
+  };
+
+  // 1. Try storing in Supabase PostgreSQL 'profiles' table
+  try {
+    const supabase = createAdminClient();
+    await supabase.from("profiles").upsert(
+      {
+        id: cleanProfile.id,
+        full_name: cleanProfile.full_name,
+        email: cleanProfile.email,
+        phone: cleanProfile.phone,
+        password: cleanProfile.password,
+        created_at: cleanProfile.created_at || new Date().toISOString(),
+      },
+      { onConflict: "email" }
+    );
+  } catch {
+    // Try without onConflict
+    try {
+      const supabase = createAdminClient();
+      await supabase.from("profiles").insert({
+        id: cleanProfile.id,
+        full_name: cleanProfile.full_name,
+        email: cleanProfile.email,
+        phone: cleanProfile.phone,
+        password: cleanProfile.password,
+        created_at: cleanProfile.created_at || new Date().toISOString(),
+      });
+    } catch {
+      // Ignore DB table error
+    }
+  }
+
+  // 2. Try storing in Supabase PostgreSQL 'user_profiles' table
+  try {
+    const supabase = createAdminClient();
+    await supabase.from("user_profiles").upsert(
+      {
+        id: cleanProfile.id,
+        full_name: cleanProfile.full_name,
+        email: cleanProfile.email,
+        phone: cleanProfile.phone,
+        password: cleanProfile.password,
+        created_at: cleanProfile.created_at || new Date().toISOString(),
+      },
+      { onConflict: "email" }
+    );
+  } catch {
+    // Ignore DB table error
+  }
+
+  // 3. Save to local JSON store
+  const existing = store.userProfiles.findIndex(
+    (p) => p.email?.toLowerCase().trim() === cleanProfile.email?.toLowerCase().trim()
+  );
+  if (existing >= 0) {
+    store.userProfiles[existing] = {
+      ...store.userProfiles[existing],
+      ...cleanProfile,
+      password: cleanProfile.password || store.userProfiles[existing].password,
+    };
+  } else {
+    store.userProfiles.push(cleanProfile);
+  }
+
+  await saveStore(store);
+}
+
+export async function getStoreRegistrations(): Promise<any[]> {
+  const store = await ensureStore();
+  return store.registrations || [];
+}
+
+export async function addStoreRegistration(reg: any): Promise<void> {
+  const store = await ensureStore();
+  if (!store.registrations) store.registrations = [];
+  store.registrations.push(reg);
+  await saveStore(store);
 }

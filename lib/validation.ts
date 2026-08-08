@@ -7,20 +7,14 @@ export const signUpSchema = z
       .string()
       .trim()
       .toLowerCase()
-      .email("Enter a valid Gmail address.")
-      .refine((value) => value.endsWith("@gmail.com"), {
-        message: "Use a Gmail address ending in @gmail.com.",
-      }),
+      .email("Enter a valid email address."),
     phone: z
       .string()
       .trim()
-      .regex(/^\+?[1-9]\d{9,14}$/, "Enter a valid phone number with country code."),
+      .min(5, "Enter a valid phone number."),
     password: z
       .string()
-      .min(8, "Password must have at least 8 characters.")
-      .regex(/[A-Z]/, "Add at least one uppercase letter.")
-      .regex(/[a-z]/, "Add at least one lowercase letter.")
-      .regex(/[0-9]/, "Add at least one number."),
+      .min(6, "Password must have at least 6 characters."),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {

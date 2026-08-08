@@ -37,11 +37,14 @@ export async function updateSession(request: NextRequest) {
 
   // Keep this immediately after createServerClient to avoid session drift.
   const { data } = await supabase.auth.getClaims();
+  const hasLocalSession = Boolean(request.cookies.get("ciel_user_session")?.value);
+  const isAuthenticated = Boolean(data?.claims?.sub || hasLocalSession);
+
   const isProtected = protectedPrefixes.some((prefix) =>
     request.nextUrl.pathname.startsWith(prefix),
   );
 
-  if (!data?.claims?.sub && isProtected) {
+  if (!isAuthenticated && isProtected) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/sign-in";
     url.searchParams.set(

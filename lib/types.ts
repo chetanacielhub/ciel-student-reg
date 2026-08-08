@@ -74,18 +74,18 @@ export type RegistrationInput = {
 export type ActionResult =
   | { ok: true; teamId: string }
   | {
-      ok: false;
-      message: string;
-      field?:
-        | "institutionId"
-        | "classId"
-        | "rollNumber"
-        | "role"
-        | "teamName"
-        | "problemStatement"
-        | "userCategory"
-        | "form";
-    };
+    ok: false;
+    message: string;
+    field?:
+    | "institutionId"
+    | "classId"
+    | "rollNumber"
+    | "role"
+    | "teamName"
+    | "problemStatement"
+    | "userCategory"
+    | "form";
+  };
 
 export type ProjectItem = {
   id: string;
@@ -197,4 +197,25 @@ export type VentureProjectItem = {
   updatedAt: string;
 };
 
+export type RegistrationItem = {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  institution: string;
+  className: string;
+  rollNumber: string;
+  role: RegistrationRole;
+  teamName: string;
+  problemStatement: string;
+  createdAt: string;
+};
 
+export type UserProfileItem = {
+  id: string;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  password?: string;
+  created_at: string;
+};

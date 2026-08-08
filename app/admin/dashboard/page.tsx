@@ -83,19 +83,38 @@ export default async function AdminDashboardPage() {
     createdAt: r.created_at || new Date().toISOString(),
   }));
 
-  // ── Fetch all profiles (signed-in user accounts) ──────────────────────────
+  // ── Fetch all profiles (signed-in user accounts from DB + store) ──────────
+  const { getStoreProfiles } = await import("@/lib/dynamic-store");
+  const storeProfiles = await getStoreProfiles();
+
   const { data: rawProfiles } = await supabase
     .from("profiles")
     .select("id, full_name, email, phone, created_at")
     .order("created_at", { ascending: false });
 
-  const profiles = (rawProfiles ?? []) as {
+  const dbProfiles = (rawProfiles ?? []) as {
     id: string;
     full_name: string;
     email: string | null;
     phone: string | null;
     created_at: string;
   }[];
+
+  // Merge database and store profiles by email
+  const profilesMap = new Map<string, { id: string; full_name: string; email: string | null; phone: string | null; created_at: string }>();
+  for (const p of [...storeProfiles, ...dbProfiles]) {
+    const key = p.email ? p.email.toLowerCase().trim() : p.id;
+    if (!profilesMap.has(key)) {
+      profilesMap.set(key, {
+        id: p.id,
+        full_name: p.full_name || "Innovator",
+        email: p.email,
+        phone: p.phone,
+        created_at: p.created_at || new Date().toISOString(),
+      });
+    }
+  }
+  const profiles = Array.from(profilesMap.values());
 
   // ── Gallery images ────────────────────────────────────────────────────────
   const images = await getGalleryImages();
