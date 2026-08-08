@@ -134,11 +134,43 @@ CREATE TABLE IF NOT EXISTS public.news (
 CREATE TABLE IF NOT EXISTS public.mentors (
   id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name        TEXT NOT NULL,
-  title       TEXT NOT NULL,
+  designation TEXT NOT NULL,
   organization TEXT,
+  category    TEXT DEFAULT 'industry',
   expertise   TEXT[],
-  avatar_url  TEXT,
+  avatar      TEXT,
+  linkedin_url TEXT,
   created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.student_council (
+  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name        TEXT NOT NULL,
+  role        TEXT NOT NULL,
+  branch      TEXT NOT NULL,
+  year        TEXT NOT NULL,
+  avatar      TEXT,
+  linkedin_url TEXT,
+  sort_order  INT DEFAULT 0,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.governance_committees (
+  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name        TEXT UNIQUE NOT NULL,
+  description TEXT,
+  sort_order  INT DEFAULT 0,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.governance_members (
+  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  committee_id  UUID REFERENCES public.governance_committees(id) ON DELETE CASCADE,
+  name          TEXT NOT NULL,
+  role          TEXT NOT NULL,
+  linkedin_url  TEXT,
+  sort_order    INT DEFAULT 0,
+  created_at    TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS public.partners (
@@ -185,6 +217,15 @@ ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.event_registrations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.applications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.mentors ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.student_council ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.governance_committees ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.governance_members ENABLE ROW LEVEL SECURITY;
 
 -- Basic RLS Policies
-CREATE POLICY "Public read access for news, events, mentors, partners, downloads" ON public.events FOR SELECT USING (true);
+CREATE POLICY "Public read access for events" ON public.events FOR SELECT USING (true);
+CREATE POLICY "Public read access for mentors" ON public.mentors FOR SELECT USING (true);
+CREATE POLICY "Public read access for student_council" ON public.student_council FOR SELECT USING (true);
+CREATE POLICY "Public read access for governance_committees" ON public.governance_committees FOR SELECT USING (true);
+CREATE POLICY "Public read access for governance_members" ON public.governance_members FOR SELECT USING (true);
+

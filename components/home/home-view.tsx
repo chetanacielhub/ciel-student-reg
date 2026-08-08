@@ -57,7 +57,7 @@ const ANGLED_PANELS = [
   { id: "img2", src: "/img2.png" },
   { id: "img3", src: "/img3.jpeg" },
   { id: "img4", src: "/img4.png" },
-  { id: "img5", src: "/img5.png" },
+  { id: "img5", src: "/img5.png"},
   { id: "img6", src: "/img6.png" },
 ];
 

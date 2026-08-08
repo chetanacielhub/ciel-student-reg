@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { requireAdminSession } from "@/lib/admin-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { EVENT_SLUG } from "@/lib/config";
+import { getGovernanceCommittees, getMentors, getStudentCouncilLeads } from "@/lib/dynamic-store";
 import { AdminDashboardClient } from "./admin-dashboard-client";
 import path from "path";
 import fs from "fs/promises";
@@ -99,6 +100,13 @@ export default async function AdminDashboardPage() {
   // ── Gallery images ────────────────────────────────────────────────────────
   const images = await getGalleryImages();
 
+  // ── Fetch dynamic store items ─────────────────────────────────────────────
+  const [initialMentors, initialCouncil, initialGovernance] = await Promise.all([
+    getMentors(),
+    getStudentCouncilLeads(),
+    getGovernanceCommittees(),
+  ]);
+
   // ── Stats ─────────────────────────────────────────────────────────────────
   const teamNames = new Set(registrations.map((r) => r.teamName).filter((n) => n !== "—"));
   const stats = {
@@ -109,6 +117,9 @@ export default async function AdminDashboardPage() {
     soloCount: registrations.filter((r) => r.role === "solo").length,
     totalUsers: profiles.length,
     totalImages: images.length,
+    mentorCount: initialMentors.length,
+    councilCount: initialCouncil.length,
+    governanceCount: initialGovernance.length,
   };
 
   return (
@@ -116,8 +127,12 @@ export default async function AdminDashboardPage() {
       registrations={registrations}
       profiles={profiles}
       images={images}
+      initialMentors={initialMentors}
+      initialCouncil={initialCouncil}
+      initialGovernance={initialGovernance}
       stats={stats}
       eventTitle={event?.title ?? "CIEL Incubation Program"}
     />
   );
 }
+

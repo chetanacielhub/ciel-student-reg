@@ -17,6 +17,7 @@ import {
   Filter,
   FolderGit2,
   Globe,
+  GraduationCap,
   Handshake,
   Image as ImageIcon,
   Layers,
@@ -30,6 +31,7 @@ import {
   Rocket,
   Search,
   Settings,
+  Shield,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
@@ -46,7 +48,9 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { CIEL_DOWNLOADS, CIEL_MENTORS } from "@/lib/ciel-data";
+import { CIEL_DOWNLOADS } from "@/lib/ciel-data";
+import type { GovernanceCommitteeItem, MentorItem, StudentCouncilLeadItem } from "@/lib/types";
+import { LinkedInIcon } from "@/components/ui/linkedin-icon";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -85,12 +89,18 @@ type AdminStats = {
   soloCount: number;
   totalUsers: number;
   totalImages: number;
+  mentorCount?: number;
+  councilCount?: number;
+  governanceCount?: number;
 };
 
 type Props = {
   registrations: RegistrationRow[];
   profiles: ProfileRow[];
   images: GalleryImage[];
+  initialMentors?: MentorItem[];
+  initialCouncil?: StudentCouncilLeadItem[];
+  initialGovernance?: GovernanceCommitteeItem[];
   stats: AdminStats;
   eventTitle: string;
 };
@@ -101,10 +111,12 @@ type AdminTab =
   | "registrations"
   | "projects"
   | "gallery"
+  | "mentors"
+  | "student-council"
+  | "governance"
   | "events"
   | "news"
   | "downloads"
-  | "mentors"
   | "partners"
   | "analytics"
   | "settings";
@@ -115,10 +127,57 @@ const ROLE_LABELS = {
   solo: "Solo",
 };
 
+async function uploadPhotoFile(file: File): Promise<string | null> {
+  const fd = new FormData();
+  fd.append("image", file);
+  try {
+    const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+    if (res.ok) {
+      const json = await res.json();
+      return json.url;
+    } else {
+      const err = await res.json();
+      alert(err.error || "Failed to upload photo.");
+      return null;
+    }
+  } catch {
+    alert("Error uploading photo file.");
+    return null;
+  }
+}
+
+function AvatarDisplay({ avatar, name, size = 32 }: { avatar?: string; name: string; size?: number }) {
+  const isImage = avatar && (avatar.startsWith("/") || avatar.startsWith("http"));
+  if (isImage) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={avatar}
+        alt={name}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: "50%",
+          objectFit: "cover",
+          border: "1px solid var(--ciel-gold-border)",
+          flexShrink: 0,
+        }}
+      />
+    );
+  }
+
+  const initials = avatar || name.split(" ").map((n) => n[0]).join("");
+  return (
+    <div className="member-avatar" style={{ width: size, height: size, fontSize: size * 0.4, margin: 0, flexShrink: 0 }}>
+      {initials}
+    </div>
+  );
+}
+
 // ─── ERP SUB-VIEWS ─────────────────────────────────────────────────────────
 
 /** 1. DASHBOARD ERP OVERVIEW */
-function ERPDashboardTab({ stats, registrations }: { stats: AdminStats; registrations: RegistrationRow[] }) {
+function ERPDashboardTab({ stats }: { stats: AdminStats }) {
   return (
     <div className="adm-tab-content">
       <div className="adm-section-head">
@@ -374,12 +433,6 @@ function ERPRegistrationsTab({ rows, eventTitle }: { rows: RegistrationRow[]; ev
           <a className="adm-btn adm-btn-outline" href="/admin/export">
             <Download size={14} /> Export CSV
           </a>
-          <button className="adm-btn adm-btn-outline" onClick={() => alert("Exporting Excel format...")}>
-            Export Excel
-          </button>
-          <button className="adm-btn adm-btn-outline" onClick={() => alert("Generating PDF Report...")}>
-            Export PDF
-          </button>
         </div>
       </div>
 
@@ -542,12 +595,827 @@ function ERPGalleryTab({ initialImages }: { initialImages: GalleryImage[] }) {
   );
 }
 
+/** 5. MENTORS MANAGEMENT ERP TAB */
+function ERPMentorsTab({ initialMentors }: { initialMentors: MentorItem[] }) {
+  const [mentors, setMentors] = useState<MentorItem[]>(initialMentors);
+  const [query, setQuery] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    designation: "",
+    organization: "",
+    category: "industry" as MentorItem["category"],
+    expertise: "",
+    avatar: "",
+    linkedinUrl: "",
+  });
+
+  const filtered = mentors.filter((m) => {
+    const q = query.trim().toLowerCase();
+    return !q || [m.name, m.designation, m.organization, m.category].some((v) => v.toLowerCase().includes(q));
+  });
+
+  async function handleAddMentor(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.name || !form.designation) return;
+
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/admin/mentors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...form,
+          expertise: form.expertise ? form.expertise.split(",").map((s) => s.trim()).filter(Boolean) : [],
+        }),
+      });
+
+      if (res.ok) {
+        const created = await res.json();
+        setMentors((prev) => [created, ...prev]);
+        setShowModal(false);
+        setForm({ name: "", designation: "", organization: "", category: "industry", expertise: "", avatar: "", linkedinUrl: "" });
+      } else {
+        const err = await res.json();
+        alert(err.error || "Failed to add mentor.");
+      }
+    } catch {
+      alert("Error adding mentor.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Are you sure you want to remove this mentor?")) return;
+    try {
+      const res = await fetch(`/api/admin/mentors?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (res.ok) {
+        setMentors((prev) => prev.filter((m) => m.id !== id));
+      }
+    } catch {
+      alert("Failed to delete mentor.");
+    }
+  }
+
+  return (
+    <div className="adm-tab-content">
+      <div className="adm-section-head">
+        <div>
+          <h2>Mentors &amp; Advisory Directory</h2>
+          <p>Manage domain advisors, venture partners, and faculty mentors · {mentors.length} active mentors</p>
+        </div>
+        <button className="adm-btn adm-btn-primary" onClick={() => setShowModal(true)}>
+          <Plus size={15} /> Add New Mentor
+        </button>
+      </div>
+
+      <div className="adm-toolbar">
+        <div className="adm-search">
+          <Search size={16} className="adm-search-icon" />
+          <input
+            type="search"
+            placeholder="Search mentor name, designation, organization..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="adm-search-input"
+          />
+        </div>
+      </div>
+
+      <div className="adm-table-wrap">
+        <table className="adm-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Mentor</th>
+              <th>Designation</th>
+              <th>Organization</th>
+              <th>Category</th>
+              <th>LinkedIn</th>
+              <th>Core Expertise</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="adm-empty-cell">No mentors found.</td>
+              </tr>
+            ) : (
+              filtered.map((m, i) => (
+                <tr key={m.id}>
+                  <td className="adm-td-muted">{i + 1}</td>
+                  <td>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <AvatarDisplay avatar={m.avatar} name={m.name} size={32} />
+                      <span className="adm-td-primary">{m.name}</span>
+                    </div>
+                  </td>
+                  <td className="adm-td-secondary">{m.designation}</td>
+                  <td className="adm-td-secondary">{m.organization}</td>
+                  <td>
+                    <span className="badge badge-brand" style={{ textTransform: "uppercase", fontSize: 10 }}>
+                      {m.category}
+                    </span>
+                  </td>
+                  <td>
+                    {m.linkedinUrl ? (
+                      <a href={m.linkedinUrl} target="_blank" rel="noreferrer" style={{ color: "#60A5FA", display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12 }}>
+                        <LinkedInIcon size={14} /> Profile
+                      </a>
+                    ) : (
+                      <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
+                    )}
+                  </td>
+                  <td>
+                    <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                      {m.expertise.map((exp) => (
+                        <span className="badge badge-neutral" style={{ fontSize: 10 }} key={exp}>
+                          {exp}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
+                  <td>
+                    <button className="adm-btn adm-btn-outline" style={{ padding: "4px 8px", color: "#FF8080" }} onClick={() => handleDelete(m.id)}>
+                      <Trash2 size={14} />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Modal Form */}
+      {showModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: 20 }}>
+          <div style={{ background: "var(--charcoal-card)", border: "1px solid var(--ciel-gold-border)", borderRadius: "var(--radius-lg)", padding: 28, width: "100%", maxWidth: 520 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h3 style={{ color: "var(--text-white)", fontSize: 18, margin: 0 }}>Add New Mentor / Advisor</h3>
+              <button style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }} onClick={() => setShowModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddMentor} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label className="field-label">Full Name *</label>
+                <input required className="input" placeholder="e.g. Dr. Sunita Deshmukh" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              </div>
+
+              <div>
+                <label className="field-label">Designation / Title *</label>
+                <input required className="input" placeholder="e.g. Managing Partner / Senior VP" value={form.designation} onChange={(e) => setForm({ ...form, designation: e.target.value })} />
+              </div>
+
+              <div>
+                <label className="field-label">Organization / Firm</label>
+                <input className="input" placeholder="e.g. Vanguard Capital / Tech Hub" value={form.organization} onChange={(e) => setForm({ ...form, organization: e.target.value })} />
+              </div>
+
+              <div>
+                <label className="field-label">Category</label>
+                <select className="adm-select" style={{ width: "100%" }} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as any })}>
+                  <option value="industry">Industry Expert</option>
+                  <option value="investor">Venture Capital / Investor</option>
+                  <option value="academic">Academic &amp; Research</option>
+                  <option value="alumni">CIEL Alumni Founder</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="field-label">LinkedIn Profile URL (Optional)</label>
+                <input className="input" type="url" placeholder="https://linkedin.com/in/username" value={form.linkedinUrl} onChange={(e) => setForm({ ...form, linkedinUrl: e.target.value })} />
+              </div>
+
+              <div>
+                <label className="field-label">Core Expertise (Comma separated)</label>
+                <input className="input" placeholder="e.g. Angel Funding, SaaS Scaling, Patent Strategy" value={form.expertise} onChange={(e) => setForm({ ...form, expertise: e.target.value })} />
+              </div>
+
+              <div>
+                <label className="field-label">Photo Image (Upload or URL / Initials)</label>
+                <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                  <label className="adm-btn adm-btn-outline" style={{ cursor: "pointer", fontSize: 12, padding: "6px 12px" }}>
+                    <Upload size={14} /> Upload Photo
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const url = await uploadPhotoFile(file);
+                          if (url) setForm({ ...form, avatar: url });
+                        }
+                      }}
+                    />
+                  </label>
+                  <input
+                    className="input"
+                    style={{ flex: 1, minWidth: 160 }}
+                    placeholder="https://... or Initials (e.g. SD)"
+                    value={form.avatar}
+                    onChange={(e) => setForm({ ...form, avatar: e.target.value })}
+                  />
+                </div>
+                {form.avatar && (form.avatar.startsWith("/") || form.avatar.startsWith("http")) && (
+                  <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10 }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={form.avatar} alt="Preview" style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", border: "1px solid var(--ciel-gold)" }} />
+                    <span style={{ fontSize: 12, color: "#34D399" }}>✓ Photo Uploaded / Selected</span>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 10 }}>
+                <button type="button" className="adm-btn adm-btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="submit" className="adm-btn adm-btn-primary" disabled={submitting}>
+                  {submitting ? "Adding..." : "Add Mentor"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** 6. STUDENT COUNCIL MANAGEMENT ERP TAB */
+function ERPCouncilTab({ initialCouncil }: { initialCouncil: StudentCouncilLeadItem[] }) {
+  const [council, setCouncil] = useState<StudentCouncilLeadItem[]>(initialCouncil);
+  const [query, setQuery] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    role: "",
+    branch: "",
+    year: "",
+    avatar: "",
+    linkedinUrl: "",
+  });
+
+  const filtered = council.filter((sc) => {
+    const q = query.trim().toLowerCase();
+    return !q || [sc.name, sc.role, sc.branch, sc.year].some((v) => v.toLowerCase().includes(q));
+  });
+
+  async function handleAddLead(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.name || !form.role) return;
+
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/admin/student-council", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      if (res.ok) {
+        const created = await res.json();
+        setCouncil((prev) => [...prev, created]);
+        setShowModal(false);
+        setForm({ name: "", role: "", branch: "", year: "", avatar: "", linkedinUrl: "" });
+      } else {
+        const err = await res.json();
+        alert(err.error || "Failed to add council lead.");
+      }
+    } catch {
+      alert("Error adding council lead.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Are you sure you want to remove this student council lead?")) return;
+    try {
+      const res = await fetch(`/api/admin/student-council?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (res.ok) {
+        setCouncil((prev) => prev.filter((sc) => sc.id !== id && sc.name !== id));
+      }
+    } catch {
+      alert("Failed to delete council lead.");
+    }
+  }
+
+  return (
+    <div className="adm-tab-content">
+      <div className="adm-section-head">
+        <div>
+          <h2>Student Innovation Council (SIC)</h2>
+          <p>Manage elected student office bearers, hackathon leads &amp; lab managers · {council.length} council leads</p>
+        </div>
+        <button className="adm-btn adm-btn-primary" onClick={() => setShowModal(true)}>
+          <Plus size={15} /> Add Council Lead
+        </button>
+      </div>
+
+      <div className="adm-toolbar">
+        <div className="adm-search">
+          <Search size={16} className="adm-search-icon" />
+          <input
+            type="search"
+            placeholder="Search council member name, role, department..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="adm-search-input"
+          />
+        </div>
+      </div>
+
+      <div className="adm-table-wrap">
+        <table className="adm-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Student Leader</th>
+              <th>Council Designation / Role</th>
+              <th>Branch / Department</th>
+              <th>Academic Year</th>
+              <th>LinkedIn</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="adm-empty-cell">No student council members found.</td>
+              </tr>
+            ) : (
+              filtered.map((sc, i) => (
+                <tr key={sc.id || sc.name}>
+                  <td className="adm-td-muted">{i + 1}</td>
+                  <td>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <AvatarDisplay avatar={sc.avatar} name={sc.name} size={32} />
+                      <span className="adm-td-primary">{sc.name}</span>
+                    </div>
+                  </td>
+                  <td className="adm-td-primary" style={{ color: "var(--ciel-gold-bright)" }}>{sc.role}</td>
+                  <td className="adm-td-secondary">{sc.branch}</td>
+                  <td className="adm-td-secondary">{sc.year}</td>
+                  <td>
+                    {sc.linkedinUrl ? (
+                      <a href={sc.linkedinUrl} target="_blank" rel="noreferrer" style={{ color: "#60A5FA", display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12 }}>
+                        <LinkedInIcon size={14} /> Profile
+                      </a>
+                    ) : (
+                      <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
+                    )}
+                  </td>
+                  <td>
+                    <button className="adm-btn adm-btn-outline" style={{ padding: "4px 8px", color: "#FF8080" }} onClick={() => handleDelete(sc.id || sc.name)}>
+                      <Trash2 size={14} />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Modal Form */}
+      {showModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: 20 }}>
+          <div style={{ background: "var(--charcoal-card)", border: "1px solid var(--ciel-gold-border)", borderRadius: "var(--radius-lg)", padding: 28, width: "100%", maxWidth: 520 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h3 style={{ color: "var(--text-white)", fontSize: 18, margin: 0 }}>Add Student Innovation Council Lead</h3>
+              <button style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }} onClick={() => setShowModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddLead} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label className="field-label">Student Name *</label>
+                <input required className="input" placeholder="e.g. Aarav Sharma" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              </div>
+
+              <div>
+                <label className="field-label">Council Designation / Role *</label>
+                <input required className="input" placeholder="e.g. President, Student Innovation Council" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} />
+              </div>
+
+              <div>
+                <label className="field-label">Department / Branch</label>
+                <input className="input" placeholder="e.g. Computer Engineering" value={form.branch} onChange={(e) => setForm({ ...form, branch: e.target.value })} />
+              </div>
+
+              <div>
+                <label className="field-label">Academic Year</label>
+                <input className="input" placeholder="e.g. Final Year / Pre-Final Year" value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} />
+              </div>
+
+              <div>
+                <label className="field-label">LinkedIn Profile URL (Optional)</label>
+                <input className="input" type="url" placeholder="https://linkedin.com/in/username" value={form.linkedinUrl} onChange={(e) => setForm({ ...form, linkedinUrl: e.target.value })} />
+              </div>
+
+              <div>
+                <label className="field-label">Photo Image (Upload or URL / Initials)</label>
+                <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                  <label className="adm-btn adm-btn-outline" style={{ cursor: "pointer", fontSize: 12, padding: "6px 12px" }}>
+                    <Upload size={14} /> Upload Photo
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const url = await uploadPhotoFile(file);
+                          if (url) setForm({ ...form, avatar: url });
+                        }
+                      }}
+                    />
+                  </label>
+                  <input
+                    className="input"
+                    style={{ flex: 1, minWidth: 160 }}
+                    placeholder="https://... or Initials (e.g. AS)"
+                    value={form.avatar}
+                    onChange={(e) => setForm({ ...form, avatar: e.target.value })}
+                  />
+                </div>
+                {form.avatar && (form.avatar.startsWith("/") || form.avatar.startsWith("http")) && (
+                  <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10 }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={form.avatar} alt="Preview" style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", border: "1px solid var(--ciel-gold)" }} />
+                    <span style={{ fontSize: 12, color: "#34D399" }}>✓ Photo Uploaded / Selected</span>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 10 }}>
+                <button type="button" className="adm-btn adm-btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="submit" className="adm-btn adm-btn-primary" disabled={submitting}>
+                  {submitting ? "Adding..." : "Add Council Lead"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** 7. GOVERNANCE MANAGEMENT ERP TAB */
+function ERPGovernanceTab({ initialGovernance }: { initialGovernance: GovernanceCommitteeItem[] }) {
+  const [governance, setGovernance] = useState<GovernanceCommitteeItem[]>(initialGovernance);
+  const [showCommitteeModal, setShowCommitteeModal] = useState(false);
+  const [showMemberModal, setShowMemberModal] = useState(false);
+  const [selectedCommittee, setSelectedCommittee] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const [commForm, setCommForm] = useState({ name: "", description: "" });
+  const [memberForm, setMemberForm] = useState({ committeeName: "", name: "", role: "", linkedinUrl: "", avatar: "" });
+
+  async function handleAddCommittee(e: React.FormEvent) {
+    e.preventDefault();
+    if (!commForm.name) return;
+
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/admin/governance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "add_committee", committeeName: commForm.name, description: commForm.description }),
+      });
+
+      if (res.ok) {
+        const created = await res.json();
+        setGovernance((prev) => {
+          const idx = prev.findIndex((g) => g.name.toLowerCase() === commForm.name.toLowerCase());
+          if (idx >= 0) {
+            const updated = [...prev];
+            updated[idx].description = commForm.description;
+            return updated;
+          }
+          return [...prev, created];
+        });
+        setShowCommitteeModal(false);
+        setCommForm({ name: "", description: "" });
+      } else {
+        const err = await res.json();
+        alert(err.error || "Failed to add committee.");
+      }
+    } catch {
+      alert("Error adding committee.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleAddMember(e: React.FormEvent) {
+    e.preventDefault();
+    const cName = memberForm.committeeName || selectedCommittee;
+    if (!cName || !memberForm.name || !memberForm.role) return;
+
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/admin/governance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "add_member",
+          committeeName: cName,
+          memberName: memberForm.name,
+          role: memberForm.role,
+          linkedinUrl: memberForm.linkedinUrl,
+          avatar: memberForm.avatar,
+        }),
+      });
+
+      if (res.ok) {
+        setGovernance((prev) =>
+          prev.map((g) => {
+            if (g.name.toLowerCase() === cName.toLowerCase()) {
+              return {
+                ...g,
+                members: [...g.members, { name: memberForm.name, role: memberForm.role, linkedinUrl: memberForm.linkedinUrl, avatar: memberForm.avatar }],
+              };
+            }
+            return g;
+          })
+        );
+        setShowMemberModal(false);
+        setMemberForm({ committeeName: "", name: "", role: "", linkedinUrl: "", avatar: "" });
+      } else {
+        const err = await res.json();
+        alert(err.error || "Failed to add member.");
+      }
+    } catch {
+      alert("Error adding member.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleDeleteMember(committeeName: string, memberName: string) {
+    if (!confirm(`Delete ${memberName} from ${committeeName}?`)) return;
+    try {
+      const res = await fetch(`/api/admin/governance?committee=${encodeURIComponent(committeeName)}&member=${encodeURIComponent(memberName)}`, { method: "DELETE" });
+      if (res.ok) {
+        setGovernance((prev) =>
+          prev.map((g) => {
+            if (g.name.toLowerCase() === committeeName.toLowerCase()) {
+              return { ...g, members: g.members.filter((m) => m.name.toLowerCase() !== memberName.toLowerCase()) };
+            }
+            return g;
+          })
+        );
+      }
+    } catch {
+      alert("Failed to delete member.");
+    }
+  }
+
+  async function handleDeleteCommittee(committeeName: string) {
+    if (!confirm(`Are you sure you want to delete the entire committee "${committeeName}"?`)) return;
+    try {
+      const res = await fetch(`/api/admin/governance?type=committee&committee=${encodeURIComponent(committeeName)}`, { method: "DELETE" });
+      if (res.ok) {
+        setGovernance((prev) => prev.filter((g) => g.name.toLowerCase() !== committeeName.toLowerCase()));
+      }
+    } catch {
+      alert("Failed to delete committee.");
+    }
+  }
+
+  return (
+    <div className="adm-tab-content">
+      <div className="adm-section-head">
+        <div>
+          <h2>Governance &amp; Committees Management</h2>
+          <p>Institutional steering board, incubation evaluation panel, and IPR ethics cell</p>
+        </div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button className="adm-btn adm-btn-outline" onClick={() => setShowCommitteeModal(true)}>
+            <Plus size={14} /> Add Committee
+          </button>
+          <button className="adm-btn adm-btn-primary" onClick={() => { setSelectedCommittee(governance[0]?.name || ""); setShowMemberModal(true); }}>
+            <UserPlus size={14} /> Add Committee Member
+          </button>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+        {governance.map((comm) => (
+          <div key={comm.name} className="adm-table-wrap" style={{ padding: 24 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+              <div>
+                <h3 style={{ fontSize: 18, color: "var(--text-white)", margin: 0 }}>{comm.name}</h3>
+                <p style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>{comm.description}</p>
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  className="adm-btn adm-btn-outline"
+                  style={{ padding: "4px 10px", fontSize: 12 }}
+                  onClick={() => {
+                    setSelectedCommittee(comm.name);
+                    setMemberForm({ committeeName: comm.name, name: "", role: "", linkedinUrl: "", avatar: "" });
+                    setShowMemberModal(true);
+                  }}
+                >
+                  <UserPlus size={13} /> Add Member
+                </button>
+                <button
+                  className="adm-btn adm-btn-outline"
+                  style={{ padding: "4px 8px", color: "#FF8080" }}
+                  onClick={() => handleDeleteCommittee(comm.name)}
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            </div>
+
+            <div className="grid-3" style={{ gap: 12 }}>
+              {comm.members.map((m) => (
+                <div
+                  key={m.name}
+                  style={{
+                    background: "rgba(255, 255, 255, 0.03)",
+                    border: "1px solid var(--line)",
+                    borderRadius: "var(--radius-sm)",
+                    padding: 14,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <AvatarDisplay avatar={m.avatar} name={m.name} size={32} />
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <strong style={{ display: "block", color: "var(--text-white)", fontSize: 14 }}>{m.name}</strong>
+                        {m.linkedinUrl && (
+                          <a href={m.linkedinUrl} target="_blank" rel="noreferrer" style={{ color: "#60A5FA", display: "inline-flex" }} title="LinkedIn Profile">
+                            <LinkedInIcon size={13} />
+                          </a>
+                        )}
+                      </div>
+                      <span style={{ fontSize: 12, color: "var(--ciel-gold-bright)" }}>{m.role}</span>
+                    </div>
+                  </div>
+                  <button
+                    style={{ background: "none", border: "none", color: "#FF8080", cursor: "pointer", padding: 4 }}
+                    onClick={() => handleDeleteMember(comm.name, m.name)}
+                    title="Remove Member"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Modal Add Committee */}
+      {showCommitteeModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: 20 }}>
+          <div style={{ background: "var(--charcoal-card)", border: "1px solid var(--ciel-gold-border)", borderRadius: "var(--radius-lg)", padding: 28, width: "100%", maxWidth: 480 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h3 style={{ color: "var(--text-white)", fontSize: 18, margin: 0 }}>Add Governance Committee</h3>
+              <button style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }} onClick={() => setShowCommitteeModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddCommittee} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label className="field-label">Committee Name *</label>
+                <input required className="input" placeholder="e.g. Research &amp; Ethics Board" value={commForm.name} onChange={(e) => setCommForm({ ...commForm, name: e.target.value })} />
+              </div>
+
+              <div>
+                <label className="field-label">Description / Scope</label>
+                <textarea className="input" rows={3} placeholder="Describes committee role and authority..." value={commForm.description} onChange={(e) => setCommForm({ ...commForm, description: e.target.value })} />
+              </div>
+
+              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 10 }}>
+                <button type="button" className="adm-btn adm-btn-outline" onClick={() => setShowCommitteeModal(false)}>Cancel</button>
+                <button type="submit" className="adm-btn adm-btn-primary" disabled={submitting}>
+                  {submitting ? "Adding..." : "Add Committee"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Add Member */}
+      {showMemberModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: 20 }}>
+          <div style={{ background: "var(--charcoal-card)", border: "1px solid var(--ciel-gold-border)", borderRadius: "var(--radius-lg)", padding: 28, width: "100%", maxWidth: 480 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h3 style={{ color: "var(--text-white)", fontSize: 18, margin: 0 }}>Add Member to Governance Committee</h3>
+              <button style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }} onClick={() => setShowMemberModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddMember} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label className="field-label">Target Committee *</label>
+                <select
+                  className="adm-select"
+                  style={{ width: "100%" }}
+                  value={memberForm.committeeName || selectedCommittee}
+                  onChange={(e) => {
+                    setSelectedCommittee(e.target.value);
+                    setMemberForm({ ...memberForm, committeeName: e.target.value });
+                  }}
+                >
+                  {governance.map((g) => (
+                    <option key={g.name} value={g.name}>{g.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="field-label">Member Name *</label>
+                <input required className="input" placeholder="e.g. Dr. B. R. Patil" value={memberForm.name} onChange={(e) => setMemberForm({ ...memberForm, name: e.target.value })} />
+              </div>
+
+              <div>
+                <label className="field-label">Designation / Role in Committee *</label>
+                <input required className="input" placeholder="e.g. Chairman, Governing Board" value={memberForm.role} onChange={(e) => setMemberForm({ ...memberForm, role: e.target.value })} />
+              </div>
+
+              <div>
+                <label className="field-label">LinkedIn Profile URL (Optional)</label>
+                <input className="input" type="url" placeholder="https://linkedin.com/in/username" value={memberForm.linkedinUrl} onChange={(e) => setMemberForm({ ...memberForm, linkedinUrl: e.target.value })} />
+              </div>
+
+              <div>
+                <label className="field-label">Photo Image (Upload or URL / Initials)</label>
+                <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                  <label className="adm-btn adm-btn-outline" style={{ cursor: "pointer", fontSize: 12, padding: "6px 12px" }}>
+                    <Upload size={14} /> Upload Photo
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const url = await uploadPhotoFile(file);
+                          if (url) setMemberForm({ ...memberForm, avatar: url });
+                        }
+                      }}
+                    />
+                  </label>
+                  <input
+                    className="input"
+                    style={{ flex: 1, minWidth: 160 }}
+                    placeholder="https://... or Initials (e.g. BP)"
+                    value={memberForm.avatar || ""}
+                    onChange={(e) => setMemberForm({ ...memberForm, avatar: e.target.value })}
+                  />
+                </div>
+                {memberForm.avatar && (memberForm.avatar.startsWith("/") || memberForm.avatar.startsWith("http")) && (
+                  <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10 }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={memberForm.avatar} alt="Preview" style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", border: "1px solid var(--ciel-gold)" }} />
+                    <span style={{ fontSize: 12, color: "#34D399" }}>✓ Photo Uploaded / Selected</span>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 10 }}>
+                <button type="button" className="adm-btn adm-btn-outline" onClick={() => setShowMemberModal(false)}>Cancel</button>
+                <button type="submit" className="adm-btn adm-btn-primary" disabled={submitting}>
+                  {submitting ? "Adding..." : "Add Member"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── MAIN ADMIN ERP COMPONENT ───────────────────────────────────────────────
 
 export function AdminDashboardClient({
   registrations,
   profiles,
   images,
+  initialMentors = [],
+  initialCouncil = [],
+  initialGovernance = [],
   stats,
   eventTitle,
 }: Props) {
@@ -583,6 +1451,18 @@ export function AdminDashboardClient({
             <ImageIcon size={16} /> Gallery <span className="adm-nav-badge">{stats.totalImages}</span>
           </button>
 
+          <button className={`adm-nav-item ${activeTab === "mentors" ? "active" : ""}`} onClick={() => setActiveTab("mentors")}>
+            <UserStar size={16} /> Mentors <span className="adm-nav-badge">{stats.mentorCount ?? initialMentors.length}</span>
+          </button>
+
+          <button className={`adm-nav-item ${activeTab === "student-council" ? "active" : ""}`} onClick={() => setActiveTab("student-council")}>
+            <GraduationCap size={16} /> Student Council <span className="adm-nav-badge">{stats.councilCount ?? initialCouncil.length}</span>
+          </button>
+
+          <button className={`adm-nav-item ${activeTab === "governance" ? "active" : ""}`} onClick={() => setActiveTab("governance")}>
+            <Shield size={16} /> Governance <span className="adm-nav-badge">{stats.governanceCount ?? initialGovernance.length}</span>
+          </button>
+
           <button className={`adm-nav-item ${activeTab === "events" ? "active" : ""}`} onClick={() => setActiveTab("events")}>
             <Calendar size={16} /> Events
           </button>
@@ -593,10 +1473,6 @@ export function AdminDashboardClient({
 
           <button className={`adm-nav-item ${activeTab === "downloads" ? "active" : ""}`} onClick={() => setActiveTab("downloads")}>
             <Download size={16} /> Downloads
-          </button>
-
-          <button className={`adm-nav-item ${activeTab === "mentors" ? "active" : ""}`} onClick={() => setActiveTab("mentors")}>
-            <UserStar size={16} /> Mentors
           </button>
 
           <button className={`adm-nav-item ${activeTab === "partners" ? "active" : ""}`} onClick={() => setActiveTab("partners")}>
@@ -634,7 +1510,9 @@ export function AdminDashboardClient({
           <div className="adm-topbar-breadcrumb">
             <span>Admin ERP</span>
             <ChevronRight size={14} />
-            <span style={{ color: "var(--ciel-gold-bright)", textTransform: "capitalize" }}>{activeTab}</span>
+            <span style={{ color: "var(--ciel-gold-bright)", textTransform: "capitalize" }}>
+              {activeTab.replace("-", " ")}
+            </span>
           </div>
           <div className="adm-topbar-right">
             <Clock size={14} />
@@ -649,7 +1527,7 @@ export function AdminDashboardClient({
         </div>
 
         {/* Render Tab Views */}
-        {activeTab === "dashboard" && <ERPDashboardTab stats={stats} registrations={registrations} />}
+        {activeTab === "dashboard" && <ERPDashboardTab stats={stats} />}
         {activeTab === "users" && <ERPUsersTab profiles={profiles} />}
         {activeTab === "registrations" && <ERPRegistrationsTab rows={registrations} eventTitle={eventTitle} />}
         {activeTab === "projects" && (
@@ -661,6 +1539,9 @@ export function AdminDashboardClient({
           </div>
         )}
         {activeTab === "gallery" && <ERPGalleryTab initialImages={images} />}
+        {activeTab === "mentors" && <ERPMentorsTab initialMentors={initialMentors} />}
+        {activeTab === "student-council" && <ERPCouncilTab initialCouncil={initialCouncil} />}
+        {activeTab === "governance" && <ERPGovernanceTab initialGovernance={initialGovernance} />}
         {activeTab === "events" && (
           <div className="adm-tab-content">
             <div className="adm-section-head"><h2>Events &amp; Hackathons Management</h2><p>Configure campus competitions and workshop posters</p></div>
@@ -679,19 +1560,13 @@ export function AdminDashboardClient({
             <div className="adm-table-wrap" style={{ padding: 24 }}><p style={{ color: "var(--text-secondary)" }}>Repository files: {CIEL_DOWNLOADS.length} documents published.</p></div>
           </div>
         )}
-        {activeTab === "mentors" && (
-          <div className="adm-tab-content">
-            <div className="adm-section-head"><h2>Mentors &amp; Advisors Directory</h2><p>Manage domain experts and 1-on-1 assignments</p></div>
-            <div className="adm-table-wrap" style={{ padding: 24 }}><p style={{ color: "var(--text-secondary)" }}>Directory: {CIEL_MENTORS.length} active mentors listed.</p></div>
-          </div>
-        )}
         {activeTab === "partners" && (
           <div className="adm-tab-content">
             <div className="adm-section-head"><h2>Corporate MoUs &amp; Partners</h2><p>Manage industry alliances and seed syndicates</p></div>
             <div className="adm-table-wrap" style={{ padding: 24 }}><p style={{ color: "var(--text-secondary)" }}>Active MoUs: 30+ institutional alliances.</p></div>
           </div>
         )}
-        {activeTab === "analytics" && <ERPDashboardTab stats={stats} registrations={registrations} />}
+        {activeTab === "analytics" && <ERPDashboardTab stats={stats} />}
         {activeTab === "settings" && (
           <div className="adm-tab-content">
             <div className="adm-section-head"><h2>System &amp; Security Settings</h2><p>Admin credentials &amp; ERP configuration</p></div>

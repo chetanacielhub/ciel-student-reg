@@ -131,6 +131,7 @@ export type MentorItem = {
   expertise: string[];
   avatar: string;
   category: "industry" | "academic" | "investor" | "alumni";
+  linkedinUrl?: string;
 };
 
 export type DownloadItem = {
@@ -142,3 +143,30 @@ export type DownloadItem = {
   updatedAt: string;
   description: string;
 };
+
+export type StudentCouncilLeadItem = {
+  id: string;
+  name: string;
+  role: string;
+  branch: string;
+  year: string;
+  avatar?: string;
+  linkedinUrl?: string;
+};
+
+export type GovernanceMemberItem = {
+  id?: string;
+  name: string;
+  role: string;
+  linkedinUrl?: string;
+  avatar?: string;
+};
+
+export type GovernanceCommitteeItem = {
+  id?: string;
+  name: string;
+  description: string;
+  members: GovernanceMemberItem[];
+};
+
+

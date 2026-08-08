@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Award, GraduationCap, Sparkles, Users } from "lucide-react";
-import { STUDENT_COUNCIL_LEADS } from "@/lib/ciel-data";
+import { ArrowRight, Award, GraduationCap, Sparkles } from "lucide-react";
+import { getStudentCouncilLeads } from "@/lib/dynamic-store";
+import { LinkedInIcon } from "@/components/ui/linkedin-icon";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Student Innovation Council | CIEL",
@@ -9,7 +12,9 @@ export const metadata: Metadata = {
     "Student Innovation Council leads campus hackathons, prototyping workshops, and student-driven entrepreneurship at CIEL.",
 };
 
-export default function StudentCouncilPage() {
+export default async function StudentCouncilPage() {
+  const councilLeads = await getStudentCouncilLeads();
+
   return (
     <div className="shell page-section">
       <div className="section-heading">
@@ -25,21 +30,56 @@ export default function StudentCouncilPage() {
 
       {/* Leadership Grid */}
       <div className="section-heading" style={{ marginBottom: 36, textAlign: "left" }}>
-        <h2>Council Leadership (2025–26)</h2>
+        <h2>Council Leadership</h2>
         <p>Elected student office bearers across engineering, technology, and management programs.</p>
       </div>
 
       <div className="grid-3" style={{ marginBottom: 64 }}>
-        {STUDENT_COUNCIL_LEADS.map((lead) => (
-          <article className="member-card" key={lead.name}>
-            <div className="member-avatar">{lead.name.split(" ").map((n) => n[0]).join("")}</div>
-            <h3 className="member-name">{lead.name}</h3>
-            <div className="member-role">{lead.role}</div>
-            <div className="member-dept">
-              {lead.branch} · {lead.year}
-            </div>
-          </article>
-        ))}
+        {councilLeads.map((lead) => {
+          const cardContent = (
+            <article className="member-card" key={lead.id || lead.name} style={{ position: "relative" }}>
+              {lead.avatar && (lead.avatar.startsWith("/") || lead.avatar.startsWith("http")) ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={lead.avatar}
+                  alt={lead.name}
+                  style={{ width: 72, height: 72, borderRadius: "50%", objectFit: "cover", margin: "0 auto 16px", border: "1.5px solid var(--ciel-gold-border)", display: "block" }}
+                />
+              ) : (
+                <div className="member-avatar">
+                  {lead.avatar || lead.name.split(" ").map((n) => n[0]).join("")}
+                </div>
+              )}
+              <h3 className="member-name" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                {lead.name}
+                {lead.linkedinUrl && <LinkedInIcon size={15} color="#60A5FA" />}
+              </h3>
+              <div className="member-role">{lead.role}</div>
+              <div className="member-dept">
+                {lead.branch} · {lead.year}
+              </div>
+              {lead.linkedinUrl && (
+                <div style={{ marginTop: 12, fontSize: 12, color: "#60A5FA", fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+                  Connect on LinkedIn &rarr;
+                </div>
+              )}
+            </article>
+          );
+
+          return lead.linkedinUrl ? (
+            <a
+              href={lead.linkedinUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              key={lead.id || lead.name}
+              style={{ textDecoration: "none", color: "inherit", display: "block" }}
+            >
+              {cardContent}
+            </a>
+          ) : (
+            cardContent
+          );
+        })}
       </div>
 
       {/* Council Initiatives */}
@@ -78,3 +118,4 @@ export default function StudentCouncilPage() {
     </div>
   );
 }
+
