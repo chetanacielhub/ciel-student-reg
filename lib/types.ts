@@ -169,4 +169,32 @@ export type GovernanceCommitteeItem = {
   members: GovernanceMemberItem[];
 };
 
+export type JourneyMilestone = {
+  id: string;
+  projectId?: string;
+  stage: "idea" | "prototype" | "validation" | "incubation" | "funding" | "market" | "scale";
+  title: string;
+  description: string;
+  date: string;
+  status: "completed" | "in_progress" | "pending";
+};
+
+export type VentureProjectItem = {
+  id: string;
+  teamId?: string;
+  teamName: string;
+  leaderName?: string;
+  leaderEmail?: string;
+  name: string;
+  problemStatement: string;
+  stage: "idea" | "prototype" | "validation" | "incubation" | "funding" | "market" | "scale";
+  progress: number;
+  pitchDeck?: string;
+  websiteUrl?: string;
+  grantStatus?: "under_review" | "approved" | "grant_awarded" | "needs_revision";
+  reviewerNotes?: string;
+  journeyMilestones: JourneyMilestone[];
+  updatedAt: string;
+};
+
 

@@ -174,5 +174,48 @@
         }
       ]
     }
+  ],
+  "projects": [
+    {
+      "id": "proj-1",
+      "teamId": "t-1",
+      "teamName": "EcoGrid Telemetry",
+      "leaderName": "Aarav Sharma",
+      "leaderEmail": "aarav.sharma@ciel.edu",
+      "name": "EcoGrid Telemetry Hub",
+      "problemStatement": "IoT-enabled smart grid telemetry for micro-solar installations in rural Maharashtra.",
+      "stage": "prototype",
+      "progress": 55,
+      "pitchDeck": "/uploads/EcoGrid_PitchDeck_v2.pdf",
+      "grantStatus": "approved",
+      "reviewerNotes": "Prototype validation approved by CIEL Board. Pre-seed grant of ₹3.5 Lakhs allocated.",
+      "journeyMilestones": [
+        {
+          "id": "jm-1",
+          "stage": "idea",
+          "title": "Ideation & Problem Validation",
+          "description": "Validated sensor requirements across 12 micro-solar installations.",
+          "date": "2026-01-10",
+          "status": "completed"
+        },
+        {
+          "id": "jm-2",
+          "stage": "prototype",
+          "title": "ESP32 PCB Hardware Assembly",
+          "description": "Completed working hardware telemetry prototype in CIEL Makerspace lab.",
+          "date": "2026-02-01",
+          "status": "completed"
+        },
+        {
+          "id": "jm-3",
+          "stage": "validation",
+          "title": "Field Pilot & IoT Dashboard Test",
+          "description": "Deploying 5 test nodes for 30-day live telemetry stream.",
+          "date": "2026-03-01",
+          "status": "in_progress"
+        }
+      ],
+      "updatedAt": "2026-08-08T12:00:00Z"
+    }
   ]
 }

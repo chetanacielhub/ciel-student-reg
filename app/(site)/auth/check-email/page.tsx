@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { MailCheck } from "lucide-react";
+import { ArrowRight, MailCheck, ShieldAlert } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Check your email",
+  title: "Check Your Email | CIEL",
 };
 
 export default async function CheckEmailPage({
@@ -15,22 +15,40 @@ export default async function CheckEmailPage({
 
   return (
     <div className="shell center-page">
-      <section className="status-card">
+      <section className="status-card" style={{ maxWidth: 540 }}>
         <div className="status-icon">
           <MailCheck size={30} aria-hidden="true" />
         </div>
-        <h1>Confirm your Gmail</h1>
-        <p>
-          We sent a confirmation link{email ? ` to ${email}` : " to your inbox"}.
-          Open it to verify your account, then you will continue to the event
-          registration form.
+        <h1>Account Created Successfully</h1>
+        <p style={{ marginBottom: 16 }}>
+          We sent a verification link{email ? ` to ${email}` : " to your email inbox"}.
         </p>
-        <div className="inline-actions">
+
+        <div
+          style={{
+            background: "rgba(212, 175, 55, 0.1)",
+            border: "1px solid var(--ciel-gold-border)",
+            borderRadius: 8,
+            padding: 16,
+            textAlign: "left",
+            marginBottom: 20,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--ciel-gold-bright)", fontWeight: 700, fontSize: 14, marginBottom: 6 }}>
+            <ShieldAlert size={16} /> Not receiving the email?
+          </div>
+          <p style={{ fontSize: 12.5, color: "var(--text-secondary)", margin: 0, lineHeight: 1.5 }}>
+            Supabase built-in SMTP has rate limits. If email confirmation is enabled in your Supabase project, go to <strong>Supabase Dashboard &rarr; Authentication &rarr; Providers &rarr; Email</strong> and disable <strong>&quot;Confirm email&quot;</strong>. This allows users to sign in instantly without waiting for an email.
+          </p>
+        </div>
+
+        <div className="inline-actions" style={{ justifyContent: "center" }}>
           <Link className="button button-primary" href="/auth/sign-in">
-            I have confirmed my email
+            Proceed to Sign In Now
+            <ArrowRight size={16} />
           </Link>
-          <Link className="button button-secondary" href="/">
-            Back to home
+          <Link className="button button-secondary" href="/apply">
+            Go to Application
           </Link>
         </div>
       </section>

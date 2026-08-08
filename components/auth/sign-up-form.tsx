@@ -60,31 +60,65 @@ export function SignUpForm() {
 
     setSubmitting(true);
 
-    const { data, error } = await supabase.auth.signUp({
-      email: parsed.data.email,
-      password: parsed.data.password,
-      options: {
-        data: {
-          full_name: parsed.data.fullName,
-          phone: parsed.data.phone,
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(parsed.data),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        setSubmitting(false);
+        setFormError(json.error || "Registration failed. Please try again.");
+        return;
+      }
+
+      if (json.redirect) {
+        router.replace(json.redirect);
+        router.refresh();
+        return;
+      }
+    } catch {
+      // Client-side fallback if API fetch fails
+      const { data, error } = await supabase.auth.signUp({
+        email: parsed.data.email,
+        password: parsed.data.password,
+        options: {
+          data: {
+            full_name: parsed.data.fullName,
+            phone: parsed.data.phone,
+          },
+          emailRedirectTo: `${getSiteUrl()}/auth/confirm`,
         },
-        emailRedirectTo: `${getSiteUrl()}/auth/confirm`,
-      },
-    });
+      });
 
-    if (error) {
-      setSubmitting(false);
-      setFormError(error.message);
-      return;
+      if (error) {
+        setSubmitting(false);
+        setFormError(error.message);
+        return;
+      }
+
+      if (data.session) {
+        router.replace("/apply");
+        router.refresh();
+        return;
+      }
+
+      const { data: signInData } = await supabase.auth.signInWithPassword({
+        email: parsed.data.email,
+        password: parsed.data.password,
+      });
+
+      if (signInData?.session) {
+        router.replace("/apply");
+        router.refresh();
+        return;
+      }
+
+      router.replace(`/auth/check-email?email=${encodeURIComponent(parsed.data.email)}`);
     }
-
-    if (data.session) {
-      router.replace("/apply");
-      router.refresh();
-      return;
-    }
-
-    router.replace(`/auth/check-email?email=${encodeURIComponent(parsed.data.email)}`);
   }
 
   return (

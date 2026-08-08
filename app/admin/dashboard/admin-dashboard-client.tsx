@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -49,7 +49,7 @@ import {
   Zap,
 } from "lucide-react";
 import { CIEL_DOWNLOADS } from "@/lib/ciel-data";
-import type { GovernanceCommitteeItem, MentorItem, StudentCouncilLeadItem } from "@/lib/types";
+import type { GovernanceCommitteeItem, MentorItem, StudentCouncilLeadItem, VentureProjectItem } from "@/lib/types";
 import { LinkedInIcon } from "@/components/ui/linkedin-icon";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -1407,6 +1407,262 @@ function ERPGovernanceTab({ initialGovernance }: { initialGovernance: Governance
   );
 }
 
+/** 8. VENTURE PROJECTS & INNOVATION JOURNEY ERP TAB */
+function ERPProjectsTab({ initialProjects = [] }: { initialProjects?: VentureProjectItem[] }) {
+  const [projects, setProjects] = useState<VentureProjectItem[]>(initialProjects);
+  const [query, setQuery] = useState("");
+  const [selectedProject, setSelectedProject] = useState<VentureProjectItem | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [reviewForm, setReviewForm] = useState({
+    stage: "prototype" as VentureProjectItem["stage"],
+    progress: 50,
+    grantStatus: "under_review" as VentureProjectItem["grantStatus"],
+    reviewerNotes: "",
+  });
+
+  // Sync projects from API
+  useEffect(() => {
+    fetch("/api/admin/projects")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.projects && data.projects.length > 0) {
+          setProjects(data.projects);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const filtered = projects.filter((p) => {
+    const q = query.trim().toLowerCase();
+    return !q || [p.name, p.teamName, p.leaderName, p.problemStatement, p.stage].some((v) => v?.toLowerCase().includes(q));
+  });
+
+  async function handleUpdateReview(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selectedProject) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/admin/projects", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectId: selectedProject.id,
+          ...reviewForm,
+        }),
+      });
+
+      if (res.ok) {
+        const json = await res.json();
+        if (json.project) {
+          setProjects((prev) => prev.map((p) => (p.id === json.project.id ? json.project : p)));
+        }
+        setSelectedProject(null);
+      } else {
+        alert("Failed to update project review.");
+      }
+    } catch {
+      alert("Error updating review.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="adm-tab-content">
+      <div className="adm-section-head">
+        <div>
+          <h2>Venture Projects &amp; Innovation Journey ERP</h2>
+          <p>Monitor startup progress, review innovation stages, and allocate seed grant approvals · {projects.length} active ventures</p>
+        </div>
+      </div>
+
+      <div className="adm-toolbar">
+        <div className="adm-search">
+          <Search size={16} className="adm-search-icon" />
+          <input
+            type="search"
+            placeholder="Search venture name, problem statement, team leader..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="adm-search-input"
+          />
+        </div>
+      </div>
+
+      <div className="adm-table-wrap">
+        <table className="adm-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Venture Name</th>
+              <th>Problem Summary</th>
+              <th>Stage</th>
+              <th>Progress</th>
+              <th>Grant Status</th>
+              <th>Pitch Deck</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="adm-empty-cell">No venture projects found.</td>
+              </tr>
+            ) : (
+              filtered.map((p, i) => (
+                <tr key={p.id}>
+                  <td className="adm-td-muted">{i + 1}</td>
+                  <td>
+                    <span className="adm-td-primary">{p.name}</span>
+                    <span className="adm-td-secondary">Team: {p.teamName}</span>
+                  </td>
+                  <td className="adm-td-problem" title={p.problemStatement}>
+                    {p.problemStatement.length > 60 ? `${p.problemStatement.slice(0, 60)}...` : p.problemStatement}
+                  </td>
+                  <td>
+                    <span className="badge badge-brand" style={{ textTransform: "uppercase", fontSize: 10 }}>
+                      {p.stage}
+                    </span>
+                  </td>
+                  <td>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ width: 60, height: 6, borderRadius: 3, background: "rgba(255,255,255,0.1)", overflow: "hidden" }}>
+                        <div style={{ width: `${p.progress}%`, height: "100%", background: "var(--ciel-gold-bright)" }} />
+                      </div>
+                      <span style={{ fontSize: 11, color: "var(--text-white)" }}>{p.progress}%</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span
+                      className="badge"
+                      style={{
+                        fontSize: 10,
+                        textTransform: "uppercase",
+                        background: p.grantStatus === "approved" || p.grantStatus === "grant_awarded" ? "rgba(16,185,129,0.15)" : "rgba(212,175,55,0.15)",
+                        color: p.grantStatus === "approved" || p.grantStatus === "grant_awarded" ? "#10B981" : "var(--ciel-gold-bright)",
+                        border: `1px solid ${p.grantStatus === "approved" || p.grantStatus === "grant_awarded" ? "#10B981" : "var(--ciel-gold-border)"}`,
+                      }}
+                    >
+                      {p.grantStatus ? p.grantStatus.replace("_", " ") : "under review"}
+                    </span>
+                  </td>
+                  <td>
+                    {p.pitchDeck ? (
+                      <a href={p.pitchDeck} target="_blank" rel="noreferrer" style={{ color: "#60A5FA", display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12 }}>
+                        <FileText size={14} /> PDF
+                      </a>
+                    ) : (
+                      <span style={{ color: "var(--text-muted)", fontSize: 12 }}>Pending</span>
+                    )}
+                  </td>
+                  <td>
+                    <button
+                      className="adm-btn adm-btn-primary"
+                      style={{ padding: "4px 10px", fontSize: 11 }}
+                      onClick={() => {
+                        setSelectedProject(p);
+                        setReviewForm({
+                          stage: p.stage || "prototype",
+                          progress: p.progress ?? 50,
+                          grantStatus: p.grantStatus || "under_review",
+                          reviewerNotes: p.reviewerNotes || "",
+                        });
+                      }}
+                    >
+                      Review &amp; Approval
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Review & Approval Modal */}
+      {selectedProject && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: 20 }}>
+          <form onSubmit={handleUpdateReview} style={{ background: "var(--charcoal-card)", border: "1px solid var(--ciel-gold-border)", borderRadius: "var(--radius-lg)", padding: 28, width: "100%", maxWidth: 520 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <div>
+                <h3 style={{ color: "var(--text-white)", fontSize: 18, margin: 0 }}>Review Venture: {selectedProject.name}</h3>
+                <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>Team: {selectedProject.teamName}</span>
+              </div>
+              <button type="button" style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }} onClick={() => setSelectedProject(null)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 20 }}>
+              <div>
+                <label className="field-label">Innovation Stage</label>
+                <select className="adm-select" style={{ width: "100%" }} value={reviewForm.stage} onChange={(e) => setReviewForm({ ...reviewForm, stage: e.target.value as any })}>
+                  {["idea", "prototype", "validation", "incubation", "funding", "market", "scale"].map((s) => (
+                    <option key={s} value={s}>{s.toUpperCase()}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="field-label">Overall Progress ({reviewForm.progress}%)</label>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={reviewForm.progress}
+                  onChange={(e) => setReviewForm({ ...reviewForm, progress: parseInt(e.target.value) })}
+                  style={{ width: "100%" }}
+                />
+              </div>
+
+              <div>
+                <label className="field-label">Incubation Grant &amp; Approval Status</label>
+                <select className="adm-select" style={{ width: "100%" }} value={reviewForm.grantStatus} onChange={(e) => setReviewForm({ ...reviewForm, grantStatus: e.target.value as any })}>
+                  <option value="under_review">Under Review</option>
+                  <option value="approved">Approved for Incubation</option>
+                  <option value="grant_awarded">Seed Grant Awarded (up to ₹5L)</option>
+                  <option value="needs_revision">Needs Revision / Resubmission</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="field-label">Admin Reviewer Feedback / Notes</label>
+                <textarea
+                  className="input"
+                  rows={3}
+                  placeholder="Feedback notes visible to innovator on their portal..."
+                  value={reviewForm.reviewerNotes}
+                  onChange={(e) => setReviewForm({ ...reviewForm, reviewerNotes: e.target.value })}
+                />
+              </div>
+
+              {selectedProject.journeyMilestones && selectedProject.journeyMilestones.length > 0 && (
+                <div>
+                  <label className="field-label">User Logged Milestones ({selectedProject.journeyMilestones.length})</label>
+                  <div style={{ maxHeight: 120, overflowY: "auto", background: "rgba(0,0,0,0.3)", padding: 10, borderRadius: 6 }}>
+                    {selectedProject.journeyMilestones.map((m) => (
+                      <div key={m.id} style={{ fontSize: 12, borderBottom: "1px dashed var(--line)", paddingBottom: 6, marginBottom: 6 }}>
+                        <strong style={{ color: "var(--ciel-gold-bright)" }}>[{m.stage.toUpperCase()}]</strong> {m.title} - <span style={{ color: "var(--text-muted)" }}>{m.date}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button type="button" className="adm-btn adm-btn-outline" onClick={() => setSelectedProject(null)}>Cancel</button>
+              <button type="submit" className="adm-btn adm-btn-primary" disabled={submitting}>
+                {submitting ? "Saving..." : "Save Review"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── MAIN ADMIN ERP COMPONENT ───────────────────────────────────────────────
 
 export function AdminDashboardClient({
@@ -1530,14 +1786,7 @@ export function AdminDashboardClient({
         {activeTab === "dashboard" && <ERPDashboardTab stats={stats} />}
         {activeTab === "users" && <ERPUsersTab profiles={profiles} />}
         {activeTab === "registrations" && <ERPRegistrationsTab rows={registrations} eventTitle={eventTitle} />}
-        {activeTab === "projects" && (
-          <div className="adm-tab-content">
-            <div className="adm-section-head"><h2>Venture Projects ERP</h2><p>Stage approval and milestone monitoring</p></div>
-            <div className="adm-table-wrap" style={{ padding: 24 }}>
-              <p style={{ color: "var(--text-secondary)" }}>Total Active Ventures: {stats.teamCount}. All registered ventures are mapped under stage reviews.</p>
-            </div>
-          </div>
-        )}
+        {activeTab === "projects" && <ERPProjectsTab />}
         {activeTab === "gallery" && <ERPGalleryTab initialImages={images} />}
         {activeTab === "mentors" && <ERPMentorsTab initialMentors={initialMentors} />}
         {activeTab === "student-council" && <ERPCouncilTab initialCouncil={initialCouncil} />}

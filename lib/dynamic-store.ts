@@ -1,13 +1,14 @@
 import fs from "fs/promises";
 import path from "path";
 import { CIEL_MENTORS, GOVERNANCE_COMMITTEES, STUDENT_COUNCIL_LEADS } from "./ciel-data";
-import type { GovernanceCommitteeItem, MentorItem, StudentCouncilLeadItem } from "./types";
+import type { GovernanceCommitteeItem, JourneyMilestone, MentorItem, StudentCouncilLeadItem, VentureProjectItem } from "./types";
 import { createAdminClient } from "./supabase/admin";
 
 type StoreData = {
   mentors: MentorItem[];
   studentCouncil: StudentCouncilLeadItem[];
   governance: GovernanceCommitteeItem[];
+  projects?: VentureProjectItem[];
 };
 
 const STORE_PATH = path.join(process.cwd(), "data", "ciel-store.json");
@@ -329,4 +330,138 @@ export async function deleteGovernanceCommittee(committeeName: string): Promise<
 
   await saveStore(store);
   return true;
+}
+
+// ─── VENTURE PROJECTS & INNOVATION JOURNEY ───────────────────────────────
+
+export async function getVentureProjects(): Promise<VentureProjectItem[]> {
+  try {
+    const supabase = createAdminClient();
+    const { data: projects } = await supabase.from("projects").select("*");
+    if (projects && projects.length > 0) {
+      return projects.map((p: any) => ({
+        id: p.id,
+        teamId: p.team_id,
+        teamName: p.team_name || p.name,
+        name: p.name,
+        problemStatement: p.description || p.problem_statement || "",
+        stage: p.stage || "idea",
+        progress: p.progress ?? 20,
+        pitchDeck: p.pitch_deck || "",
+        websiteUrl: p.website_url || "",
+        grantStatus: p.grant_status || "under_review",
+        reviewerNotes: p.reviewer_notes || "",
+        journeyMilestones: Array.isArray(p.journey_milestones) ? p.journey_milestones : [],
+        updatedAt: p.updated_at || new Date().toISOString(),
+      }));
+    }
+  } catch {
+    // Fallback
+  }
+
+  const store = await ensureStore();
+  return store.projects || [];
+}
+
+export async function getVentureProjectById(idOrTeamId: string): Promise<VentureProjectItem | null> {
+  const projects = await getVentureProjects();
+  return projects.find((p) => p.id === idOrTeamId || p.teamId === idOrTeamId) || projects[0] || null;
+}
+
+export async function updateVentureProject(
+  id: string,
+  updates: Partial<VentureProjectItem>
+): Promise<VentureProjectItem | null> {
+  const store = await ensureStore();
+  if (!store.projects) store.projects = [];
+
+  let idx = store.projects.findIndex((p) => p.id === id || p.teamId === id);
+  if (idx < 0 && store.projects.length > 0) {
+    idx = 0; // Default fallback for single venture local testing
+  }
+
+  if (idx >= 0) {
+    store.projects[idx] = {
+      ...store.projects[idx],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+    await saveStore(store);
+
+    try {
+      const supabase = createAdminClient();
+      await supabase
+        .from("projects")
+        .update({
+          name: updates.name,
+          description: updates.problemStatement,
+          stage: updates.stage,
+          progress: updates.progress,
+          pitch_deck: updates.pitchDeck,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", store.projects[idx].id);
+    } catch {
+      // Ignore
+    }
+
+    return store.projects[idx];
+  }
+
+  return null;
+}
+
+export async function addJourneyMilestone(
+  projectId: string,
+  milestone: Omit<JourneyMilestone, "id">
+): Promise<JourneyMilestone | null> {
+  const store = await ensureStore();
+  if (!store.projects) store.projects = [];
+
+  let project = store.projects.find((p) => p.id === projectId || p.teamId === projectId);
+  if (!project && store.projects.length > 0) {
+    project = store.projects[0];
+  }
+
+  if (project) {
+    const newMilestone: JourneyMilestone = {
+      id: `jm-${Date.now()}`,
+      projectId: project.id,
+      ...milestone,
+    };
+
+    if (!project.journeyMilestones) project.journeyMilestones = [];
+    project.journeyMilestones.unshift(newMilestone);
+    project.updatedAt = new Date().toISOString();
+
+    await saveStore(store);
+    return newMilestone;
+  }
+
+  return null;
+}
+
+export async function updateAdminProjectGrantStatus(
+  projectId: string,
+  data: { grantStatus: VentureProjectItem["grantStatus"]; reviewerNotes?: string; stage?: VentureProjectItem["stage"] }
+): Promise<VentureProjectItem | null> {
+  const store = await ensureStore();
+  if (!store.projects) store.projects = [];
+
+  let project = store.projects.find((p) => p.id === projectId || p.teamId === projectId);
+  if (!project && store.projects.length > 0) {
+    project = store.projects[0];
+  }
+
+  if (project) {
+    if (data.grantStatus) project.grantStatus = data.grantStatus;
+    if (data.reviewerNotes !== undefined) project.reviewerNotes = data.reviewerNotes;
+    if (data.stage) project.stage = data.stage;
+    project.updatedAt = new Date().toISOString();
+
+    await saveStore(store);
+    return project;
+  }
+
+  return null;
 }
