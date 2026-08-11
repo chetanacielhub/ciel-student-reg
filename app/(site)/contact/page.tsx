@@ -31,7 +31,7 @@ export default function ContactPage() {
                 <strong style={{ color: "var(--text-white)", display: "block" }}>Campus Location</strong>
                 <span style={{ fontSize: 13.5, color: "var(--text-secondary)" }}>
                   Centre for Innovation &amp; Entrepreneurship Learning (CIEL),<br />
-                  Chetana Campus, Survey No. 34, Bandra East, Mumbai, Maharashtra 400051.
+                  409,Chetana Campus, Survey No. 34, Bandra East, Mumbai, Maharashtra 400051.
                 </span>
               </div>
             </div>
@@ -43,7 +43,7 @@ export default function ContactPage() {
               <div>
                 <strong style={{ color: "var(--text-white)", display: "block" }}>Email Inquiries</strong>
                 <span style={{ fontSize: 13.5, color: "var(--text-secondary)" }}>
-                  incubation@ciel-hub.edu · ipr@ciel-hub.edu
+                  info@cielhub.org
                 </span>
               </div>
             </div>
