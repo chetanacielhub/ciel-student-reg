@@ -13,6 +13,7 @@ import {
   Clock,
   Download,
   FileCheck,
+  FileSpreadsheet,
   FileText,
   Filter,
   FolderGit2,
@@ -47,9 +48,13 @@ import {
   UserX,
   X,
   Zap,
+  Eye,
+  Edit,
+  Copy,
+  ExternalLink,
 } from "lucide-react";
 import { CIEL_DOWNLOADS } from "@/lib/ciel-data";
-import type { GovernanceCommitteeItem, MentorItem, StudentCouncilLeadItem, VentureProjectItem, CielEventItem, NewsItem, DownloadItem } from "@/lib/types";
+import type { GovernanceCommitteeItem, MentorItem, StudentCouncilLeadItem, VentureProjectItem, CielEventItem, NewsItem, DownloadItem, GoogleFormItem } from "@/lib/types";
 import { LinkedInIcon } from "@/components/ui/linkedin-icon";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -92,6 +97,7 @@ type AdminStats = {
   mentorCount?: number;
   councilCount?: number;
   governanceCount?: number;
+  formsCount?: number;
 };
 
 type Props = {
@@ -104,6 +110,7 @@ type Props = {
   initialEvents?: CielEventItem[];
   initialNews?: NewsItem[];
   initialDownloads?: DownloadItem[];
+  initialGoogleForms?: GoogleFormItem[];
   stats: AdminStats;
   eventTitle: string;
 };
@@ -120,6 +127,7 @@ type AdminTab =
   | "events"
   | "news"
   | "downloads"
+  | "google-forms"
   | "partners"
   | "analytics"
   | "settings";
@@ -2227,6 +2235,343 @@ function ERPDownloadsTab({ initialDownloads = [] }: { initialDownloads?: Downloa
   );
 }
 
+// ─── GOOGLE FORMS TAB COMPONENT ─────────────────────────────────────────────
+
+function ERPGoogleFormsTab({ initialForms }: { initialForms: GoogleFormItem[] }) {
+  const [forms, setForms] = useState<GoogleFormItem[]>(initialForms);
+  const [isAdding, setIsAdding] = useState(false);
+  const [editingForm, setEditingForm] = useState<GoogleFormItem | null>(null);
+  const [previewForm, setPreviewForm] = useState<GoogleFormItem | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const [formState, setFormState] = useState({
+    title: "",
+    description: "",
+    category: "Incubation",
+    formUrl: "",
+    isActive: true,
+  });
+
+  const resetForm = () => {
+    setFormState({ title: "", description: "", category: "Incubation", formUrl: "", isActive: true });
+    setIsAdding(false);
+    setEditingForm(null);
+  };
+
+  const handleEditClick = (form: GoogleFormItem) => {
+    setEditingForm(form);
+    setFormState({
+      title: form.title,
+      description: form.description || "",
+      category: form.category || "General",
+      formUrl: form.formUrl || form.embedUrl,
+      isActive: form.isActive !== false,
+    });
+    setIsAdding(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formState.title || !formState.formUrl) {
+      alert("Title and Google Form URL are required");
+      return;
+    }
+    setSubmitting(true);
+
+    try {
+      if (editingForm) {
+        const res = await fetch("/api/admin/google-forms", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: editingForm.id, ...formState }),
+        });
+        const json = await res.json();
+        if (res.ok && json.form) {
+          setForms((prev) => prev.map((f) => (f.id === editingForm.id ? json.form : f)));
+          resetForm();
+        } else {
+          alert(json.error || "Failed to update form");
+        }
+      } else {
+        const res = await fetch("/api/admin/google-forms", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formState),
+        });
+        const json = await res.json();
+        if (res.ok && json.form) {
+          setForms((prev) => [json.form, ...prev]);
+          resetForm();
+        } else {
+          alert(json.error || "Failed to add form");
+        }
+      }
+    } catch {
+      alert("An error occurred while saving the Google Form");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleToggleActive = async (form: GoogleFormItem) => {
+    try {
+      const res = await fetch("/api/admin/google-forms", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: form.id, isActive: !form.isActive }),
+      });
+      const json = await res.json();
+      if (res.ok && json.form) {
+        setForms((prev) => prev.map((f) => (f.id === form.id ? json.form : f)));
+      }
+    } catch {
+      alert("Failed to update status");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this Google Form?")) return;
+    try {
+      const res = await fetch(`/api/admin/google-forms?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (res.ok) {
+        setForms((prev) => prev.filter((f) => f.id !== id));
+      } else {
+        alert("Failed to delete form");
+      }
+    } catch {
+      alert("Error deleting form");
+    }
+  };
+
+  const copyToClipboard = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  return (
+    <div className="adm-tab-content">
+      <div className="adm-section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h2>Google Forms Management</h2>
+          <p>Configure, edit, and publish Google Forms embedded inside iframe containers across the website.</p>
+        </div>
+        <button
+          className="button button-primary button-small"
+          onClick={() => {
+            resetForm();
+            setIsAdding(true);
+          }}
+        >
+          <Plus size={16} /> Add New Form Link
+        </button>
+      </div>
+
+      {/* Add / Edit Form Modal */}
+      {isAdding && (
+        <div className="adm-card" style={{ marginBottom: 24, padding: 24, background: "var(--ciel-card-bg, #111827)", borderRadius: 12, border: "1px solid var(--ciel-gold-border, rgba(217,119,6,0.3))" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <h3 style={{ fontSize: 18, color: "var(--text-white)", margin: 0 }}>
+              {editingForm ? "Edit Google Form Details" : "Add Google Form Link"}
+            </h3>
+            <button className="adm-icon-btn" onClick={resetForm}><X size={18} /></button>
+          </div>
+
+          <form onSubmit={handleSubmit} style={{ display: "grid", gap: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <div>
+                <label className="field-label">Form Title *</label>
+                <input
+                  type="text"
+                  className="input"
+                  required
+                  placeholder="e.g. Incubation Cohort 2026 Application"
+                  value={formState.title}
+                  onChange={(e) => setFormState({ ...formState, title: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="field-label">Category</label>
+                <select
+                  className="input"
+                  value={formState.category}
+                  onChange={(e) => setFormState({ ...formState, category: e.target.value })}
+                >
+                  <option value="Incubation">Incubation</option>
+                  <option value="Events">Events & Hackathons</option>
+                  <option value="Feedback">Feedback & Survey</option>
+                  <option value="Grants">Grants & Funding</option>
+                  <option value="General">General</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="field-label">Google Form Share/View URL *</label>
+              <input
+                type="url"
+                className="input"
+                required
+                placeholder="https://docs.google.com/forms/d/e/.../viewform"
+                value={formState.formUrl}
+                onChange={(e) => setFormState({ ...formState, formUrl: e.target.value })}
+              />
+              <span style={{ fontSize: 12, color: "var(--ciel-gold-bright)", display: "block", marginTop: 4 }}>
+                ℹ️ Paste any valid Google Form link. It will automatically convert to the embedded iframe URL format (appending <code>?embedded=true</code>).
+              </span>
+            </div>
+
+            <div>
+              <label className="field-label">Description / Guidance</label>
+              <textarea
+                className="input"
+                rows={3}
+                placeholder="Brief guidelines or summary of what this form is for..."
+                value={formState.description}
+                onChange={(e) => setFormState({ ...formState, description: e.target.value })}
+              />
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <input
+                type="checkbox"
+                id="form-is-active"
+                checked={formState.isActive}
+                onChange={(e) => setFormState({ ...formState, isActive: e.target.checked })}
+              />
+              <label htmlFor="form-is-active" style={{ fontSize: 14, color: "var(--text-white)", cursor: "pointer" }}>
+                Active &amp; Published on Public Forms Hub (`/forms`)
+              </label>
+            </div>
+
+            <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", marginTop: 8 }}>
+              <button type="button" className="button button-ghost" onClick={resetForm}>Cancel</button>
+              <button type="submit" className="button button-primary" disabled={submitting}>
+                {submitting ? "Saving..." : editingForm ? "Update Form" : "Publish Form"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Live Preview Modal */}
+      {previewForm && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <div style={{ background: "var(--ciel-card-bg, #0f172a)", width: "100%", maxWidth: 900, height: "90vh", borderRadius: 16, border: "1px solid var(--ciel-gold-border)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+            <div style={{ padding: "16px 24px", borderBottom: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <h3 style={{ margin: 0, color: "var(--text-white)", fontSize: 18 }}>Preview: {previewForm.title}</h3>
+                <span style={{ fontSize: 12, color: "var(--ciel-gold-bright)" }}>Category: {previewForm.category || "General"}</span>
+              </div>
+              <button className="button button-ghost button-small" onClick={() => setPreviewForm(null)}><X size={18} /></button>
+            </div>
+            <div style={{ flex: 1, background: "#ffffff" }}>
+              <iframe
+                src={previewForm.embedUrl}
+                width="100%"
+                height="100%"
+                style={{ border: "none" }}
+                title={previewForm.title}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Forms Table */}
+      <div className="adm-table-wrap">
+        <table className="adm-table">
+          <thead>
+            <tr>
+              <th>Form Details</th>
+              <th>Category</th>
+              <th>Status</th>
+              <th>Embed URL</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {forms.length === 0 ? (
+              <tr><td colSpan={5} style={{ textAlign: "center", padding: 32, color: "var(--text-muted)" }}>No Google Forms configured yet. Click &quot;Add New Form Link&quot; above.</td></tr>
+            ) : (
+              forms.map((form) => (
+                <tr key={form.id}>
+                  <td>
+                    <strong style={{ color: "var(--text-white)", display: "block" }}>{form.title}</strong>
+                    <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{form.description || "No description"}</span>
+                  </td>
+                  <td>
+                    <span className="badge badge-brand">{form.category || "General"}</span>
+                  </td>
+                  <td>
+                    <button
+                      onClick={() => handleToggleActive(form)}
+                      className={`badge ${form.isActive !== false ? "badge-success" : "badge-neutral"}`}
+                      style={{ border: "none", cursor: "pointer" }}
+                      title="Click to toggle status"
+                    >
+                      {form.isActive !== false ? "Active (Public)" : "Inactive"}
+                    </button>
+                  </td>
+                  <td>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <code style={{ fontSize: 11, background: "rgba(0,0,0,0.3)", padding: "2px 6px", borderRadius: 4, maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {form.embedUrl}
+                      </code>
+                      <button
+                        className="adm-icon-btn"
+                        title="Copy embed URL"
+                        onClick={() => copyToClipboard(form.embedUrl, form.id)}
+                      >
+                        {copiedId === form.id ? <CheckCircle2 size={14} style={{ color: "#22c55e" }} /> : <Copy size={14} />}
+                      </button>
+                    </div>
+                  </td>
+                  <td>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button
+                        className="adm-icon-btn text-gold"
+                        title="Preview Live Iframe"
+                        onClick={() => setPreviewForm(form)}
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <a
+                        href={form.formUrl || form.embedUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="adm-icon-btn text-primary"
+                        title="Open in Direct Tab"
+                      >
+                        <ExternalLink size={16} />
+                      </a>
+                      <button
+                        className="adm-icon-btn"
+                        title="Edit Form Details"
+                        onClick={() => handleEditClick(form)}
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button
+                        className="adm-icon-btn text-danger"
+                        title="Delete Form"
+                        onClick={() => handleDelete(form.id)}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 // ─── MAIN ADMIN ERP COMPONENT ───────────────────────────────────────────────
 
 export function AdminDashboardClient({
@@ -2239,6 +2584,7 @@ export function AdminDashboardClient({
   initialEvents = [],
   initialNews = [],
   initialDownloads = [],
+  initialGoogleForms = [],
   stats,
   eventTitle,
 }: Props) {
@@ -2296,6 +2642,10 @@ export function AdminDashboardClient({
 
           <button className={`adm-nav-item ${activeTab === "downloads" ? "active" : ""}`} onClick={() => setActiveTab("downloads")}>
             <Download size={16} /> Downloads <span className="adm-nav-badge">{initialDownloads.length}</span>
+          </button>
+
+          <button className={`adm-nav-item ${activeTab === "google-forms" ? "active" : ""}`} onClick={() => setActiveTab("google-forms")}>
+            <FileSpreadsheet size={16} /> Google Forms <span className="adm-nav-badge">{stats.formsCount ?? initialGoogleForms.length}</span>
           </button>
 
           <button className={`adm-nav-item ${activeTab === "partners" ? "active" : ""}`} onClick={() => setActiveTab("partners")}>
@@ -2361,6 +2711,7 @@ export function AdminDashboardClient({
         {activeTab === "events" && <ERPEventsTab initialEvents={initialEvents} />}
         {activeTab === "news" && <ERPNewsTab initialNews={initialNews} />}
         {activeTab === "downloads" && <ERPDownloadsTab initialDownloads={initialDownloads} />}
+        {activeTab === "google-forms" && <ERPGoogleFormsTab initialForms={initialGoogleForms} />}
         {activeTab === "partners" && (
           <div className="adm-tab-content">
             <div className="adm-section-head"><h2>Corporate MoUs &amp; Partners</h2><p>Manage industry alliances and seed syndicates</p></div>

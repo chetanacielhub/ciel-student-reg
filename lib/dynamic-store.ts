@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
-import { CIEL_MENTORS, GOVERNANCE_COMMITTEES, STUDENT_COUNCIL_LEADS, CIEL_DOWNLOADS } from "./ciel-data";
-import type { GovernanceCommitteeItem, JourneyMilestone, MentorItem, StudentCouncilLeadItem, VentureProjectItem, UserProfileItem, CielEventItem, NewsItem, DownloadItem } from "./types";
+import { CIEL_MENTORS, GOVERNANCE_COMMITTEES, STUDENT_COUNCIL_LEADS, CIEL_DOWNLOADS, DEFAULT_GOOGLE_FORMS } from "./ciel-data";
+import type { GovernanceCommitteeItem, JourneyMilestone, MentorItem, StudentCouncilLeadItem, VentureProjectItem, UserProfileItem, CielEventItem, NewsItem, DownloadItem, GoogleFormItem } from "./types";
 import { createAdminClient } from "./supabase/admin";
 
 type StoreData = {
@@ -14,6 +14,7 @@ type StoreData = {
   events?: CielEventItem[];
   news?: NewsItem[];
   downloads?: DownloadItem[];
+  googleForms?: GoogleFormItem[];
 };
 
 const STORE_PATH = path.join(process.cwd(), "data", "ciel-store.json");
@@ -36,6 +37,7 @@ function getInitialData(): StoreData {
       description: c.description,
       members: c.members,
     })),
+    googleForms: DEFAULT_GOOGLE_FORMS,
   };
 }
 
@@ -57,6 +59,7 @@ async function ensureStore(): Promise<StoreData> {
       events: Array.isArray(parsed.events) ? parsed.events : [],
       news: Array.isArray(parsed.news) ? parsed.news : [],
       downloads: Array.isArray(parsed.downloads) ? parsed.downloads : CIEL_DOWNLOADS,
+      googleForms: Array.isArray(parsed.googleForms) && parsed.googleForms.length > 0 ? parsed.googleForms : DEFAULT_GOOGLE_FORMS,
     };
   } catch {
     const initial = getInitialData();
@@ -771,3 +774,119 @@ export async function deleteDownloadDoc(id: string): Promise<boolean> {
   }
   return true;
 }
+
+// ─── GOOGLE FORMS MANAGEMENT ────────────────────────────────────────────────
+
+export function formatGoogleFormEmbedUrl(rawUrl: string): string {
+  if (!rawUrl) return "";
+  let trimmed = rawUrl.trim();
+
+  // If user pasted a full <iframe src="..."> HTML embed code snippet
+  if (trimmed.includes("<iframe") && trimmed.includes("src=")) {
+    const srcMatch = trimmed.match(/src=["']([^"']+)["']/i);
+    if (srcMatch && srcMatch[1]) {
+      trimmed = srcMatch[1];
+    }
+  }
+
+  // If already contains embedded=true, return as is
+  if (trimmed.includes("embedded=true")) return trimmed;
+
+  // Replace edit/viewform with viewform?embedded=true
+  if (trimmed.includes("/viewform")) {
+    const [base] = trimmed.split("?");
+    return `${base}?embedded=true`;
+  }
+  if (trimmed.includes("/edit")) {
+    const base = trimmed.substring(0, trimmed.indexOf("/edit"));
+    return `${base}/viewform?embedded=true`;
+  }
+
+  // Handle generic url params if viewform parameter absent
+  if (trimmed.includes("docs.google.com/forms")) {
+    if (trimmed.includes("?")) {
+      return `${trimmed}&embedded=true`;
+    }
+    return `${trimmed}?embedded=true`;
+  }
+
+  return trimmed;
+}
+
+export async function getGoogleForms(onlyActive = false): Promise<GoogleFormItem[]> {
+  const store = await ensureStore();
+  const forms = store.googleForms && store.googleForms.length > 0 ? store.googleForms : DEFAULT_GOOGLE_FORMS;
+  if (onlyActive) {
+    return forms.filter((f) => f.isActive !== false);
+  }
+  return forms;
+}
+
+export async function addGoogleForm(form: {
+  title: string;
+  description?: string;
+  category?: string;
+  formUrl: string;
+  embedUrl?: string;
+  isActive?: boolean;
+}): Promise<GoogleFormItem> {
+  const store = await ensureStore();
+  if (!store.googleForms) store.googleForms = [...DEFAULT_GOOGLE_FORMS];
+
+  const embedUrl = form.embedUrl ? form.embedUrl : formatGoogleFormEmbedUrl(form.formUrl);
+
+  const newForm: GoogleFormItem = {
+    id: `gf-${Date.now()}`,
+    title: form.title,
+    description: form.description || "",
+    category: form.category || "General",
+    formUrl: form.formUrl,
+    embedUrl,
+    isActive: form.isActive !== undefined ? form.isActive : true,
+    createdAt: new Date().toISOString(),
+  };
+
+  store.googleForms.unshift(newForm);
+  await saveStore(store);
+  return newForm;
+}
+
+export async function updateGoogleForm(
+  id: string,
+  updates: Partial<Omit<GoogleFormItem, "id">>
+): Promise<GoogleFormItem | null> {
+  const store = await ensureStore();
+  if (!store.googleForms) store.googleForms = [...DEFAULT_GOOGLE_FORMS];
+
+  const index = store.googleForms.findIndex((f) => f.id === id);
+  if (index === -1) return null;
+
+  const current = store.googleForms[index];
+  const newFormUrl = updates.formUrl !== undefined ? updates.formUrl : current.formUrl;
+  const newEmbedUrl = updates.embedUrl
+    ? updates.embedUrl
+    : updates.formUrl
+    ? formatGoogleFormEmbedUrl(updates.formUrl)
+    : current.embedUrl;
+
+  const updatedItem: GoogleFormItem = {
+    ...current,
+    ...updates,
+    formUrl: newFormUrl,
+    embedUrl: newEmbedUrl,
+  };
+
+  store.googleForms[index] = updatedItem;
+  await saveStore(store);
+  return updatedItem;
+}
+
+export async function deleteGoogleForm(id: string): Promise<boolean> {
+  const store = await ensureStore();
+  if (store.googleForms) {
+    store.googleForms = store.googleForms.filter((f) => f.id !== id);
+    await saveStore(store);
+  }
+  return true;
+}
+

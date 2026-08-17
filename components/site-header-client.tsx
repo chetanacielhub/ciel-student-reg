@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   ChevronDown,
   Compass,
+  FileSpreadsheet,
   FileText,
   Globe,
   Heart,
@@ -88,6 +89,10 @@ export function SiteHeaderClient({ signedIn }: { signedIn: boolean }) {
               </Link>
             </div>
           </div>
+
+          <Link className="nav-link" href="/forms">
+            <FileSpreadsheet size={14} /> Forms
+          </Link>
 
           <Link className="nav-link" href="/partners">
             <Globe size={14} /> Partners
@@ -192,6 +197,9 @@ export function SiteHeaderClient({ signedIn }: { signedIn: boolean }) {
               </Link>
               <Link className="mobile-nav-link" href="/gallery" onClick={() => setMobileMenuOpen(false)}>
                 <Images size={18} /> Gallery
+              </Link>
+              <Link className="mobile-nav-link" href="/forms" onClick={() => setMobileMenuOpen(false)}>
+                <FileSpreadsheet size={18} /> Google Forms Hub
               </Link>
               <Link className="mobile-nav-link" href="/contact" onClick={() => setMobileMenuOpen(false)}>
                 Contact Office

@@ -40,6 +40,7 @@ export function SiteFooter() {
             <ul>
               <li><Link href="/register">Apply for Incubation</Link></li>
               <li><Link href="/dashboard">Participant Portal</Link></li>
+              <li><Link href="/forms">Google Forms Hub</Link></li>
               <li><Link href="/downloads">Policy Manuals &amp; Downloads</Link></li>
               <li><Link href="/gallery">Photo Gallery</Link></li>
               <li><Link href="/faq">Incubation FAQ</Link></li>

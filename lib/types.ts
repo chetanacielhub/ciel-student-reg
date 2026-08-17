@@ -239,3 +239,15 @@ export type UserProfileItem = {
   password?: string;
   created_at: string;
 };
+
+export type GoogleFormItem = {
+  id: string;
+  title: string;
+  description?: string;
+  category?: string;
+  formUrl: string;
+  embedUrl: string;
+  isActive: boolean;
+  createdAt: string;
+};
+

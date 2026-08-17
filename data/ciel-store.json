@@ -228,5 +228,27 @@
       "problemStatement": "qwertyuiop[asdfghjklzxcvbnm",
       "createdAt": "2026-08-08T08:58:00.072Z"
     }
+  ],
+  "googleForms": [
+    {
+      "id": "gf-1",
+      "title": "CiEL Registration",
+      "description": "Official registration form for Centre for Innovation & Entrepreneurship Learning (CiEL) incubation program.",
+      "category": "Incubation",
+      "formUrl": "https://docs.google.com/forms/d/e/1FAIpQLSe4TiDARd-MAr5xgmzHlu7tf2UnVU6uJ_uU4fx3fdNknzi1mw/viewform?usp=header",
+      "embedUrl": "https://docs.google.com/forms/d/e/1FAIpQLSe4TiDARd-MAr5xgmzHlu7tf2UnVU6uJ_uU4fx3fdNknzi1mw/viewform?embedded=true",
+      "isActive": true,
+      "createdAt": "2026-02-01T10:00:00.000Z"
+    },
+    {
+      "id": "gf-2",
+      "title": "SiC for CiEL",
+      "description": "Application and membership registration form for the Student Innovation Council (SiC) at CiEL.",
+      "category": "Student Council",
+      "formUrl": "https://docs.google.com/forms/d/e/1FAIpQLScCGydXqb45XNLxuc_t1WMmRg0j3rePsmGBjSzZU_1s2R-VNA/viewform",
+      "embedUrl": "https://docs.google.com/forms/d/e/1FAIpQLScCGydXqb45XNLxuc_t1WMmRg0j3rePsmGBjSzZU_1s2R-VNA/viewform?embedded=true",
+      "isActive": true,
+      "createdAt": "2026-02-10T12:30:00.000Z"
+    }
   ]
 }
