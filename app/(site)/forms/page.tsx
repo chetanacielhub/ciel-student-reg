@@ -68,18 +68,12 @@ export default function GoogleFormsPage() {
   };
 
   return (
-    <div className="forms-page shell" style={{ padding: "40px 0 80px 0" }}>
-      {/* Hero Header */}
-      <div className="section-header text-center" style={{ marginBottom: "40px" }}>
-        <div className="badge badge-accent" style={{ display: "inline-flex", gap: "6px", alignItems: "center", marginBottom: "12px" }}>
-          <Sparkles size={14} /> Official Portal Forms
-        </div>
-        <h1 style={{ fontSize: "clamp(2rem, 4vw, 2.75rem)", fontWeight: 800, letterSpacing: "-0.02em" }}>
+    <div className="forms-page shell" style={{ padding: "16px 0 40px 0" }}>
+      {/* Hero Header (Compact) */}
+      <div className="section-header text-center" style={{ marginBottom: "16px" }}>
+        <h1 style={{ fontSize: "clamp(1.75rem, 3vw, 2.2rem)", fontWeight: 800, letterSpacing: "-0.02em", margin: 0 }}>
           CIEL Forms &amp; Surveys Hub
         </h1>
-        <p className="subtext" style={{ maxWidth: "680px", margin: "12px auto 0 auto", opacity: 0.9 }}>
-          Access, view, and fill official incubation application forms, event registrations, surveys, and feedback questionnaires directly on our platform.
-        </p>
       </div>
 
       {/* Loading Skeleton */}
@@ -89,7 +83,7 @@ export default function GoogleFormsPage() {
           <div className="card" style={{ height: "650px", opacity: 0.6 }} />
         </div>
       ) : forms.length === 0 ? (
-        <div className="card text-center" style={{ padding: "60px 20px" }}>
+        <div className="card text-center" style={{ padding: "40px 20px" }}>
           <FileSpreadsheet size={48} style={{ opacity: 0.4, margin: "0 auto 16px auto" }} />
           <h3>No Active Forms Found</h3>
           <p className="subtext" style={{ maxWidth: "450px", margin: "8px auto 0 auto" }}>
@@ -98,11 +92,11 @@ export default function GoogleFormsPage() {
         </div>
       ) : (
         <div className="forms-hub-layout">
-          {/* Form Selector Sidebar / Header Controls */}
-          <div className="forms-sidebar card" style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "20px" }}>
+          {/* Form Selector Sidebar */}
+          <div className="forms-sidebar card" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "14px" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-                <Layers size={18} className="text-primary" /> Active Forms
+              <h3 style={{ fontSize: "1rem", fontWeight: 700, margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                <Layers size={16} className="text-primary" /> Active Forms
               </h3>
               <span className="badge badge-subtle">{filteredForms.length} Available</span>
             </div>
@@ -116,7 +110,7 @@ export default function GoogleFormsPage() {
                 placeholder="Search forms..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ fontSize: "0.875rem", padding: "8px 12px 8px 36px" }}
+                style={{ fontSize: "0.85rem", padding: "6px 12px 6px 36px" }}
               />
             </div>
 
@@ -128,7 +122,7 @@ export default function GoogleFormsPage() {
                     key={cat}
                     onClick={() => setSelectedCategory(cat)}
                     className={`button ${selectedCategory === cat ? "button-primary" : "button-ghost"}`}
-                    style={{ fontSize: "0.75rem", padding: "4px 10px", borderRadius: "20px" }}
+                    style={{ fontSize: "0.75rem", padding: "3px 9px", borderRadius: "20px" }}
                   >
                     {cat}
                   </button>
@@ -137,7 +131,7 @@ export default function GoogleFormsPage() {
             )}
 
             {/* Forms List */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "550px", overflowY: "auto" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "550px", overflowY: "auto" }}>
               {filteredForms.map((form) => {
                 const isSelected = selectedForm?.id === form.id;
                 return (
@@ -148,8 +142,8 @@ export default function GoogleFormsPage() {
                       setIframeLoading(true);
                     }}
                     style={{
-                      padding: "14px",
-                      borderRadius: "12px",
+                      padding: "12px",
+                      borderRadius: "10px",
                       border: isSelected ? "2px solid var(--primary, #3b82f6)" : "1px solid var(--border, rgba(255,255,255,0.1))",
                       background: isSelected ? "var(--surface-hover, rgba(59,130,246,0.08))" : "var(--surface, rgba(255,255,255,0.02))",
                       cursor: "pointer",
@@ -157,17 +151,12 @@ export default function GoogleFormsPage() {
                     }}
                   >
                     <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>
-                      <span style={{ fontWeight: 600, fontSize: "0.95rem", color: isSelected ? "var(--primary, #3b82f6)" : "inherit" }}>
+                      <span style={{ fontWeight: 600, fontSize: "0.9rem", color: isSelected ? "var(--primary, #3b82f6)" : "inherit" }}>
                         {form.title}
                       </span>
                       {isSelected && <CheckCircle2 size={16} style={{ color: "var(--primary, #3b82f6)", flexShrink: 0 }} />}
                     </div>
-                    {form.description && (
-                      <p style={{ fontSize: "0.8rem", opacity: 0.7, margin: "6px 0 0 0", lineClamp: 2, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                        {form.description}
-                      </p>
-                    )}
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "10px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "6px" }}>
                       <span className="badge badge-accent" style={{ fontSize: "0.7rem", padding: "2px 8px" }}>
                         {form.category || "General"}
                       </span>
@@ -191,35 +180,28 @@ export default function GoogleFormsPage() {
                     bottom: 0,
                     zIndex: 9999,
                     borderRadius: 0,
-                    padding: "20px",
+                    padding: "16px",
                     background: "var(--background, #090d16)",
                     display: "flex",
                     flexDirection: "column",
                   }
                 : {
-                    padding: "24px",
+                    padding: "14px 18px",
                     display: "flex",
                     flexDirection: "column",
-                    gap: "16px",
+                    gap: "10px",
                   }
             }
           >
             {selectedForm ? (
               <>
-                {/* Header Toolbar */}
-                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "12px", borderBottom: "1px solid var(--border, rgba(255,255,255,0.1))", paddingBottom: "16px" }}>
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      <h2 style={{ fontSize: "1.25rem", fontWeight: 700, margin: 0 }}>
-                        {selectedForm.title}
-                      </h2>
-                      <span className="badge badge-primary">{selectedForm.category || "General"}</span>
-                    </div>
-                    {selectedForm.description && (
-                      <p style={{ fontSize: "0.85rem", opacity: 0.8, margin: "4px 0 0 0" }}>
-                        {selectedForm.description}
-                      </p>
-                    )}
+                {/* Compact Header Toolbar directly above iframe */}
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "10px", borderBottom: "1px solid var(--border, rgba(255,255,255,0.1))", paddingBottom: "10px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <h2 style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0 }}>
+                      {selectedForm.title}
+                    </h2>
+                    <span className="badge badge-primary" style={{ fontSize: "0.75rem", padding: "2px 8px" }}>{selectedForm.category || "General"}</span>
                   </div>
 
                   {/* Actions Toolbar */}
@@ -230,7 +212,7 @@ export default function GoogleFormsPage() {
                       title="Copy link to form"
                     >
                       {copied ? <Check size={14} style={{ color: "#22c55e" }} /> : <Copy size={14} />}
-                      {copied ? "Copied Link!" : "Copy Link"}
+                      {copied ? "Copied!" : "Copy Link"}
                     </button>
 
                     <a
