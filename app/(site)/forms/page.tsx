@@ -196,23 +196,24 @@ export default function GoogleFormsPage() {
             {selectedForm ? (
               <>
                 {/* Compact Header Toolbar directly above iframe */}
-                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "10px", borderBottom: "1px solid var(--border, rgba(255,255,255,0.1))", paddingBottom: "10px" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "8px", borderBottom: "1px solid var(--border, rgba(255,255,255,0.1))", paddingBottom: "8px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <h2 style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0 }}>
+                    <h2 style={{ fontSize: "1rem", fontWeight: 700, margin: 0 }}>
                       {selectedForm.title}
                     </h2>
-                    <span className="badge badge-primary" style={{ fontSize: "0.75rem", padding: "2px 8px" }}>{selectedForm.category || "General"}</span>
+                    <span className="badge badge-primary" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>{selectedForm.category || "General"}</span>
                   </div>
 
                   {/* Actions Toolbar */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <button
                       onClick={handleCopyLink}
                       className="button button-secondary button-small"
                       title="Copy link to form"
+                      style={{ padding: "4px 8px", fontSize: "0.75rem" }}
                     >
                       {copied ? <Check size={14} style={{ color: "#22c55e" }} /> : <Copy size={14} />}
-                      {copied ? "Copied!" : "Copy Link"}
+                      <span className="action-btn-text">{copied ? "Copied!" : "Copy"}</span>
                     </button>
 
                     <a
@@ -221,29 +222,33 @@ export default function GoogleFormsPage() {
                       rel="noopener noreferrer"
                       className="button button-ghost button-small"
                       title="Open form in external tab"
+                      style={{ padding: "4px 8px", fontSize: "0.75rem" }}
                     >
-                      <ExternalLink size={14} /> Open in New Tab
+                      <ExternalLink size={14} />
+                      <span className="action-btn-text">Open Tab</span>
                     </a>
 
                     <button
                       onClick={() => setIsFullscreen(!isFullscreen)}
                       className="button button-ghost button-small"
                       title={isFullscreen ? "Exit Fullscreen" : "Fullscreen View"}
+                      style={{ padding: "4px 8px", fontSize: "0.75rem" }}
                     >
                       {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-                      {isFullscreen ? "Exit" : "Expand"}
+                      <span className="action-btn-text">{isFullscreen ? "Exit" : "Expand"}</span>
                     </button>
                   </div>
                 </div>
 
                 {/* Iframe Loading Banner / Container */}
                 <div
+                  className="iframe-wrap-container"
                   style={{
                     position: "relative",
                     width: "100%",
                     flex: 1,
-                    minHeight: isFullscreen ? "calc(100vh - 120px)" : "720px",
-                    borderRadius: "12px",
+                    minHeight: isFullscreen ? "calc(100vh - 120px)" : "680px",
+                    borderRadius: "10px",
                     overflow: "hidden",
                     border: "1px solid var(--border, rgba(255,255,255,0.12))",
                     background: "#ffffff",
@@ -268,7 +273,7 @@ export default function GoogleFormsPage() {
                       }}
                     >
                       <RefreshCw size={28} className="animate-spin text-primary" />
-                      <span style={{ fontSize: "0.9rem", fontWeight: 500 }}>Loading Google Form iframe...</span>
+                      <span style={{ fontSize: "0.9rem", fontWeight: 500 }}>Loading Google Form...</span>
                     </div>
                   )}
 
@@ -283,7 +288,7 @@ export default function GoogleFormsPage() {
                       border: "none",
                       width: "100%",
                       height: "100%",
-                      minHeight: isFullscreen ? "calc(100vh - 120px)" : "720px",
+                      minHeight: isFullscreen ? "calc(100vh - 120px)" : "680px",
                     }}
                     onLoad={() => setIframeLoading(false)}
                     title={selectedForm.title}
@@ -294,8 +299,8 @@ export default function GoogleFormsPage() {
                 </div>
 
                 {/* Footer Note */}
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.8rem", opacity: 0.7 }}>
-                  <Info size={14} />
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", opacity: 0.75, flexWrap: "wrap" }}>
+                  <Info size={13} style={{ flexShrink: 0 }} />
                   <span>
                     Having trouble viewing the embedded form? You can{" "}
                     <a
@@ -304,33 +309,48 @@ export default function GoogleFormsPage() {
                       rel="noopener noreferrer"
                       style={{ textDecoration: "underline", color: "var(--primary, #3b82f6)" }}
                     >
-                      open the direct Google Form link
-                    </a>{" "}
-                    in a new browser tab.
+                      open direct form link
+                    </a>.
                   </span>
                 </div>
               </>
             ) : (
-              <div style={{ textAlign: "center", padding: "60px 20px" }}>
-                <p>Select a form from the sidebar to display it here.</p>
+              <div style={{ textAlign: "center", padding: "40px 16px" }}>
+                <p>Select a form from the active forms list to display it here.</p>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* Grid Layout Styling */}
+      {/* Grid & Responsive Mobile Styling */}
       <style jsx>{`
         .forms-hub-layout {
           display: grid;
-          grid-template-columns: 340px 1fr;
-          gap: 24px;
+          grid-template-columns: 320px 1fr;
+          gap: 20px;
           align-items: start;
         }
 
         @media (max-width: 992px) {
           .forms-hub-layout {
             grid-template-columns: 1fr;
+            gap: 14px;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .forms-page {
+            padding: 8px 0 24px 0 !important;
+          }
+          .action-btn-text {
+            display: none !important;
+          }
+          .iframe-wrap-container {
+            min-height: 520px !important;
+          }
+          .iframe-wrap-container iframe {
+            min-height: 520px !important;
           }
         }
       `}</style>
