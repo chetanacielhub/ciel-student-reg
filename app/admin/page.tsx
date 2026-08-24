@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { Logo } from "@/components/ui/logo";
 import { LockKeyhole, ShieldCheck, AlertCircle } from "lucide-react";
+import { AdminThemeToggle } from "./admin-theme-toggle";
 
 export const metadata: Metadata = {
   title: "Admin Login | CIEL",
@@ -22,9 +23,13 @@ export default async function AdminLoginPage({
   return (
     <div className="admin-login-page">
       <div className="admin-login-card">
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px" }}>
+          <AdminThemeToggle />
+        </div>
+
         {/* Logo */}
         <div style={{ marginBottom: "32px", display: "flex", justifyContent: "center" }}>
-          <Logo />
+          <Logo href="/" size="medium" />
         </div>
 
         {/* Icon + Title */}

@@ -52,10 +52,13 @@ import {
   Edit,
   Copy,
   ExternalLink,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { CIEL_DOWNLOADS } from "@/lib/ciel-data";
 import type { GovernanceCommitteeItem, MentorItem, StudentCouncilLeadItem, VentureProjectItem, CielEventItem, NewsItem, DownloadItem, GoogleFormItem } from "@/lib/types";
 import { LinkedInIcon } from "@/components/ui/linkedin-icon";
+import { Logo } from "@/components/ui/logo";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -2589,14 +2592,28 @@ export function AdminDashboardClient({
   eventTitle,
 }: Props) {
   const [activeTab, setActiveTab] = useState<AdminTab>("dashboard");
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("ciel_admin_theme") as "dark" | "light";
+    if (saved) setTheme(saved);
+  }, []);
+
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    localStorage.setItem("ciel_admin_theme", next);
+  };
 
   return (
-    <div className="adm-shell">
+    <div className="adm-shell" data-theme={theme}>
       {/* Sidebar Navigation */}
       <aside className="adm-sidebar">
-        <div className="adm-sidebar-brand">
-          <ShieldCheck size={20} />
-          <span>CIEL ERP Admin</span>
+        <div className="adm-sidebar-brand" style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "2px", padding: "12px 16px" }}>
+          <Logo href="/admin/dashboard" size="small" />
+          <span style={{ fontSize: "11px", color: "var(--ciel-gold-dark)", textTransform: "uppercase", letterSpacing: "1px", fontWeight: 700, marginLeft: "4px", marginTop: "-14px" }}>
+            ERP Admin Portal
+          </span>
         </div>
 
         <nav className="adm-nav">
@@ -2620,40 +2637,36 @@ export function AdminDashboardClient({
             <ImageIcon size={16} /> Gallery <span className="adm-nav-badge">{stats.totalImages}</span>
           </button>
 
-          <button className={`adm-nav-item ${activeTab === "mentors" ? "active" : ""}`} onClick={() => setActiveTab("mentors")}>
-            <UserStar size={16} /> Mentors <span className="adm-nav-badge">{stats.mentorCount ?? initialMentors.length}</span>
-          </button>
-
-          <button className={`adm-nav-item ${activeTab === "student-council" ? "active" : ""}`} onClick={() => setActiveTab("student-council")}>
-            <GraduationCap size={16} /> Student Council <span className="adm-nav-badge">{stats.councilCount ?? initialCouncil.length}</span>
-          </button>
-
-          <button className={`adm-nav-item ${activeTab === "governance" ? "active" : ""}`} onClick={() => setActiveTab("governance")}>
-            <Shield size={16} /> Governance <span className="adm-nav-badge">{stats.governanceCount ?? initialGovernance.length}</span>
-          </button>
-
           <button className={`adm-nav-item ${activeTab === "events" ? "active" : ""}`} onClick={() => setActiveTab("events")}>
-            <Calendar size={16} /> Events <span className="adm-nav-badge">{initialEvents.length}</span>
+            <Calendar size={16} /> Events &amp; Workshops
           </button>
 
           <button className={`adm-nav-item ${activeTab === "news" ? "active" : ""}`} onClick={() => setActiveTab("news")}>
-            <Newspaper size={16} /> News <span className="adm-nav-badge">{initialNews.length}</span>
+            <Newspaper size={16} /> News &amp; Announcements
+          </button>
+
+          <button className={`adm-nav-item ${activeTab === "mentors" ? "active" : ""}`} onClick={() => setActiveTab("mentors")}>
+            <UserStar size={16} /> Mentors Directory
+          </button>
+
+          <button className={`adm-nav-item ${activeTab === "student-council" ? "active" : ""}`} onClick={() => setActiveTab("student-council")}>
+            <GraduationCap size={16} /> Student Council
+          </button>
+
+          <button className={`adm-nav-item ${activeTab === "governance" ? "active" : ""}`} onClick={() => setActiveTab("governance")}>
+            <Building2 size={16} /> Governance Committees
           </button>
 
           <button className={`adm-nav-item ${activeTab === "downloads" ? "active" : ""}`} onClick={() => setActiveTab("downloads")}>
-            <Download size={16} /> Downloads <span className="adm-nav-badge">{initialDownloads.length}</span>
+            <Download size={16} /> Downloads &amp; Policies
           </button>
 
           <button className={`adm-nav-item ${activeTab === "google-forms" ? "active" : ""}`} onClick={() => setActiveTab("google-forms")}>
-            <FileSpreadsheet size={16} /> Google Forms <span className="adm-nav-badge">{stats.formsCount ?? initialGoogleForms.length}</span>
-          </button>
-
-          <button className={`adm-nav-item ${activeTab === "partners" ? "active" : ""}`} onClick={() => setActiveTab("partners")}>
-            <Handshake size={16} /> Partners
+            <FileSpreadsheet size={16} /> Google Forms
           </button>
 
           <button className={`adm-nav-item ${activeTab === "analytics" ? "active" : ""}`} onClick={() => setActiveTab("analytics")}>
-            <Activity size={16} /> Analytics
+            <TrendingUp size={16} /> Incubation Analytics
           </button>
 
           <button className={`adm-nav-item ${activeTab === "settings" ? "active" : ""}`} onClick={() => setActiveTab("settings")}>
@@ -2687,15 +2700,27 @@ export function AdminDashboardClient({
               {activeTab.replace("-", " ")}
             </span>
           </div>
-          <div className="adm-topbar-right">
-            <Clock size={14} />
-            <span>
-              {new Intl.DateTimeFormat("en-IN", {
-                dateStyle: "medium",
-                timeStyle: "short",
-                timeZone: "Asia/Kolkata",
-              }).format(new Date())}
-            </span>
+          <div className="adm-topbar-right" style={{ gap: "16px", display: "flex", alignItems: "center" }}>
+            <button
+              onClick={toggleTheme}
+              className="adm-btn adm-btn-outline"
+              style={{ padding: "6px 12px", fontSize: "12px", display: "inline-flex", alignItems: "center", gap: "6px", cursor: "pointer" }}
+              title={`Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`}
+            >
+              {theme === "dark" ? <Sun size={14} style={{ color: "#fbbf24" }} /> : <Moon size={14} style={{ color: "#2563eb" }} />}
+              <span>{theme === "dark" ? "Light Theme" : "Dark Theme"}</span>
+            </button>
+
+            <div style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+              <Clock size={14} />
+              <span>
+                {new Intl.DateTimeFormat("en-IN", {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                  timeZone: "Asia/Kolkata",
+                }).format(new Date())}
+              </span>
+            </div>
           </div>
         </div>
 

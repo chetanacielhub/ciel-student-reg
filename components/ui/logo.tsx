@@ -4,9 +4,10 @@ import Image from "next/image";
 type LogoProps = {
   className?: string;
   size?: "small" | "medium" | "large";
+  href?: string;
 };
 
-export function Logo({ className = "", size = "medium" }: LogoProps) {
+export function Logo({ className = "", size = "medium", href = "/" }: LogoProps) {
   const heightMap = {
     small: "100px",
     medium: "140px",
@@ -28,7 +29,7 @@ export function Logo({ className = "", size = "medium" }: LogoProps) {
   return (
     <Link
       className={`brand-lockup ${className}`}
-      href="/"
+      href={href}
       aria-label="CIEL Home"
       style={{
         display: "inline-flex",

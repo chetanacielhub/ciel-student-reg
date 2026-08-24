@@ -1,8 +1,5 @@
-/**
- * Admin section layout — renders admin pages WITHOUT the public SiteHeader/SiteFooter.
- * This layout sits inside the root layout (html/body/fonts/css) but replaces
- * the header/main/footer shell with a dedicated admin viewport.
- */
+import AdminLayoutWrapper from "./admin-layout-wrapper";
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return <AdminLayoutWrapper>{children}</AdminLayoutWrapper>;
 }
