@@ -10,12 +10,14 @@ export const metadata: Metadata = {
 export default function AcceleratorPage() {
   return (
     <section className="shell page-section">
-      <div className="section-heading" style={{ textAlign: "left", maxWidth: "800px", margin: "0 0 60px" }}>
-        <span className="eyebrow">
-          <Rocket size={14} className="text-gold" />
-          Scale-Up & Growth
-        </span>
-        <h1>CIEL Startup Accelerator</h1>
+      <div className="section-heading" style={{ margin: "0 0 36px" }}>
+        <div className="section-heading-row" style={{ justifyContent: "flex-start" }}>
+          <span className="eyebrow">
+            <Rocket size={14} className="text-gold" />
+            Scale-Up &amp; Growth
+          </span>
+          <h1>CIEL Startup Accelerator</h1>
+        </div>
         <p style={{ fontSize: "18px" }}>
           Designed for high-growth startups with an MVP or early revenue. We accelerate product-market fit, sales channels, industry partnerships, and investor funding rounds.
         </p>

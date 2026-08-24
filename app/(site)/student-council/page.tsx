@@ -18,11 +18,13 @@ export default async function StudentCouncilPage() {
   return (
     <div className="shell page-section">
       <div className="section-heading">
-        <span className="eyebrow">
-          <GraduationCap size={14} className="text-gold" />
-          Youth &amp; Student Leadership
-        </span>
-        <h1 style={{ marginTop: 16 }}>Student Innovation Council</h1>
+        <div className="section-heading-row">
+          <span className="eyebrow">
+            <GraduationCap size={14} className="text-gold" />
+            Youth &amp; Student Leadership
+          </span>
+          <h1>Student Innovation Council</h1>
+        </div>
         <p>
           The Student Innovation Council (SIC) is a student-led body under CIEL driving grassroots innovation, organizing campus hackathons, managing prototyping labs, and mentoring junior student founders.
         </p>

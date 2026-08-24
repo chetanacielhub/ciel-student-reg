@@ -18,11 +18,13 @@ export default async function EventsPage() {
   return (
     <div className="shell page-section">
       <div className="section-heading">
-        <span className="eyebrow">
-          <Calendar size={14} className="text-gold" />
-          Campus Calendar
-        </span>
-        <h1 style={{ marginTop: 16 }}>Events &amp; Hackathons</h1>
+        <div className="section-heading-row">
+          <span className="eyebrow">
+            <Calendar size={14} className="text-gold" />
+            Campus Calendar
+          </span>
+          <h1>Events &amp; Hackathons</h1>
+        </div>
         <p>
           Participate in business ideathons, hardware prototyping bootcamps, IP masterclasses, and investor Demo Days.
         </p>

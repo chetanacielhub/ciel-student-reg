@@ -29,7 +29,7 @@ export default async function AdminLoginPage({
 
         {/* Logo */}
         <div style={{ marginBottom: "32px", display: "flex", justifyContent: "center" }}>
-          <Logo href="/" size="medium" />
+          <Logo size="medium" />
         </div>
 
         {/* Icon + Title */}

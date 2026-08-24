@@ -19,11 +19,13 @@ export default function PartnersPage() {
   return (
     <div className="shell page-section">
       <div className="section-heading">
-        <span className="eyebrow">
-          <Handshake size={14} className="text-gold" />
-          Strategic Network
-        </span>
-        <h1 style={{ marginTop: 16 }}>Industry Partners &amp; MoUs</h1>
+        <div className="section-heading-row">
+          <span className="eyebrow">
+            <Handshake size={14} className="text-gold" />
+            Strategic Network
+          </span>
+          <h1>Industry Partners &amp; MoUs</h1>
+        </div>
         <p>
           CIEL collaborates with government research agencies, venture capital syndicates, and industry leaders to provide corporate pilot access and market validation.
         </p>

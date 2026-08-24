@@ -9,12 +9,14 @@ export const metadata: Metadata = {
 export default function SocialImpactPage() {
   return (
     <section className="shell page-section">
-      <div className="section-heading" style={{ textAlign: "left", maxWidth: "800px", margin: "0 0 60px" }}>
-        <span className="eyebrow">
-          <Heart size={14} className="text-gold" />
-          Community & Sustainability
-        </span>
-        <h1>Social Impact Vertical</h1>
+      <div className="section-heading" style={{ margin: "0 0 36px" }}>
+        <div className="section-heading-row" style={{ justifyContent: "flex-start" }}>
+          <span className="eyebrow">
+            <Heart size={14} className="text-gold" />
+            Community &amp; Sustainability
+          </span>
+          <h1>Social Impact Vertical</h1>
+        </div>
         <p style={{ fontSize: "18px" }}>
           Fostering inclusive entrepreneurship, women-led enterprises, sustainable grassroots technology, and rural livelihood generation aligned with global UN SDGs.
         </p>

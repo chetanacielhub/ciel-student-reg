@@ -18,11 +18,13 @@ export default async function MentorsPage() {
   return (
     <div className="shell page-section">
       <div className="section-heading">
-        <span className="eyebrow">
-          <UserCheck size={14} className="text-gold" />
-          Expert Guidance
-        </span>
-        <h1 style={{ marginTop: 16 }}>Mentorship &amp; Advisory Directory</h1>
+        <div className="section-heading-row">
+          <span className="eyebrow">
+            <UserCheck size={14} className="text-gold" />
+            Expert Guidance
+          </span>
+          <h1>Mentorship &amp; Advisory Directory</h1>
+        </div>
         <p>
           Our network of domain advisors, serial entrepreneurs, venture capital partners, and patent attorneys provide 1-on-1 strategic guidance to CIEL incubated ventures.
         </p>

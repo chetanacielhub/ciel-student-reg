@@ -13,11 +13,13 @@ export default function StartupShowcasePage() {
   return (
     <div className="shell page-section">
       <div className="section-heading">
-        <span className="eyebrow">
-          <Rocket size={14} className="text-gold" />
-          Incubated Portfolio
-        </span>
-        <h1 style={{ marginTop: 16 }}>Startup Showcase</h1>
+        <div className="section-heading-row">
+          <span className="eyebrow">
+            <Rocket size={14} className="text-gold" />
+            Incubated Portfolio
+          </span>
+          <h1>Startup Showcase</h1>
+        </div>
         <p>
           Discover cutting-edge technological enterprises, healthtech innovations, clean-tech solutions, and SaaS platforms built by CIEL student founders and alumni.
         </p>

@@ -10,11 +10,13 @@ export default async function DownloadsPage() {
   return (
     <div className="shell page-section">
       <div className="section-heading">
-        <span className="eyebrow">
-          <FolderDown size={14} className="text-gold" />
-          Institutional Repository
-        </span>
-        <h1 style={{ marginTop: 16 }}>Downloads &amp; Policy Manuals</h1>
+        <div className="section-heading-row">
+          <span className="eyebrow">
+            <FolderDown size={14} className="text-gold" />
+            Institutional Repository
+          </span>
+          <h1>Downloads &amp; Policy Manuals</h1>
+        </div>
         <p>
           Access verified policy handbooks, IP disclosure guidelines, incubation agreements, and pitch deck templates.
         </p>

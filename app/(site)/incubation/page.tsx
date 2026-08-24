@@ -10,12 +10,14 @@ export const metadata: Metadata = {
 export default function IncubationPage() {
   return (
     <section className="shell page-section">
-      <div className="section-heading" style={{ textAlign: "left", maxWidth: "800px", margin: "0 0 60px" }}>
-        <span className="eyebrow">
-          <Lightbulb size={14} className="text-gold" />
-          Idea to Startup
-        </span>
-        <h1>CIEL Incubation Cell</h1>
+      <div className="section-heading" style={{ margin: "0 0 36px" }}>
+        <div className="section-heading-row" style={{ justifyContent: "flex-start" }}>
+          <span className="eyebrow">
+            <Lightbulb size={14} className="text-gold" />
+            Idea to Startup
+          </span>
+          <h1>CIEL Incubation Cell</h1>
+        </div>
         <p style={{ fontSize: "18px" }}>
           The Incubation Cell provides early-stage student founders, researchers, and innovators with structured incubation programs, prototype lab access, seed grants, legal support, and dedicated office workspace.
         </p>

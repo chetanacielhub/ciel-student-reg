@@ -18,11 +18,13 @@ export default async function NewsPage() {
   return (
     <div className="shell page-section">
       <div className="section-heading">
-        <span className="eyebrow">
-          <Newspaper size={14} className="text-gold" />
-          Media &amp; Bulletins
-        </span>
-        <h1 style={{ marginTop: 16 }}>Incubation News &amp; Updates</h1>
+        <div className="section-heading-row">
+          <span className="eyebrow">
+            <Newspaper size={14} className="text-gold" />
+            Media &amp; Bulletins
+          </span>
+          <h1>Incubation News &amp; Updates</h1>
+        </div>
         <p>
           Stay informed about patent grants, seed funding disbursements, corporate partnerships, and ecosystem milestones.
         </p>

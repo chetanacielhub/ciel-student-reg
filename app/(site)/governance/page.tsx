@@ -18,11 +18,13 @@ export default async function GovernancePage() {
   return (
     <div className="shell page-section">
       <div className="section-heading">
-        <span className="eyebrow">
-          <Shield size={14} className="text-gold" />
-          Institutional Leadership
-        </span>
-        <h1 style={{ marginTop: 16 }}>Governance Structure</h1>
+        <div className="section-heading-row">
+          <span className="eyebrow">
+            <Shield size={14} className="text-gold" />
+            Institutional Leadership
+          </span>
+          <h1>Governance Structure</h1>
+        </div>
         <p>
           CIEL operates under strict academic and administrative governance to ensure compliance, transparency, equity allocation integrity, and ethical research.
         </p>

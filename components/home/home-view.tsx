@@ -141,9 +141,11 @@ export function HomeView({ event }: HomeViewProps) {
           <div>
             <FadeIn delay={0.1}>
               <h1 className="ref-hero-title">
-                Ideas.<br />
-                <span className="text-gold">Innovation.</span><br />
-                Impact.
+                Ideate.<br />
+                Innovate.<br />
+                <span className="text-gold" style={{ whiteSpace: "nowrap" }}>
+                  Create Impact.
+                </span>
               </h1>
             </FadeIn>
 

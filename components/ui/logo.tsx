@@ -1,13 +1,23 @@
 import Link from "next/link";
 import Image from "next/image";
 
+const CIEL_LINKEDIN_URL = "https://www.linkedin.com/company/ciel-center-for-innovation-and-entrepreneurship-learning";
+
 type LogoProps = {
   className?: string;
   size?: "small" | "medium" | "large";
   href?: string;
+  target?: string;
+  rel?: string;
 };
 
-export function Logo({ className = "", size = "medium", href = "/" }: LogoProps) {
+export function Logo({
+  className = "",
+  size = "medium",
+  href = CIEL_LINKEDIN_URL,
+  target,
+  rel,
+}: LogoProps) {
   const heightMap = {
     small: "100px",
     medium: "140px",
@@ -26,11 +36,17 @@ export function Logo({ className = "", size = "medium", href = "/" }: LogoProps)
     large: "-50px 0",
   };
 
+  const isExternal = href.startsWith("http");
+  const linkTarget = target ?? (isExternal ? "_blank" : undefined);
+  const linkRel = rel ?? (isExternal ? "noopener noreferrer" : undefined);
+
   return (
     <Link
       className={`brand-lockup ${className}`}
       href={href}
-      aria-label="CIEL Home"
+      target={linkTarget}
+      rel={linkRel}
+      aria-label="CIEL LinkedIn Page"
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -62,3 +78,4 @@ export function Logo({ className = "", size = "medium", href = "/" }: LogoProps)
     </Link>
   );
 }
+

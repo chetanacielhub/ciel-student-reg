@@ -422,12 +422,29 @@ a {
 
 .site-main {
   min-height: calc(100vh - 160px);
-  padding-bottom: 80px;
+  padding-bottom: 60px;
 }
 
 .page-section {
-  padding: 90px 0;
+  padding: 60px 0;
   position: relative;
+}
+
+/* Remove extra space between page content and navbar */
+.site-main > :first-child,
+.site-main > .page-section:first-child,
+.site-main > .shell:first-child,
+.site-main > div:first-child,
+.site-main > section:first-child {
+  padding-top: 4px !important;
+  margin-top: 0 !important;
+}
+
+.site-main > :first-child .section-heading:first-child,
+.site-main > .shell:first-child > .section-heading:first-child,
+.site-main .section-heading:first-child {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
 }
 
 .hero {
@@ -846,8 +863,28 @@ a {
 /* Headings */
 .section-heading {
   text-align: center;
-  max-width: 750px;
-  margin: 0 auto 60px;
+  max-width: 850px;
+  margin: 0 auto 40px;
+}
+
+.section-heading-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.section-heading-row .eyebrow {
+  margin: 0 !important;
+  flex-shrink: 0;
+}
+
+.section-heading-row h1,
+.section-heading-row h2 {
+  margin: 0 !important;
+  line-height: 1.2 !important;
 }
 
 .section-heading h2 {

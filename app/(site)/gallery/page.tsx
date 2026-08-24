@@ -35,11 +35,13 @@ export default async function GalleryPage() {
     <section className="shell page-section">
       {/* Page heading */}
       <div className="section-heading">
-        <span className="eyebrow">
-          <Images size={14} aria-hidden="true" />
-          Innovation Moments
-        </span>
-        <h2 style={{ marginTop: "16px" }}>Our Gallery</h2>
+        <div className="section-heading-row">
+          <span className="eyebrow">
+            <Images size={14} aria-hidden="true" />
+            Innovation Moments
+          </span>
+          <h2>Our Gallery</h2>
+        </div>
         <p>
           Relive the energy of hackathons, incubation showcases, mentor interactions,
           prototype demos, and community-building events at CIEL.

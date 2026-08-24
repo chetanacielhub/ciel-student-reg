@@ -12,11 +12,13 @@ export default function AboutPage() {
   return (
     <div className="shell page-section">
       <div className="section-heading">
-        <span className="eyebrow">
-          <Compass size={14} className="text-gold" />
-          Institutional Overview
-        </span>
-        <h1 style={{ marginTop: 16 }}>About CIEL</h1>
+        <div className="section-heading-row">
+          <span className="eyebrow">
+            <Compass size={14} className="text-gold" />
+            Institutional Overview
+          </span>
+          <h1>About CIEL</h1>
+        </div>
         <p>
           Centre for Innovation &amp; Entrepreneurship Learning (CIEL) is a premier institutional incubator dedicated to nurturing student innovators, researchers, and early-stage entrepreneurs into high-impact ventures.
         </p>
