@@ -6,22 +6,29 @@ import { Sun, Moon } from "lucide-react";
 export function AdminThemeToggle() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
 
-  useEffect(() => {
-    const saved = localStorage.getItem("ciel_admin_theme") as "dark" | "light";
-    const currentTheme = saved || "dark";
-    setTheme(currentTheme);
-    
+  const applyTheme = (t: "dark" | "light") => {
+    setTheme(t);
+    localStorage.setItem("ciel_admin_theme", t);
+    document.documentElement.setAttribute("data-theme", t);
+    document.body.setAttribute("data-theme", t);
+    if (t === "light") {
+      document.body.classList.add("light-theme");
+    } else {
+      document.body.classList.remove("light-theme");
+    }
+
     const targets = document.querySelectorAll(".admin-portal, .admin-login-page, .adm-shell");
-    targets.forEach((el) => el.setAttribute("data-theme", currentTheme));
+    targets.forEach((el) => el.setAttribute("data-theme", t));
+  };
+
+  useEffect(() => {
+    const saved = (localStorage.getItem("ciel_admin_theme") as "dark" | "light") || "dark";
+    applyTheme(saved);
   }, []);
 
   const toggleTheme = () => {
     const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    localStorage.setItem("ciel_admin_theme", next);
-    
-    const targets = document.querySelectorAll(".admin-portal, .admin-login-page, .adm-shell");
-    targets.forEach((el) => el.setAttribute("data-theme", next));
+    applyTheme(next);
   };
 
   return (
@@ -38,8 +45,8 @@ export function AdminThemeToggle() {
         fontSize: "12px",
         borderRadius: "8px",
         border: "1px solid var(--ciel-gold-border)",
-        background: theme === "dark" ? "rgba(212, 175, 55, 0.1)" : "rgba(255, 255, 255, 0.9)",
-        color: "inherit",
+        background: theme === "dark" ? "rgba(212, 175, 55, 0.1)" : "#ffffff",
+        color: theme === "dark" ? "#ffffff" : "#0f172a",
       }}
       title={`Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`}
     >
@@ -52,3 +59,4 @@ export function AdminThemeToggle() {
     </button>
   );
 }
+

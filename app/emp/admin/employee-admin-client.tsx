@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { EmpSessionData, getAuthorizedEmpUsers } from "@/lib/emp-auth";
-import { EmpThemeToggle } from "../layout";
+import { EmpThemeToggle } from "../emp-theme-toggle";
 import { Logo } from "@/components/ui/logo";
 import { AttendanceRecord, TaskRecord, DailyUpdateRecord } from "@/lib/emp-store";
 import {

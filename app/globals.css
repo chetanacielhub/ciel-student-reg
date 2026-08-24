@@ -4441,9 +4441,11 @@ img, iframe, video {
 
 /* ==========================================================================
    ADMIN LIGHT THEME SYSTEM OVERRIDES ([data-theme="light"])
-   Signature CIEL Golden Borders on Crisp Bright Canvas
+   Signature CIEL Golden Accents on Crisp Bright Canvas
    ========================================================================== */
 
+html[data-theme="light"],
+body[data-theme="light"],
 .adm-shell[data-theme="light"],
 .admin-login-page[data-theme="light"],
 .admin-portal[data-theme="light"],
@@ -4465,11 +4467,18 @@ img, iframe, video {
   color: #0f172a !important;
 }
 
-.admin-portal[data-theme="light"] .adm-shell {
+body[data-theme="light"] {
   background-color: #f8fafc !important;
   color: #0f172a !important;
 }
 
+.admin-portal[data-theme="light"] .adm-shell,
+.adm-shell[data-theme="light"] {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Sidebar */
 .admin-portal[data-theme="light"] .adm-sidebar,
 .adm-shell[data-theme="light"] .adm-sidebar {
   background: #ffffff !important;
@@ -4478,6 +4487,7 @@ img, iframe, video {
 
 .admin-portal[data-theme="light"] .adm-sidebar-brand,
 .adm-shell[data-theme="light"] .adm-sidebar-brand {
+  background: #ffffff !important;
   color: #0f172a !important;
   border-bottom: 1px solid var(--ciel-gold-border) !important;
 }
@@ -4498,6 +4508,7 @@ img, iframe, video {
   background: rgba(212, 175, 55, 0.15) !important;
   color: var(--ciel-gold-dark) !important;
   border-right: 3px solid var(--ciel-gold) !important;
+  font-weight: 600 !important;
 }
 
 .admin-portal[data-theme="light"] .adm-nav-badge,
@@ -4511,6 +4522,7 @@ img, iframe, video {
 .adm-shell[data-theme="light"] .adm-sidebar-stats {
   border-top: 1px solid var(--ciel-gold-border) !important;
   border-bottom: 1px solid var(--ciel-gold-border) !important;
+  background: #f8fafc !important;
 }
 
 .admin-portal[data-theme="light"] .adm-sidebar-stat,
@@ -4518,6 +4530,19 @@ img, iframe, video {
   color: #64748b !important;
 }
 
+.admin-portal[data-theme="light"] .adm-logout-btn,
+.adm-shell[data-theme="light"] .adm-logout-btn {
+  background: #fff5f5 !important;
+  color: #dc2626 !important;
+  border: 1px solid #fecaca !important;
+}
+
+.admin-portal[data-theme="light"] .adm-logout-btn:hover,
+.adm-shell[data-theme="light"] .adm-logout-btn:hover {
+  background: #fee2e2 !important;
+}
+
+/* Main Content & Topbar */
 .admin-portal[data-theme="light"] .adm-main,
 .adm-shell[data-theme="light"] .adm-main {
   background: #f8fafc !important;
@@ -4545,12 +4570,15 @@ img, iframe, video {
   color: #64748b !important;
 }
 
+/* Cards & Containers */
 .admin-portal[data-theme="light"] .adm-card,
 .admin-portal[data-theme="light"] .adm-kpi-card,
 .admin-portal[data-theme="light"] .adm-table-wrap,
+.admin-portal[data-theme="light"] .adm-upload-card,
 .adm-shell[data-theme="light"] .adm-card,
 .adm-shell[data-theme="light"] .adm-kpi-card,
 .adm-shell[data-theme="light"] .adm-table-wrap,
+.adm-shell[data-theme="light"] .adm-upload-card,
 .admin-portal[data-theme="light"] .stat-card,
 .adm-shell[data-theme="light"] .stat-card {
   background: #ffffff !important;
@@ -4570,10 +4598,22 @@ img, iframe, video {
 }
 
 .admin-portal[data-theme="light"] .stat-icon,
-.adm-shell[data-theme="light"] .stat-icon {
+.adm-shell[data-theme="light"] .stat-icon,
+.admin-portal[data-theme="light"] .adm-upload-icon,
+.adm-shell[data-theme="light"] .adm-upload-icon {
   background: rgba(212, 175, 55, 0.12) !important;
   color: var(--ciel-gold-dark) !important;
   border: 1px solid var(--ciel-gold-border) !important;
+}
+
+.admin-portal[data-theme="light"] .adm-upload-title,
+.adm-shell[data-theme="light"] .adm-upload-title {
+  color: #0f172a !important;
+}
+
+.admin-portal[data-theme="light"] .adm-upload-desc,
+.adm-shell[data-theme="light"] .adm-upload-desc {
+  color: #64748b !important;
 }
 
 .admin-portal[data-theme="light"] .adm-kpi-val,
@@ -4586,17 +4626,26 @@ img, iframe, video {
   color: #64748b !important;
 }
 
+/* Tables */
+.admin-portal[data-theme="light"] .adm-table,
+.adm-shell[data-theme="light"] .adm-table {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
 .admin-portal[data-theme="light"] .adm-table th,
 .adm-shell[data-theme="light"] .adm-table th {
-  background: rgba(212, 175, 55, 0.08) !important;
+  background: #f8fafc !important;
   color: var(--ciel-gold-dark) !important;
-  border-bottom: 1px solid var(--ciel-gold-border) !important;
+  border-bottom: 2px solid var(--ciel-gold-border) !important;
+  font-weight: 600 !important;
 }
 
 .admin-portal[data-theme="light"] .adm-table td,
 .adm-shell[data-theme="light"] .adm-table td {
   color: #1e293b !important;
   border-bottom: 1px solid #f1f5f9 !important;
+  background: #ffffff !important;
 }
 
 .admin-portal[data-theme="light"] .adm-table tr:hover td,
@@ -4607,6 +4656,7 @@ img, iframe, video {
 .admin-portal[data-theme="light"] .adm-td-primary,
 .adm-shell[data-theme="light"] .adm-td-primary {
   color: #0f172a !important;
+  font-weight: 600 !important;
 }
 
 .admin-portal[data-theme="light"] .adm-td-secondary,
@@ -4616,23 +4666,92 @@ img, iframe, video {
   color: #64748b !important;
 }
 
+.admin-portal[data-theme="light"] .adm-td-mono,
+.adm-shell[data-theme="light"] .adm-td-mono {
+  color: #0f172a !important;
+}
+
+.admin-portal[data-theme="light"] .adm-empty-cell,
+.adm-shell[data-theme="light"] .adm-empty-cell {
+  color: #64748b !important;
+}
+
+/* Badges & Role Labels */
+.admin-portal[data-theme="light"] .adm-role-team_leader,
+.adm-shell[data-theme="light"] .adm-role-team_leader {
+  background: #dbeafe !important;
+  color: #1e40af !important;
+  border: 1px solid #bfdbfe !important;
+}
+
+.admin-portal[data-theme="light"] .adm-role-team_member,
+.adm-shell[data-theme="light"] .adm-role-team_member {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border: 1px solid #fde68a !important;
+}
+
+.admin-portal[data-theme="light"] .adm-role-solo,
+.adm-shell[data-theme="light"] .adm-role-solo {
+  background: #d1fae5 !important;
+  color: #065f46 !important;
+  border: 1px solid #a7f3d0 !important;
+}
+
+.admin-portal[data-theme="light"] .badge-brand,
+.adm-shell[data-theme="light"] .badge-brand {
+  background: rgba(212, 175, 55, 0.15) !important;
+  color: #92400e !important;
+  border: 1px solid var(--ciel-gold-border) !important;
+}
+
+.admin-portal[data-theme="light"] .badge-neutral,
+.adm-shell[data-theme="light"] .badge-neutral {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+/* Inputs & Form Controls */
 .admin-portal[data-theme="light"] .adm-search-input,
 .admin-portal[data-theme="light"] .adm-input,
 .admin-portal[data-theme="light"] .adm-select,
 .admin-portal[data-theme="light"] .adm-textarea,
 .admin-portal[data-theme="light"] .field input,
 .admin-portal[data-theme="light"] .field select,
+.admin-portal[data-theme="light"] .field textarea,
 .adm-shell[data-theme="light"] .adm-search-input,
 .adm-shell[data-theme="light"] .adm-input,
 .adm-shell[data-theme="light"] .adm-select,
 .adm-shell[data-theme="light"] .adm-textarea,
 .adm-shell[data-theme="light"] .field input,
-.adm-shell[data-theme="light"] .field select {
+.adm-shell[data-theme="light"] .field select,
+.adm-shell[data-theme="light"] .field textarea,
+.adm-shell[data-theme="light"] input,
+.adm-shell[data-theme="light"] select,
+.adm-shell[data-theme="light"] textarea {
   background: #ffffff !important;
-  border: 1px solid var(--ciel-gold-border) !important;
+  border: 1px solid #cbd5e1 !important;
   color: #0f172a !important;
 }
 
+.admin-portal[data-theme="light"] .adm-search-input::placeholder,
+.admin-portal[data-theme="light"] .adm-input::placeholder,
+.admin-portal[data-theme="light"] .adm-textarea::placeholder,
+.adm-shell[data-theme="light"] .adm-search-input::placeholder,
+.adm-shell[data-theme="light"] .adm-input::placeholder,
+.adm-shell[data-theme="light"] .adm-textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+.admin-portal[data-theme="light"] .field-label,
+.adm-shell[data-theme="light"] .field-label,
+.adm-shell[data-theme="light"] label {
+  color: #334155 !important;
+  font-weight: 600 !important;
+}
+
+/* Buttons */
 .admin-portal[data-theme="light"] .adm-btn-outline,
 .adm-shell[data-theme="light"] .adm-btn-outline {
   background: #ffffff !important;
@@ -4652,6 +4771,7 @@ img, iframe, video {
   border: 1px solid var(--ciel-gold-border) !important;
 }
 
+/* Login Page */
 .admin-portal[data-theme="light"] .admin-login-page,
 .admin-login-page[data-theme="light"] {
   background: #f8fafc !important;
@@ -4662,6 +4782,7 @@ img, iframe, video {
   background: #ffffff !important;
   border: 1px solid var(--ciel-gold-border) !important;
   box-shadow: 0 20px 50px rgba(212, 175, 55, 0.15) !important;
+  color: #0f172a !important;
 }
 
 .admin-portal[data-theme="light"] .admin-login-title,
@@ -4679,27 +4800,72 @@ img, iframe, video {
   color: #94a3b8 !important;
 }
 
-.admin-portal[data-theme="light"] code {
+/* Code & Modals */
+.admin-portal[data-theme="light"] code,
+.adm-shell[data-theme="light"] code {
   background: rgba(212, 175, 55, 0.08) !important;
   color: var(--ciel-gold-dark) !important;
   border: 1px solid var(--ciel-gold-border) !important;
 }
 
-/* Force light colors on inline-styled white and muted text elements in admin light theme */
+/* Modal Backdrops & Cards in Light Mode */
+.admin-portal[data-theme="light"] [style*="position: fixed"],
+.adm-shell[data-theme="light"] [style*="position: fixed"] {
+  background: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+.admin-portal[data-theme="light"] [style*="position: fixed"] > div,
+.adm-shell[data-theme="light"] [style*="position: fixed"] > div {
+  background: #ffffff !important;
+  border: 1px solid var(--ciel-gold-border) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  color: #0f172a !important;
+}
+
+/* Overrides for inline dark/white text & background styles in light mode */
 .admin-portal[data-theme="light"] [style*="color: #ffffff"],
 .admin-portal[data-theme="light"] [style*="color: '#ffffff'"],
 .admin-portal[data-theme="light"] [style*="color:#ffffff"],
+.admin-portal[data-theme="light"] [style*="color: #FFFFFF"],
+.admin-portal[data-theme="light"] [style*="color: '#FFFFFF'"],
+.admin-portal[data-theme="light"] [style*="color:#FFFFFF"],
 .adm-shell[data-theme="light"] [style*="color: #ffffff"],
 .adm-shell[data-theme="light"] [style*="color: '#ffffff'"],
-.adm-shell[data-theme="light"] [style*="color:#ffffff"] {
+.adm-shell[data-theme="light"] [style*="color:#ffffff"],
+.adm-shell[data-theme="light"] [style*="color: #FFFFFF"],
+.adm-shell[data-theme="light"] [style*="color: '#FFFFFF'"],
+.adm-shell[data-theme="light"] [style*="color:#FFFFFF"] {
   color: #0f172a !important;
 }
 
 .admin-portal[data-theme="light"] [style*="color: #94a3b8"],
 .admin-portal[data-theme="light"] [style*="color: #cbd5e1"],
+.admin-portal[data-theme="light"] [style*="color: #C8CBD9"],
 .adm-shell[data-theme="light"] [style*="color: #94a3b8"],
-.adm-shell[data-theme="light"] [style*="color: #cbd5e1"] {
+.adm-shell[data-theme="light"] [style*="color: #cbd5e1"],
+.adm-shell[data-theme="light"] [style*="color: #C8CBD9"] {
   color: #475569 !important;
+}
+
+.admin-portal[data-theme="light"] [style*="background: rgba(255, 255, 255, 0.06)"],
+.admin-portal[data-theme="light"] [style*="background: rgba(255, 255, 255, 0.03)"],
+.admin-portal[data-theme="light"] [style*="background: rgba(255,255,255,0.06)"],
+.admin-portal[data-theme="light"] [style*="background: rgba(255,255,255,0.03)"],
+.adm-shell[data-theme="light"] [style*="background: rgba(255, 255, 255, 0.06)"],
+.adm-shell[data-theme="light"] [style*="background: rgba(255, 255, 255, 0.03)"],
+.adm-shell[data-theme="light"] [style*="background: rgba(255,255,255,0.06)"],
+.adm-shell[data-theme="light"] [style*="background: rgba(255,255,255,0.03)"] {
+  background: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+}
+
+.admin-portal[data-theme="light"] [style*="background: rgba(0, 0, 0, 0.3)"],
+.admin-portal[data-theme="light"] [style*="background: rgba(0,0,0,0.3)"],
+.adm-shell[data-theme="light"] [style*="background: rgba(0, 0, 0, 0.3)"],
+.adm-shell[data-theme="light"] [style*="background: rgba(0,0,0,0.3)"] {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
 }
 
 /* ==========================================================================

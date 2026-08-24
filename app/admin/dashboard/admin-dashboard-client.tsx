@@ -2594,15 +2594,29 @@ export function AdminDashboardClient({
   const [activeTab, setActiveTab] = useState<AdminTab>("dashboard");
   const [theme, setTheme] = useState<"dark" | "light">("dark");
 
+  const applyTheme = (t: "dark" | "light") => {
+    setTheme(t);
+    localStorage.setItem("ciel_admin_theme", t);
+    document.documentElement.setAttribute("data-theme", t);
+    document.body.setAttribute("data-theme", t);
+    if (t === "light") {
+      document.body.classList.add("light-theme");
+    } else {
+      document.body.classList.remove("light-theme");
+    }
+
+    const targets = document.querySelectorAll(".admin-portal, .admin-login-page, .adm-shell");
+    targets.forEach((el) => el.setAttribute("data-theme", t));
+  };
+
   useEffect(() => {
-    const saved = localStorage.getItem("ciel_admin_theme") as "dark" | "light";
-    if (saved) setTheme(saved);
+    const saved = (localStorage.getItem("ciel_admin_theme") as "dark" | "light") || "dark";
+    applyTheme(saved);
   }, []);
 
   const toggleTheme = () => {
     const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    localStorage.setItem("ciel_admin_theme", next);
+    applyTheme(next);
   };
 
   return (

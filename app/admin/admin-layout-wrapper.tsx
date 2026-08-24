@@ -7,8 +7,14 @@ export default function AdminLayoutWrapper({ children }: { children: React.React
 
   useEffect(() => {
     const saved = localStorage.getItem("ciel_admin_theme") as "dark" | "light";
-    if (saved) {
-      setTheme(saved);
+    const currentTheme = saved || "dark";
+    setTheme(currentTheme);
+    document.documentElement.setAttribute("data-theme", currentTheme);
+    document.body.setAttribute("data-theme", currentTheme);
+    if (currentTheme === "light") {
+      document.body.classList.add("light-theme");
+    } else {
+      document.body.classList.remove("light-theme");
     }
   }, []);
 
@@ -18,3 +24,4 @@ export default function AdminLayoutWrapper({ children }: { children: React.React
     </div>
   );
 }
+
