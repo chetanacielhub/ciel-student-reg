@@ -13,7 +13,6 @@ import {
   RefreshCw,
   Search,
   CheckCircle2,
-  MapPin,
   Lock,
   Compass,
   X,
@@ -56,6 +55,7 @@ export default function GoogleFormsPage() {
     );
 
     if (enableGps && navigator.geolocation) {
+      setGeoStatus((prev) => ({ ...prev, loading: true, error: null }));
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const res = checkChetanaGeofence(pos.coords.latitude, pos.coords.longitude);
@@ -77,6 +77,12 @@ export default function GoogleFormsPage() {
           if (err.code === 1) {
             msg = "Location permission is blocked. Please click the lock 🔒 icon in your browser address bar and set Location to 'Allow'.";
           }
+          setGeoStatus({
+            loading: false,
+            isWithinGeofence: false,
+            distanceMeters: null,
+            error: msg,
+          });
           window.alert(`⚠️ Location Disabled\n\n${msg}`);
         },
         { enableHighAccuracy: true, timeout: 10000 }
@@ -85,17 +91,7 @@ export default function GoogleFormsPage() {
   }, []);
 
   // ─── LOCATION VERIFICATION ───────────────────────────────────────────────
-  const verifyLocation = useCallback((bypass: boolean = false, triggerAlertOnFail: boolean = false) => {
-    if (bypass) {
-      setGeoStatus({
-        loading: false,
-        isWithinGeofence: true,
-        distanceMeters: 0,
-        error: null,
-      });
-      return;
-    }
-
+  const verifyLocation = useCallback((triggerAlertOnFail: boolean = false) => {
     if (typeof window === "undefined" || !navigator.geolocation) {
       setGeoStatus({
         loading: false,
@@ -155,7 +151,7 @@ export default function GoogleFormsPage() {
       }
     }
     loadForms();
-    verifyLocation(false, true);
+    verifyLocation(true);
   }, [verifyLocation]);
 
   const categories = ["All", ...Array.from(new Set(forms.map((f) => f.category || "General").filter(Boolean)))];
@@ -202,12 +198,6 @@ export default function GoogleFormsPage() {
             <button className="pill pill-action" onClick={promptSystemAlert} title="Click to enable location via system alert">
               <span className="dot dot-red" />
               <span>Location Disabled (Enable GPS)</span>
-            </button>
-          )}
-
-          {geoStatus.isWithinGeofence !== true && (
-            <button className="campus-bypass-btn" onClick={() => verifyLocation(true)}>
-              I am on Campus
             </button>
           )}
         </div>
@@ -366,9 +356,6 @@ export default function GoogleFormsPage() {
                       <button onClick={promptSystemAlert} className="button button-primary button-small">
                         <Compass size={14} /> Enable Location
                       </button>
-                      <button onClick={() => verifyLocation(true)} className="button button-secondary button-small">
-                        I am on Campus
-                      </button>
                     </div>
                   </div>
                 )}
@@ -467,22 +454,6 @@ export default function GoogleFormsPage() {
         .dot-red {
           background: #ef4444;
           box-shadow: 0 0 6px #ef4444;
-        }
-
-        .campus-bypass-btn {
-          background: transparent;
-          border: 1px solid var(--border, rgba(255, 255, 255, 0.15));
-          color: var(--text-muted);
-          font-size: 0.78rem;
-          padding: 5px 10px;
-          border-radius: 999px;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .campus-bypass-btn:hover {
-          color: var(--text-primary);
-          border-color: var(--ciel-gold);
         }
 
         .forms-grid {
