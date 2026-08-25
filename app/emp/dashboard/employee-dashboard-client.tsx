@@ -179,20 +179,34 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
     }
 
     if (!navigator.geolocation) {
-      setGeoStatus((prev) => ({ ...prev, loading: false, error: "Geolocation not supported on this device." }));
+      const msg = "Geolocation is not supported by your browser.";
+      setGeoStatus((prev) => ({ ...prev, loading: false, error: msg }));
+      setActionMessage({ type: "error", text: `⚠️ ${msg}` });
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
       (pos) => { processCoordinates(pos.coords.latitude, pos.coords.longitude); },
       (err) => {
+        let errMsg = "GPS error. Please enable location permissions in your browser.";
+        if (err.code === 1) {
+          errMsg = "Location access was denied. Please click the lock icon in your address bar and allow Location access to check-in.";
+        } else if (err.code === 2) {
+          errMsg = "Device GPS / Location is turned OFF. Please turn ON your device location services and click 'Detect Location'.";
+        } else if (err.code === 3) {
+          errMsg = "GPS request timed out. Please ensure GPS is enabled and try again.";
+        }
         setGeoStatus((prev) => ({
           ...prev,
           loading: false,
-          error: `GPS error: ${err.message}. Enable location permissions in browser.`,
+          error: errMsg,
         }));
+        setActionMessage({
+          type: "error",
+          text: `⚠️ Location Off / Permission Denied: ${errMsg}`,
+        });
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
     );
   };
 
