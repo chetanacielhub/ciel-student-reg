@@ -26,7 +26,6 @@ import {
   LogOut,
   Mail,
   MoreHorizontal,
-  Newspaper,
   Plus,
   RefreshCw,
   Rocket,
@@ -56,7 +55,7 @@ import {
   Moon,
 } from "lucide-react";
 import { CIEL_DOWNLOADS } from "@/lib/ciel-data";
-import type { GovernanceCommitteeItem, MentorItem, StudentCouncilLeadItem, VentureProjectItem, CielEventItem, NewsItem, DownloadItem, GoogleFormItem } from "@/lib/types";
+import type { GovernanceCommitteeItem, MentorItem, StudentCouncilLeadItem, VentureProjectItem, CielEventItem, DownloadItem, GoogleFormItem } from "@/lib/types";
 import { LinkedInIcon } from "@/components/ui/linkedin-icon";
 import { Logo } from "@/components/ui/logo";
 
@@ -111,7 +110,6 @@ type Props = {
   initialCouncil?: StudentCouncilLeadItem[];
   initialGovernance?: GovernanceCommitteeItem[];
   initialEvents?: CielEventItem[];
-  initialNews?: NewsItem[];
   initialDownloads?: DownloadItem[];
   initialGoogleForms?: GoogleFormItem[];
   stats: AdminStats;
@@ -128,7 +126,6 @@ type AdminTab =
   | "student-council"
   | "governance"
   | "events"
-  | "news"
   | "downloads"
   | "google-forms"
   | "partners"
@@ -1362,10 +1359,56 @@ function ERPGovernanceTab({ initialGovernance }: { initialGovernance: Governance
                 <input required className="input" placeholder="e.g. Dr. B. R. Patil" value={memberForm.name} onChange={(e) => setMemberForm({ ...memberForm, name: e.target.value })} />
               </div>
 
-              <div>
-                <label className="field-label">Designation / Role in Committee *</label>
-                <input required className="input" placeholder="e.g. Chairman, Governing Board" value={memberForm.role} onChange={(e) => setMemberForm({ ...memberForm, role: e.target.value })} />
-              </div>
+              {((memberForm.committeeName || selectedCommittee).toLowerCase().includes("functional")) ? (
+                <div>
+                  <label className="field-label">Functional Committee Section *</label>
+                  <select
+                    className="adm-select"
+                    style={{ width: "100%", marginBottom: 8 }}
+                    value={
+                      [
+                        "1: Innovation and Research",
+                        "2: Incubation and start-up support",
+                        "3: Skill Development and Training",
+                        "4: Industry and Investor",
+                        "5: Events and OutReach",
+                        "6: Monitoring And eveluation",
+                      ].find((s) =>
+                        memberForm.role.toLowerCase().includes(s.split(":")[1]?.trim().toLowerCase())
+                      ) || ""
+                    }
+                    onChange={(e) => {
+                      const sec = e.target.value;
+                      if (sec) {
+                        setMemberForm({ ...memberForm, role: `Lead — ${sec}` });
+                      }
+                    }}
+                    required
+                  >
+                    <option value="">-- Select One of 6 Sections --</option>
+                    <option value="1: Innovation and Research">Section 1: Innovation and Research</option>
+                    <option value="2: Incubation and start-up support">Section 2: Incubation and start-up support</option>
+                    <option value="3: Skill Development and Training">Section 3: Skill Development and Training</option>
+                    <option value="4: Industry and Investor">Section 4: Industry and Investor</option>
+                    <option value="5: Events and OutReach">Section 5: Events and OutReach</option>
+                    <option value="6: Monitoring And eveluation">Section 6: Monitoring And eveluation</option>
+                  </select>
+
+                  <label className="field-label" style={{ fontSize: 12 }}>Role / Designation Format</label>
+                  <input
+                    required
+                    className="input"
+                    placeholder="e.g. Lead — 1: Innovation and Research"
+                    value={memberForm.role}
+                    onChange={(e) => setMemberForm({ ...memberForm, role: e.target.value })}
+                  />
+                </div>
+              ) : (
+                <div>
+                  <label className="field-label">Designation / Role in Committee *</label>
+                  <input required className="input" placeholder="e.g. Chairman, Governing Board" value={memberForm.role} onChange={(e) => setMemberForm({ ...memberForm, role: e.target.value })} />
+                </div>
+              )}
 
               <div>
                 <label className="field-label">LinkedIn Profile URL (Optional)</label>
@@ -1894,150 +1937,7 @@ function ERPEventsTab({ initialEvents = [] }: { initialEvents?: CielEventItem[] 
   );
 }
 
-// ─── NEWS ERP TAB ───────────────────────────────────────────────────────────
 
-function ERPNewsTab({ initialNews = [] }: { initialNews?: NewsItem[] }) {
-  const [news, setNews] = useState<NewsItem[]>(initialNews);
-  const [isAdding, setIsAdding] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-
-  const [form, setForm] = useState({
-    title: "",
-    category: "Funding Disbursement",
-    date: "",
-    summary: "",
-  });
-
-  async function handleAddNews(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.title || !form.summary) {
-      alert("Title and Summary are required");
-      return;
-    }
-    setSubmitting(true);
-
-    try {
-      const res = await fetch("/api/admin/news", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const json = await res.json();
-      if (res.ok && json.news) {
-        setNews((prev) => [json.news, ...prev]);
-        setForm({ title: "", category: "Funding Disbursement", date: "", summary: "" });
-        setIsAdding(false);
-      } else {
-        alert(json.error || "Failed to add announcement");
-      }
-    } catch {
-      alert("Error adding announcement");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  async function handleDelete(id: string) {
-    if (!confirm("Are you sure you want to delete this announcement?")) return;
-    try {
-      const res = await fetch(`/api/admin/news?id=${encodeURIComponent(id)}`, { method: "DELETE" });
-      if (res.ok) {
-        setNews((prev) => prev.filter((n) => n.id !== id));
-      }
-    } catch {
-      alert("Failed to delete news item");
-    }
-  }
-
-  return (
-    <div className="adm-tab-content">
-      <div className="adm-section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <h2>News &amp; Announcements Management</h2>
-          <p>Publish press bulletins, funding updates, and institutional news</p>
-        </div>
-        <button className="adm-btn adm-btn-primary" onClick={() => setIsAdding(!isAdding)}>
-          <Plus size={16} /> {isAdding ? "Close Form" : "Publish Announcement"}
-        </button>
-      </div>
-
-      {isAdding && (
-        <div className="adm-table-wrap" style={{ padding: 24, marginBottom: 24 }}>
-          <h3 style={{ fontSize: 16, color: "var(--text-white)", marginBottom: 16 }}>New Press Announcement</h3>
-          <form onSubmit={handleAddNews} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
-              <div>
-                <label className="field-label">Headline / Title *</label>
-                <input className="input" required placeholder="CIEL Startup Wins ₹25L Seed Fund" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-              </div>
-
-              <div>
-                <label className="field-label">Category</label>
-                <select className="adm-select" style={{ width: "100%" }} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
-                  <option value="Funding Disbursement">Funding Disbursement</option>
-                  <option value="Strategic Partnership">Strategic Partnership</option>
-                  <option value="Infrastructure">Infrastructure</option>
-                  <option value="Patent Grant">Patent Grant</option>
-                  <option value="Award &amp; Recognition">Award &amp; Recognition</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="field-label">Date</label>
-              <input className="input" placeholder="February 01, 2026" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
-            </div>
-
-            <div>
-              <label className="field-label">Announcement Summary / Excerpt *</label>
-              <textarea className="input" rows={3} required placeholder="Summary of press release..." value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} />
-            </div>
-
-            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-              <button type="button" className="adm-btn adm-btn-outline" onClick={() => setIsAdding(false)}>Cancel</button>
-              <button type="submit" className="adm-btn adm-btn-primary" disabled={submitting}>
-                {submitting ? "Publishing..." : "Publish Announcement"}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      <div className="adm-table-wrap">
-        <table className="adm-table">
-          <thead>
-            <tr>
-              <th>Headline</th>
-              <th>Category</th>
-              <th>Date</th>
-              <th>Summary</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {news.length === 0 ? (
-              <tr><td colSpan={5} style={{ textAlign: "center", padding: 24, color: "var(--text-muted)" }}>No news items published.</td></tr>
-            ) : (
-              news.map((n) => (
-                <tr key={n.id}>
-                  <td><strong style={{ color: "var(--text-white)" }}>{n.title}</strong></td>
-                  <td><span className="badge badge-brand">{n.category}</span></td>
-                  <td><span style={{ color: "var(--ciel-gold-bright)" }}>{n.date}</span></td>
-                  <td style={{ fontSize: 13, color: "var(--text-secondary)", maxWidth: 300 }}>{n.summary}</td>
-                  <td>
-                    <button className="adm-icon-btn text-danger" title="Delete News" onClick={() => handleDelete(n.id)}>
-                      <Trash2 size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
 
 // ─── DOWNLOADS ERP TAB ──────────────────────────────────────────────────────
 
@@ -2585,7 +2485,6 @@ export function AdminDashboardClient({
   initialCouncil = [],
   initialGovernance = [],
   initialEvents = [],
-  initialNews = [],
   initialDownloads = [],
   initialGoogleForms = [],
   stats,
@@ -2653,10 +2552,6 @@ export function AdminDashboardClient({
 
           <button className={`adm-nav-item ${activeTab === "events" ? "active" : ""}`} onClick={() => setActiveTab("events")}>
             <Calendar size={16} /> Events &amp; Workshops
-          </button>
-
-          <button className={`adm-nav-item ${activeTab === "news" ? "active" : ""}`} onClick={() => setActiveTab("news")}>
-            <Newspaper size={16} /> News &amp; Announcements
           </button>
 
           <button className={`adm-nav-item ${activeTab === "mentors" ? "active" : ""}`} onClick={() => setActiveTab("mentors")}>
@@ -2748,7 +2643,6 @@ export function AdminDashboardClient({
         {activeTab === "student-council" && <ERPCouncilTab initialCouncil={initialCouncil} />}
         {activeTab === "governance" && <ERPGovernanceTab initialGovernance={initialGovernance} />}
         {activeTab === "events" && <ERPEventsTab initialEvents={initialEvents} />}
-        {activeTab === "news" && <ERPNewsTab initialNews={initialNews} />}
         {activeTab === "downloads" && <ERPDownloadsTab initialDownloads={initialDownloads} />}
         {activeTab === "google-forms" && <ERPGoogleFormsTab initialForms={initialGoogleForms} />}
         {activeTab === "partners" && (

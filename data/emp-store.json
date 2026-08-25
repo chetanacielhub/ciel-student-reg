@@ -13,8 +13,64 @@
       "location_lng": 72.854651,
       "distance_meters": 6.2,
       "is_within_geofence": true
+    },
+    {
+      "id": "att-1787647577414-xf3vg",
+      "employee_id": "emp-1",
+      "date": "2026-08-25",
+      "status": "Present",
+      "check_in_time": "2026-08-25T08:46:16.493Z",
+      "check_out_time": null,
+      "created_at": "2026-08-25T08:46:16.493Z",
+      "updated_at": "2026-08-25T11:27:24.385Z",
+      "location_lat": 19.06107215499772,
+      "location_lng": 72.84797033148861,
+      "distance_meters": 444.8,
+      "is_within_geofence": true
     }
   ],
-  "tasks": [],
+  "tasks": [
+    {
+      "id": "tsk-1787656404895-gxh0b",
+      "employee_id": "emp-1",
+      "date": "2026-08-25",
+      "title": "abc",
+      "description": "has",
+      "status": "Pending",
+      "priority": "Medium",
+      "created_at": "2026-08-25T11:13:24.892Z",
+      "updated_at": "2026-08-25T11:13:24.892Z"
+    },
+    {
+      "id": "tsk-1787647593330-70cdq",
+      "employee_id": "emp-1",
+      "date": "2026-08-25",
+      "title": "abc",
+      "description": "",
+      "status": "Completed",
+      "priority": "Medium",
+      "created_at": "2026-08-25T08:46:33.204Z",
+      "updated_at": "2026-08-25T08:46:33.204Z"
+    },
+    {
+      "id": "tsk-1787649876609-dg04y",
+      "employee_id": "emp-1",
+      "date": "2026-08-25",
+      "status": "Pending",
+      "created_at": "2026-08-25T09:24:35.931Z",
+      "updated_at": "2026-08-25T11:17:28.598Z"
+    },
+    {
+      "id": "tsk-1787656057507-vjk94",
+      "employee_id": "emp-1",
+      "date": "2026-08-25",
+      "title": "Task",
+      "description": "",
+      "status": "In Progress",
+      "priority": "Medium",
+      "created_at": "2026-08-25T11:07:36.389Z",
+      "updated_at": "2026-08-25T11:14:48.681Z"
+    }
+  ],
   "dailyUpdates": []
 }

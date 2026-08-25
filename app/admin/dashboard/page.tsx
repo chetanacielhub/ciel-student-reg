@@ -120,13 +120,12 @@ export default async function AdminDashboardPage() {
   const images = await getGalleryImages();
 
   // ── Fetch dynamic store items ─────────────────────────────────────────────
-  const { getCielEvents, getNewsItems, getDownloadDocs, getGoogleForms } = await import("@/lib/dynamic-store");
-  const [initialMentors, initialCouncil, initialGovernance, initialEvents, initialNews, initialDownloads, initialGoogleForms] = await Promise.all([
+  const { getCielEvents, getDownloadDocs, getGoogleForms } = await import("@/lib/dynamic-store");
+  const [initialMentors, initialCouncil, initialGovernance, initialEvents, initialDownloads, initialGoogleForms] = await Promise.all([
     getMentors(),
     getStudentCouncilLeads(),
     getGovernanceCommittees(),
     getCielEvents(),
-    getNewsItems(),
     getDownloadDocs(),
     getGoogleForms(false),
   ]);
@@ -145,7 +144,6 @@ export default async function AdminDashboardPage() {
     councilCount: initialCouncil.length,
     governanceCount: initialGovernance.length,
     eventsCount: initialEvents.length,
-    newsCount: initialNews.length,
     downloadsCount: initialDownloads.length,
     formsCount: initialGoogleForms.length,
   };
@@ -159,7 +157,6 @@ export default async function AdminDashboardPage() {
       initialCouncil={initialCouncil}
       initialGovernance={initialGovernance}
       initialEvents={initialEvents}
-      initialNews={initialNews}
       initialDownloads={initialDownloads}
       initialGoogleForms={initialGoogleForms}
       stats={stats}

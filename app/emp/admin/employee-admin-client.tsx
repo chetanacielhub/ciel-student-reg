@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { EmpSessionData, getAuthorizedEmpUsers } from "@/lib/emp-auth";
+import type { EmpSessionData } from "@/lib/emp-auth";
 import { EmpThemeToggle } from "../emp-theme-toggle";
 import { Logo } from "@/components/ui/logo";
-import { AttendanceRecord, TaskRecord, DailyUpdateRecord } from "@/lib/emp-store";
+import type { AttendanceRecord, TaskRecord, DailyUpdateRecord } from "@/lib/emp-store";
 import {
   Users,
   Calendar,
@@ -18,7 +18,10 @@ import {
   Search,
   ChevronRight,
   AlertCircle,
+  RefreshCw,
 } from "lucide-react";
+
+type EmployeeInfo = { id: string; name: string; email: string };
 
 export default function EmployeeAdminClient({ adminUser }: { adminUser: EmpSessionData }) {
   const router = useRouter();
@@ -32,18 +35,15 @@ export default function EmployeeAdminClient({ adminUser }: { adminUser: EmpSessi
     day: "numeric",
   });
 
-  // Master Lists for All Employees
-  const employees = [
-    { id: "emp-1", name: "Employee 1", email: "employee1@ciel.edu.in" },
-    { id: "emp-2", name: "Employee 2", email: "employee2@ciel.edu.in" },
-    { id: "emp-3", name: "Employee 3", email: "employee3@ciel.edu.in" },
-  ];
+  // Dynamically loaded employee list from server
+  const [employees, setEmployees] = useState<EmployeeInfo[]>([]);
 
   // Data states
   const [allAttendance, setAllAttendance] = useState<AttendanceRecord[]>([]);
   const [allTasks, setAllTasks] = useState<TaskRecord[]>([]);
   const [allUpdates, setAllUpdates] = useState<DailyUpdateRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dataError, setDataError] = useState<string | null>(null);
 
   // Filters
   const [empFilter, setEmpFilter] = useState<string>("all");
@@ -53,23 +53,28 @@ export default function EmployeeAdminClient({ adminUser }: { adminUser: EmpSessi
 
   const fetchAdminData = async () => {
     setLoading(true);
+    setDataError(null);
     try {
-      // Fetch attendance, tasks, updates across all employees
-      const [attRes, taskRes, updRes] = await Promise.all([
+      // Fetch employee list + attendance, tasks, updates across all employees
+      const [empRes, attRes, taskRes, updRes] = await Promise.all([
+        fetch("/emp/api/employees"),
         fetch("/emp/api/attendance"),
         fetch("/emp/api/tasks"),
         fetch("/emp/api/daily-updates"),
       ]);
 
+      const empData = await empRes.json();
       const attData = await attRes.json();
       const taskData = await taskRes.json();
       const updData = await updRes.json();
 
+      if (empData.success) setEmployees(empData.data);
       if (attData.success) setAllAttendance(attData.data);
+      else setDataError("Failed to load attendance data.");
       if (taskData.success) setAllTasks(taskData.data);
       if (updData.success) setAllUpdates(updData.data);
     } catch {
-      // Handle error gracefully
+      setDataError("Network error: could not reach the server. Please refresh.");
     } finally {
       setLoading(false);
     }
@@ -95,15 +100,15 @@ export default function EmployeeAdminClient({ adminUser }: { adminUser: EmpSessi
   const filteredAttendance = allAttendance.filter((a) => {
     if (empFilter !== "all" && a.employee_id !== empFilter) return false;
     if (dateFilter && a.date !== dateFilter) return false;
-    if (statusFilter !== "all" && a.status.toLowerCase().replace(/\s+/g, "") !== statusFilter) return false;
+    if (statusFilter !== "all" && (a.status || "Present").toLowerCase().replace(/\s+/g, "") !== statusFilter) return false;
     return true;
   });
 
   const filteredTasks = allTasks.filter((t) => {
     if (empFilter !== "all" && t.employee_id !== empFilter) return false;
     if (dateFilter && t.date !== dateFilter) return false;
-    if (statusFilter !== "all" && t.status.toLowerCase().replace(/\s+/g, "") !== statusFilter) return false;
-    if (priorityFilter !== "all" && t.priority.toLowerCase() !== priorityFilter) return false;
+    if (statusFilter !== "all" && (t.status || "Pending").toLowerCase().replace(/\s+/g, "") !== statusFilter) return false;
+    if (priorityFilter !== "all" && (t.priority || "Medium").toLowerCase() !== priorityFilter) return false;
     return true;
   });
 
@@ -176,10 +181,36 @@ export default function EmployeeAdminClient({ adminUser }: { adminUser: EmpSessi
             <FileText size={16} style={{ display: "inline", marginRight: "8px", verticalAlign: "text-bottom" }} />
             Daily Work Reports ({allUpdates.length})
           </button>
+
+          <button
+            className="emp-tab"
+            onClick={fetchAdminData}
+            disabled={loading}
+            style={{ marginLeft: "auto", opacity: loading ? 0.6 : 1 }}
+          >
+            <RefreshCw size={15} style={{ display: "inline", marginRight: "6px", verticalAlign: "text-bottom", animation: loading ? "spin 1s linear infinite" : "none" }} />
+            {loading ? "Refreshing..." : "Refresh Data"}
+          </button>
         </div>
 
+        {/* Error Banner */}
+        {dataError && (
+          <div style={{ background: "rgba(239, 68, 68, 0.12)", border: "1px solid rgba(239, 68, 68, 0.3)", borderRadius: "10px", padding: "14px 20px", marginBottom: "20px", display: "flex", alignItems: "center", gap: "10px", color: "#fca5a5" }}>
+            <AlertCircle size={18} />
+            <span style={{ fontSize: "14px" }}>{dataError}</span>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <div style={{ textAlign: "center", padding: "60px 20px", color: "#94a3b8" }}>
+            <RefreshCw size={28} style={{ animation: "spin 1s linear infinite", marginBottom: "12px" }} />
+            <p>Loading employee data...</p>
+          </div>
+        )}
+
         {/* TAB 1: ALL EMPLOYEES OVERVIEW */}
-        {activeTab === "overview" && (
+        {!loading && activeTab === "overview" && (
           <div>
             <div className="emp-section-header">
               <h2 className="emp-section-title">
@@ -204,8 +235,8 @@ export default function EmployeeAdminClient({ adminUser }: { adminUser: EmpSessi
                         <div style={{ fontSize: "12px", color: "#94a3b8" }}>{emp.email}</div>
                       </div>
                       {todayAtt ? (
-                        <span className={`emp-badge emp-badge-${todayAtt.status.toLowerCase().replace(/\s+/g, "")}`}>
-                          {todayAtt.status}
+                        <span className={`emp-badge emp-badge-${(todayAtt.status || "Present").toLowerCase().replace(/\s+/g, "")}`}>
+                          {todayAtt.status || "Present"}
                         </span>
                       ) : (
                         <span className="emp-badge emp-badge-pending">Not Marked</span>
@@ -265,7 +296,7 @@ export default function EmployeeAdminClient({ adminUser }: { adminUser: EmpSessi
         )}
 
         {/* TAB 2: ATTENDANCE MONITORING */}
-        {activeTab === "attendance" && (
+        {!loading && activeTab === "attendance" && (
           <div>
             <div className="emp-section-header">
               <h2 className="emp-section-title">
@@ -352,8 +383,8 @@ export default function EmployeeAdminClient({ adminUser }: { adminUser: EmpSessi
                         </td>
                         <td>{a.date}</td>
                         <td>
-                          <span className={`emp-badge emp-badge-${a.status.toLowerCase().replace(/\s+/g, "")}`}>
-                            {a.status}
+                          <span className={`emp-badge emp-badge-${(a.status || "Present").toLowerCase().replace(/\s+/g, "")}`}>
+                            {a.status || "Present"}
                           </span>
                         </td>
                         <td>
@@ -385,7 +416,7 @@ export default function EmployeeAdminClient({ adminUser }: { adminUser: EmpSessi
         )}
 
         {/* TAB 3: EMPLOYEE TASKS VIEW */}
-        {activeTab === "tasks" && (
+        {!loading && activeTab === "tasks" && (
           <div>
             <div className="emp-section-header">
               <h2 className="emp-section-title">
@@ -471,13 +502,13 @@ export default function EmployeeAdminClient({ adminUser }: { adminUser: EmpSessi
                           {t.description || "—"}
                         </td>
                         <td>
-                          <span className={`emp-badge emp-badge-${t.priority.toLowerCase()}`}>
-                            {t.priority}
+                          <span className={`emp-badge emp-badge-${(t.priority || "Medium").toLowerCase()}`}>
+                            {t.priority || "Medium"}
                           </span>
                         </td>
                         <td>
-                          <span className={`emp-badge emp-badge-${t.status.toLowerCase().replace(/\s+/g, "")}`}>
-                            {t.status}
+                          <span className={`emp-badge emp-badge-${(t.status || "Pending").toLowerCase().replace(/\s+/g, "")}`}>
+                            {t.status || "Pending"}
                           </span>
                         </td>
                       </tr>
@@ -490,7 +521,7 @@ export default function EmployeeAdminClient({ adminUser }: { adminUser: EmpSessi
         )}
 
         {/* TAB 4: DAILY WORK REPORTS */}
-        {activeTab === "updates" && (
+        {!loading && activeTab === "updates" && (
           <div>
             <div className="emp-section-header">
               <h2 className="emp-section-title">

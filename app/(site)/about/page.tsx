@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Award, Compass, Eye, Flag, Layers, ShieldCheck, Target, Zap } from "lucide-react";
+import { ArrowRight, Award, Compass, Eye, Layers, Target, Zap } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "About CIEL | Vision & Institutional Mission",
@@ -25,20 +25,15 @@ export default function AboutPage() {
       </div>
 
       {/* Vision & Mission Grid */}
-      <div className="grid-2" style={{ marginBottom: 64 }}>
+      <div className="grid-2" style={{ gap: 36, marginBottom: 72 }}>
         <article className="luxury-card">
           <div className="card-icon-wrap">
             <Eye size={28} />
           </div>
           <h3>Our Vision</h3>
           <p>
-            To emerge as a world-class institutional innovation hub that transforms academic research and creative ideas into globally competitive, scalable, and socially responsible technological enterprises.
+            To be a premier hub for nurturing an innovative mindset and entrepreneurial talents to produce significant, long-term solutions to global challenges.
           </p>
-          <ul className="card-list">
-            <li><ShieldCheck size={16} /> Foster institutional culture of innovation and research excellence.</li>
-            <li><ShieldCheck size={16} /> Empower youth and women entrepreneurs across diverse sectors.</li>
-            <li><ShieldCheck size={16} /> Bridge the gap between academia, industry, and venture capital.</li>
-          </ul>
         </article>
 
         <article className="luxury-card">
@@ -47,13 +42,8 @@ export default function AboutPage() {
           </div>
           <h3>Our Mission</h3>
           <p>
-            To provide end-to-end incubation support including seed funding, prototyping labs, patent filing assistance, legal incorporation, and industry mentorship for campus &amp; regional innovators.
+            Cultivating an ecosystem that allows individuals to translate ideas into significant initiatives through experiential learning, interdisciplinary collaboration, and strategic partnerships to generate long-term economic and social growth.
           </p>
-          <ul className="card-list">
-            <li><Flag size={16} /> Incubate 100+ high-potential startups by 2028.</li>
-            <li><Flag size={16} /> Facilitate 50+ patent filings &amp; technology transfers.</li>
-            <li><Flag size={16} /> Create robust Industry MoUs and angel investment syndicates.</li>
-          </ul>
         </article>
       </div>
 
@@ -98,10 +88,6 @@ export default function AboutPage() {
           Submit your venture application today and gain access to prototyping facilities, mentorship, and grant support.
         </p>
         <div className="inline-actions" style={{ justifyContent: "center" }}>
-          <Link className="button button-primary button-large" href="/register">
-            Apply for Incubation
-            <ArrowRight size={18} />
-          </Link>
           <Link className="button button-secondary button-large" href="/governance">
             Governance &amp; Committee Structure
           </Link>

@@ -150,8 +150,9 @@ export const CIEL_DOWNLOADS: DownloadItem[] = [
 
 export const GOVERNANCE_COMMITTEES = [
   {
-    name: "Joint Steering Committee",
-    description: "Provides strategic leadership, governance oversight, and institutional alignment for CIEL initiatives.",
+    id: "governing-committee",
+    name: "Governing Committee",
+    description: "Apex institutional decision-making body establishing strategic governance policies, resource allocations, and venture acceleration mandates for CIEL.",
     members: [
       { name: "Dr. B. R. Patil", role: "Chairman, Governing Board" },
       { name: "Prof. S. R. Joshi", role: "Director, Chetana Institute" },
@@ -160,22 +161,27 @@ export const GOVERNANCE_COMMITTEES = [
     ],
   },
   {
-    name: "Incubation & Investment Committee",
-    description: "Evaluates startup applications, recommends seed fund disbursements, and reviews quarterly milestone achievements.",
+    id: "joint-steering-committee",
+    name: "Joint-Steering Committee",
+    description: "Provides operational leadership, interdisciplinary academic integration, cross-faculty research synergy, and ecosystem partner alignment.",
     members: [
+      { name: "Prof. Arvind Mehta", role: "Chair, Joint-Steering & Research" },
+      { name: "Dr. Smita Rao", role: "Director of Academic Partnerships" },
       { name: "Sunita Nambiar", role: "Venture Partner, Lead Investor" },
-      { name: "Prof. Arvind Mehta", role: "Head of Research & IPR" },
       { name: "Karan Johar", role: "Senior Partner, Angel Network" },
-      { name: "Meera Fernandez", role: "Legal & Corporate Compliance Lead" },
     ],
   },
   {
-    name: "Intellectual Property & Ethics Cell",
-    description: "Manages prior art searches, patent drafting assistance, technology licensing agreements, and research ethics compliance.",
+    id: "functional-committee",
+    name: "Functional Committee",
+    description: "Operational leadership bodies executing CIEL's 6 core innovation tracks, each spearheaded by a dedicated committee lead.",
     members: [
-      { name: "Prof. Arvind Mehta", role: "IPR Cell Chair" },
-      { name: "Advocate Ramesh Iyer", role: "Senior Patent Attorney" },
-      { name: "Dr. Smita Rao", role: "Technology Transfer Officer" },
+      { name: "Dr. Arvind Mehta", role: "Lead — 1. Innovation and Research" },
+      { name: "Dr. Rajesh Kulkarni", role: "Lead — 2. Incubation and Start-up Support" },
+      { name: "Prof. Smita Rao", role: "Lead — 3. Skill Development and Training" },
+      { name: "Mr. Anand Rathi", role: "Lead — 4. Industry and Investor" },
+      { name: "Ms. Meera Fernandez", role: "Lead — 5. Events and Outreach" },
+      { name: "Prof. S. R. Joshi", role: "Lead — 6. Monitoring and Evaluation" },
     ],
   },
 ];

@@ -270,13 +270,8 @@ export function HomeView({ event }: HomeViewProps) {
               </div>
               <h3>Our Vision</h3>
               <p>
-                To emerge as a top-tier institutional innovation hub that transforms academic research and creative ideas into globally competitive, scalable, and socially responsible technological enterprises.
+                To be a premier hub for nurturing an innovative mindset and entrepreneurial talents to produce significant, long-term solutions to global challenges.
               </p>
-              <ul className="card-list">
-                <li><CheckCircle2 size={16} /> Foster institutional culture of research excellence.</li>
-                <li><CheckCircle2 size={16} /> Empower youth and women entrepreneurs across diverse sectors.</li>
-                <li><CheckCircle2 size={16} /> Bridge academia, industry, and venture capital.</li>
-              </ul>
             </article>
           </ScaleIn>
 
@@ -287,13 +282,8 @@ export function HomeView({ event }: HomeViewProps) {
               </div>
               <h3>Our Mission</h3>
               <p>
-                To provide end-to-end incubation support including seed funding, prototyping labs, patent filing assistance, legal incorporation, and industry mentorship for campus &amp; regional innovators.
+                Cultivating an ecosystem that allows individuals to translate ideas into significant initiatives through experiential learning, interdisciplinary collaboration, and strategic partnerships to generate long-term economic and social growth.
               </p>
-              <ul className="card-list">
-                <li><CheckCircle2 size={16} /> Incubate 100+ high-potential startups by 2028.</li>
-                <li><CheckCircle2 size={16} /> Facilitate 50+ patent filings &amp; tech transfers.</li>
-                <li><CheckCircle2 size={16} /> Create robust Industry MoUs and angel investment syndicates.</li>
-              </ul>
             </article>
           </ScaleIn>
         </div>

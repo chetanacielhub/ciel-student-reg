@@ -10,8 +10,8 @@ export const metadata: Metadata = {
 export default function AcceleratorPage() {
   return (
     <section className="shell page-section">
-      <div className="section-heading" style={{ margin: "0 0 36px" }}>
-        <div className="section-heading-row" style={{ justifyContent: "flex-start" }}>
+      <div className="section-heading" style={{ margin: "0 auto 36px" }}>
+        <div className="section-heading-row">
           <span className="eyebrow">
             <Rocket size={14} className="text-gold" />
             Scale-Up &amp; Growth

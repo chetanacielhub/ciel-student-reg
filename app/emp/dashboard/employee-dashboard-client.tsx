@@ -25,13 +25,15 @@ import {
   Navigation,
   Target,
   RefreshCw,
+  TrendingUp,
+  Zap,
+  Activity,
 } from "lucide-react";
 
 export default function EmployeeDashboardClient({ user }: { user: EmpSessionData }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"attendance" | "tasks" | "daily_updates">("attendance");
 
-  // Today's formatted date string
   const todayStr = new Date().toISOString().split("T")[0];
   const currentDateFormatted = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -63,7 +65,7 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
   const [loading, setLoading] = useState(true);
   const [actionMessage, setActionMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  // Geolocation state for Chetana Institute 200m Geofence
+  // Geolocation state
   const [geoStatus, setGeoStatus] = useState<{
     loading: boolean;
     lat: number | null;
@@ -91,11 +93,9 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
   // Task Delete Confirmation Modal
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
 
-  // Fetch initial data
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      // 1. Attendance
       const attRes = await fetch("/emp/api/attendance");
       const attData = await attRes.json();
       if (attData.success) {
@@ -104,14 +104,12 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
         setTodayAttendance(todayRec || null);
       }
 
-      // 2. Tasks
       const taskRes = await fetch("/emp/api/tasks");
       const taskData = await taskRes.json();
       if (taskData.success) {
         setTasks(taskData.data);
       }
 
-      // 3. Daily Updates
       const updRes = await fetch("/emp/api/daily-updates");
       const updData = await updRes.json();
       if (updData.success) {
@@ -133,7 +131,6 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
     }
   };
 
-  // Trigger Automatic Location Detection
   const triggerAutoLocationCheck = (bypass: boolean = false) => {
     setGeoStatus((prev) => ({ ...prev, loading: true, error: null }));
 
@@ -165,48 +162,34 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
         if (data.success) {
           setActionMessage({
             type: "success",
-            text: `🎯 Auto Location Verified! You are within ${geofence?.distanceMeters}m of Chetana Institute. Marked Present!`,
+            text: `🎯 Verified! You are within ${geofence?.distanceMeters}m of Chetana Institute. Marked Present!`,
           });
           loadDashboardData();
         } else {
-          setActionMessage({
-            type: "error",
-            text: data.error || "Location verification failed.",
-          });
+          setActionMessage({ type: "error", text: data.error || "Location verification failed." });
         }
       } catch {
-        setGeoStatus((prev) => ({
-          ...prev,
-          loading: false,
-          error: "Network error during location verification.",
-        }));
+        setGeoStatus((prev) => ({ ...prev, loading: false, error: "Network error during location verification." }));
       }
     };
 
     if (bypass) {
-      // Simulate being physically inside Chetana Campus (19.062828, 72.854651)
       processCoordinates(19.062828, 72.854651);
       return;
     }
 
     if (!navigator.geolocation) {
-      setGeoStatus((prev) => ({
-        ...prev,
-        loading: false,
-        error: "Browser geolocation is not supported on this device.",
-      }));
+      setGeoStatus((prev) => ({ ...prev, loading: false, error: "Geolocation not supported on this device." }));
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        processCoordinates(pos.coords.latitude, pos.coords.longitude);
-      },
+      (pos) => { processCoordinates(pos.coords.latitude, pos.coords.longitude); },
       (err) => {
         setGeoStatus((prev) => ({
           ...prev,
           loading: false,
-          error: `Geolocation error: ${err.message}. Please enable location permissions in your browser.`,
+          error: `GPS error: ${err.message}. Enable location permissions in browser.`,
         }));
       },
       { enableHighAccuracy: true, timeout: 10000 }
@@ -215,7 +198,6 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
 
   useEffect(() => {
     loadDashboardData();
-    // Auto-detect location on load
     triggerAutoLocationCheck(false);
   }, []);
 
@@ -225,7 +207,6 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
     router.refresh();
   };
 
-  // Attendance Handlers
   const handleMarkAttendance = async (status: AttendanceStatus, action?: "check_in" | "check_out" | "set_status") => {
     try {
       const res = await fetch("/emp/api/attendance", {
@@ -245,7 +226,6 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
     }
   };
 
-  // Task Handlers
   const openNewTaskModal = () => {
     setEditingTask(null);
     setTaskTitle("");
@@ -270,42 +250,37 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
 
     try {
       if (editingTask) {
-        // Update task
         const res = await fetch("/emp/api/tasks", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id: editingTask.id,
-            title: taskTitle,
-            description: taskDesc,
-            priority: taskPriority,
-            status: taskStatus,
-          }),
+          body: JSON.stringify({ id: editingTask.id, title: taskTitle, description: taskDesc, priority: taskPriority, status: taskStatus }),
         });
         const data = await res.json();
-        if (data.success) {
+        if (data.success && data.data) {
           setActionMessage({ type: "success", text: "Task updated successfully." });
+          setTasks((prev) => prev.map((t) => (t.id === data.data.id ? data.data : t)));
           setIsTaskModalOpen(false);
+          setEditingTask(null);
+          setTaskTitle("");
+          setTaskDesc("");
           loadDashboardData();
         } else {
           setActionMessage({ type: "error", text: data.error || "Failed to update task." });
         }
       } else {
-        // Create task
         const res = await fetch("/emp/api/tasks", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title: taskTitle,
-            description: taskDesc,
-            priority: taskPriority,
-            status: taskStatus,
-          }),
+          body: JSON.stringify({ title: taskTitle.trim(), description: taskDesc.trim(), priority: taskPriority, status: taskStatus }),
         });
         const data = await res.json();
-        if (data.success) {
+        if (data.success && data.data) {
           setActionMessage({ type: "success", text: "New task created!" });
+          setTasks((prev) => [data.data, ...prev.filter((t) => t.id !== data.data.id)]);
           setIsTaskModalOpen(false);
+          setEditingTask(null);
+          setTaskTitle("");
+          setTaskDesc("");
           loadDashboardData();
         } else {
           setActionMessage({ type: "error", text: data.error || "Failed to create task." });
@@ -324,9 +299,7 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
         body: JSON.stringify({ id: t.id, status: newStatus }),
       });
       const data = await res.json();
-      if (data.success) {
-        loadDashboardData();
-      }
+      if (data.success) { loadDashboardData(); }
     } catch {
       setActionMessage({ type: "error", text: "Failed to change task status." });
     }
@@ -349,14 +322,12 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
     }
   };
 
-  // Daily Update Handler
   const handleSaveDailyUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!todayUpdate.work_completed.trim()) {
       setActionMessage({ type: "error", text: "Work completed summary is required." });
       return;
     }
-
     try {
       const res = await fetch("/emp/api/daily-updates", {
         method: "POST",
@@ -375,531 +346,596 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
     }
   };
 
-  // Filter tasks
   const filteredTasks = tasks.filter((t) => {
     if (taskStatusFilter === "all") return true;
-    return t.status.toLowerCase().replace(/\s+/g, "") === taskStatusFilter;
+    const s = (t.status || "Pending").toLowerCase().replace(/\s+/g, "");
+    return s === taskStatusFilter;
   });
 
+  // Computed stats
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter((t) => t.status === "Completed").length;
+  const pendingTasks = tasks.filter((t) => t.status === "Pending").length;
+  const inProgressTasks = tasks.filter((t) => t.status === "In Progress").length;
+  const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  const todayReportSubmitted = dailyUpdates.some((u) => u.date === todayStr);
+
+  const getUserInitials = (name: string) => name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+
   return (
-    <div>
-      {/* Top Header Navbar */}
-      <header className="emp-navbar">
-        <div className="emp-brand" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+    <div className="emp-portal emp-dash-root">
+      {/* ─── TOPBAR ──────────────────────────────────────────── */}
+      <header className="emp-topbar">
+        <div className="emp-topbar-left">
           <Logo href="/emp/dashboard" size="small" />
-          <span className="emp-brand-badge" style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)", marginLeft: "-10px" }}>Portal</span>
+          <div className="emp-topbar-divider" />
+          <span className="emp-topbar-badge">Employee Portal</span>
         </div>
 
-        <div className="emp-user-info">
-          <div className="emp-user-meta">
-            <div className="emp-user-name">{user.name}</div>
-            <div className="emp-user-role">
-              <span className="emp-user-role-badge emp-role-employee">Employee</span>
-              <span>•</span>
-              <Calendar size={13} style={{ display: "inline", marginBottom: "-1px" }} />
-              <span>{currentDateFormatted}</span>
+        <div className="emp-topbar-center">
+          <div className="emp-topbar-date">
+            <Calendar size={14} />
+            <span>{currentDateFormatted}</span>
+          </div>
+        </div>
+
+        <div className="emp-topbar-right">
+          <div className="emp-topbar-user">
+            <div className="emp-topbar-avatar">{getUserInitials(user.name)}</div>
+            <div className="emp-topbar-user-info">
+              <span className="emp-topbar-user-name">{user.name}</span>
+              <span className="emp-topbar-user-role">
+                <span className="emp-role-dot emp-role-dot-emp" />
+                Employee
+              </span>
             </div>
           </div>
-
           <EmpThemeToggle />
-
-          <button onClick={handleLogout} className="emp-btn-logout" title="Sign out of Employee Portal">
-            <LogOut size={15} />
+          <button onClick={handleLogout} className="emp-topbar-logout" title="Sign out">
+            <LogOut size={16} />
             <span>Logout</span>
           </button>
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="emp-container">
-        {/* Banner Alert Message */}
-        {actionMessage && (
-          <div
-            className={`emp-alert ${
-              actionMessage.type === "success" ? "emp-alert-success" : "emp-alert-error"
-            }`}
-          >
-            {actionMessage.type === "success" ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
-            <span>{actionMessage.text}</span>
-            <button
-              onClick={() => setActionMessage(null)}
-              style={{ background: "none", border: "none", color: "inherit", marginLeft: "auto", cursor: "pointer" }}
-            >
-              <X size={16} />
-            </button>
+      {/* ─── LAYOUT ──────────────────────────────────────────── */}
+      <div className="emp-dash-layout">
+        {/* SIDEBAR */}
+        <aside className="emp-sidebar">
+          <nav className="emp-sidenav">
+            {[
+              { id: "attendance" as const, icon: <Clock size={18} />, label: "Attendance", badge: null },
+              { id: "tasks" as const, icon: <CheckSquare size={18} />, label: "My Tasks", badge: tasks.length },
+              { id: "daily_updates" as const, icon: <FileText size={18} />, label: "Daily Report", badge: null },
+            ].map((item) => (
+              <button
+                key={item.id}
+                className={`emp-sidenav-item ${activeTab === item.id ? "emp-sidenav-item-active" : ""}`}
+                onClick={() => setActiveTab(item.id)}
+              >
+                <span className="emp-sidenav-icon">{item.icon}</span>
+                <span className="emp-sidenav-label">{item.label}</span>
+                {item.badge !== null && item.badge > 0 && (
+                  <span className="emp-sidenav-badge">{item.badge}</span>
+                )}
+              </button>
+            ))}
+          </nav>
+
+          {/* Sidebar stats summary */}
+          <div className="emp-sidebar-stats">
+            <div className="emp-sidebar-stat">
+              <span className="emp-sidebar-stat-val" style={{ color: "#f59e0b" }}>{pendingTasks}</span>
+              <span className="emp-sidebar-stat-label">Pending</span>
+            </div>
+            <div className="emp-sidebar-stat">
+              <span className="emp-sidebar-stat-val" style={{ color: "#60a5fa" }}>{inProgressTasks}</span>
+              <span className="emp-sidebar-stat-label">Active</span>
+            </div>
+            <div className="emp-sidebar-stat">
+              <span className="emp-sidebar-stat-val" style={{ color: "#34d399" }}>{completedTasks}</span>
+              <span className="emp-sidebar-stat-label">Done</span>
+            </div>
           </div>
-        )}
 
-        {/* Dashboard Tabs */}
-        <div className="emp-tabs">
-          <button
-            className={`emp-tab ${activeTab === "attendance" ? "emp-tab-active" : ""}`}
-            onClick={() => setActiveTab("attendance")}
-          >
-            <Clock size={16} style={{ display: "inline", marginRight: "8px", verticalAlign: "text-bottom" }} />
-            Attendance Management
-          </button>
-          <button
-            className={`emp-tab ${activeTab === "tasks" ? "emp-tab-active" : ""}`}
-            onClick={() => setActiveTab("tasks")}
-          >
-            <CheckSquare size={16} style={{ display: "inline", marginRight: "8px", verticalAlign: "text-bottom" }} />
-            Daily Task Manager ({tasks.length})
-          </button>
-          <button
-            className={`emp-tab ${activeTab === "daily_updates" ? "emp-tab-active" : ""}`}
-            onClick={() => setActiveTab("daily_updates")}
-          >
-            <FileText size={16} style={{ display: "inline", marginRight: "8px", verticalAlign: "text-bottom" }} />
-            Daily Work Update
-          </button>
-        </div>
+          {/* Today's status summary */}
+          <div className="emp-sidebar-today">
+            <div className="emp-sidebar-today-title">Today</div>
+            <div className="emp-sidebar-today-row">
+              <span>Attendance</span>
+              {todayAttendance ? (
+                <span className={`emp-chip emp-chip-${(todayAttendance.status || "Present").toLowerCase().replace(/\s+/g, "")}`}>
+                  {todayAttendance.status || "Present"}
+                </span>
+              ) : (
+                <span className="emp-chip emp-chip-pending">Not Marked</span>
+              )}
+            </div>
+            <div className="emp-sidebar-today-row">
+              <span>Report</span>
+              {todayReportSubmitted ? (
+                <span className="emp-chip emp-chip-present">Submitted</span>
+              ) : (
+                <span className="emp-chip emp-chip-absent">Pending</span>
+              )}
+            </div>
+            <div className="emp-sidebar-today-row">
+              <span>Progress</span>
+              <span className="emp-chip" style={{ background: "rgba(99,102,241,0.15)", color: "#818cf8", border: "1px solid rgba(99,102,241,0.3)" }}>
+                {completionRate}%
+              </span>
+            </div>
+          </div>
+        </aside>
 
-        {/* TAB 1: ATTENDANCE */}
-        {activeTab === "attendance" && (
-          <div>
-            {/* GEOFENCE AUTO LOCATION BANNER */}
-            <div
-              className={`emp-card emp-geofence-banner ${geoStatus.isWithinGeofence === true ? "emp-geofence-in" : geoStatus.isWithinGeofence === false ? "emp-geofence-out" : ""}`}
-              style={{ marginBottom: "24px" }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+        {/* MAIN CONTENT */}
+        <main className="emp-dash-main">
+          {/* Global alert */}
+          {actionMessage && (
+            <div className={`emp-dash-alert ${actionMessage.type === "success" ? "emp-dash-alert-success" : "emp-dash-alert-error"}`}>
+              {actionMessage.type === "success" ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
+              <span>{actionMessage.text}</span>
+              <button className="emp-dash-alert-close" onClick={() => setActionMessage(null)}>
+                <X size={14} />
+              </button>
+            </div>
+          )}
+
+          {/* Loading */}
+          {loading && (
+            <div className="emp-dash-loading">
+              <div className="emp-dash-spinner" />
+              <span>Loading your workspace…</span>
+            </div>
+          )}
+
+          {/* ─── TAB 1: ATTENDANCE ─────────────────────────────── */}
+          {!loading && activeTab === "attendance" && (
+            <div className="emp-dash-section">
+              {/* Page header */}
+              <div className="emp-dash-page-header">
                 <div>
-                  <div className="emp-geofence-title" style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "16px", fontWeight: 800, marginBottom: "4px" }}>
-                    <Target size={20} style={{ color: "#3b82f6" }} />
-                    <span>Auto Location Attendance (Chetana Campus Zone)</span>
-                  </div>
-                  <div className="emp-geofence-sub" style={{ fontSize: "13px" }}>
-                    Chetana Institute of Management &amp; Research, Bandra East • Multi-Point Campus Verification (500m Radius Tolerance)
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                  <button
-                    className="emp-btn emp-btn-primary emp-btn-sm"
-                    onClick={() => triggerAutoLocationCheck(false)}
-                    disabled={geoStatus.loading}
-                  >
-                    <Compass size={14} className={geoStatus.loading ? "spin-icon" : ""} />
-                    {geoStatus.loading ? "Detecting GPS..." : "Re-Detect Location"}
-                  </button>
-
-                  <button
-                    className="emp-btn emp-btn-success emp-btn-sm"
-                    onClick={() => triggerAutoLocationCheck(true)}
-                    disabled={geoStatus.loading}
-                    title="Mark Present immediately if sitting inside Chetana College Campus"
-                  >
-                    <CheckCircle size={14} />
-                    I am on Chetana Campus (Mark Present)
-                  </button>
+                  <h1 className="emp-dash-page-title">Attendance Management</h1>
+                  <p className="emp-dash-page-sub">GPS-verified check-in powered by Chetana Campus geofence</p>
                 </div>
               </div>
 
-              {/* Geofence Status Result Badge & Coordinate breakdown */}
-              <div style={{ marginTop: "16px", paddingTop: "14px", borderTop: "1px solid rgba(255, 255, 255, 0.08)", display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
-                {geoStatus.distanceMeters !== null && (
-                  <div style={{ fontSize: "13px", color: "#cbd5e1" }}>
-                    Detected Distance to Chetana Campus:{" "}
-                    <strong style={{ color: geoStatus.isWithinGeofence ? "#34d399" : "#fbbf24" }}>
-                      {geoStatus.distanceMeters} meters
-                    </strong>
+              {/* KPI Cards row */}
+              <div className="emp-kpi-row">
+                <div className="emp-kpi-card">
+                  <div className="emp-kpi-icon" style={{ background: "rgba(16,185,129,0.12)", color: "#34d399" }}>
+                    <CheckCircle size={20} />
+                  </div>
+                  <div>
+                    <div className="emp-kpi-value">{attendanceRecords.filter((r) => r.status === "Present").length}</div>
+                    <div className="emp-kpi-label">Days Present</div>
+                  </div>
+                </div>
+                <div className="emp-kpi-card">
+                  <div className="emp-kpi-icon" style={{ background: "rgba(239,68,68,0.12)", color: "#f87171" }}>
+                    <X size={20} />
+                  </div>
+                  <div>
+                    <div className="emp-kpi-value">{attendanceRecords.filter((r) => r.status === "Absent").length}</div>
+                    <div className="emp-kpi-label">Days Absent</div>
+                  </div>
+                </div>
+                <div className="emp-kpi-card">
+                  <div className="emp-kpi-icon" style={{ background: "rgba(245,158,11,0.12)", color: "#fbbf24" }}>
+                    <Activity size={20} />
+                  </div>
+                  <div>
+                    <div className="emp-kpi-value">{attendanceRecords.filter((r) => r.status === "Half Day").length}</div>
+                    <div className="emp-kpi-label">Half Days</div>
+                  </div>
+                </div>
+                <div className="emp-kpi-card">
+                  <div className="emp-kpi-icon" style={{ background: "rgba(99,102,241,0.12)", color: "#818cf8" }}>
+                    <TrendingUp size={20} />
+                  </div>
+                  <div>
+                    <div className="emp-kpi-value">
+                      {attendanceRecords.length > 0
+                        ? `${Math.round((attendanceRecords.filter((r) => r.status === "Present").length / attendanceRecords.length) * 100)}%`
+                        : "—"}
+                    </div>
+                    <div className="emp-kpi-label">Attendance Rate</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Geofence Card */}
+              <div className={`emp-geo-card ${geoStatus.isWithinGeofence === true ? "emp-geo-card-in" : geoStatus.isWithinGeofence === false ? "emp-geo-card-out" : ""}`}>
+                <div className="emp-geo-card-header">
+                  <div className="emp-geo-card-icon">
+                    <Target size={22} />
+                  </div>
+                  <div>
+                    <div className="emp-geo-card-title">Geo-Verified Campus Attendance</div>
+                    <div className="emp-geo-card-sub">Chetana Institute of Management &amp; Research, Bandra East · 500m Campus Zone</div>
+                  </div>
+                  <div className="emp-geo-card-actions">
+                    <button
+                      className="emp-btn emp-btn-primary emp-btn-sm"
+                      onClick={() => triggerAutoLocationCheck(false)}
+                      disabled={geoStatus.loading}
+                    >
+                      <Compass size={14} className={geoStatus.loading ? "emp-spin" : ""} />
+                      {geoStatus.loading ? "Detecting GPS…" : "Detect Location"}
+                    </button>
+                    <button
+                      className="emp-btn emp-btn-success emp-btn-sm"
+                      onClick={() => triggerAutoLocationCheck(true)}
+                      disabled={geoStatus.loading}
+                    >
+                      <CheckCircle size={14} />
+                      I&apos;m on Campus
+                    </button>
+                  </div>
+                </div>
+
+                {(geoStatus.distanceMeters !== null || geoStatus.error) && (
+                  <div className="emp-geo-status-row">
+                    {geoStatus.distanceMeters !== null && (
+                      <div className="emp-geo-status-item">
+                        <Navigation size={14} />
+                        <span>Distance to Chetana Campus:</span>
+                        <strong style={{ color: geoStatus.isWithinGeofence ? "#34d399" : "#fbbf24" }}>
+                          {geoStatus.distanceMeters}m
+                        </strong>
+                      </div>
+                    )}
+                    {geoStatus.isWithinGeofence === true && (
+                      <span className="emp-chip emp-chip-present"><CheckCircle size={11} /> Verified — Inside Campus Zone</span>
+                    )}
+                    {geoStatus.isWithinGeofence === false && (
+                      <span className="emp-chip emp-chip-halfday"><MapPin size={11} /> Outside Zone · Click "I'm on Campus" to confirm</span>
+                    )}
+                    {geoStatus.error && (
+                      <span className="emp-geo-error">{geoStatus.error}</span>
+                    )}
                   </div>
                 )}
+              </div>
 
-                {geoStatus.lat !== null && geoStatus.lng !== null && (
-                  <div style={{ fontSize: "12px", color: "#94a3b8" }}>
-                    Browser Coordinates: <code>{geoStatus.lat.toFixed(5)}, {geoStatus.lng.toFixed(5)}</code>
+              {/* Today Status + Actions */}
+              <div className="emp-att-row">
+                <div className="emp-dash-card emp-att-today">
+                  <div className="emp-dash-card-header">Today&apos;s Status</div>
+                  <div className="emp-att-today-status">
+                    {todayAttendance ? (
+                      <span className={`emp-badge-lg emp-badge-lg-${(todayAttendance.status || "Present").toLowerCase().replace(/\s+/g, "")}`}>
+                        {todayAttendance.status || "Present"}
+                      </span>
+                    ) : (
+                      <span className="emp-badge-lg emp-badge-lg-pending">Not Marked</span>
+                    )}
                   </div>
-                )}
-
-                {geoStatus.isWithinGeofence === true && (
-                  <span className="emp-badge emp-badge-present">
-                    <CheckCircle size={12} /> Verified Inside Campus Zone (Present)
-                  </span>
-                )}
-
-                {geoStatus.isWithinGeofence === false && (
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                    <span className="emp-badge emp-badge-halfday">
-                      <MapPin size={12} /> Browser GPS Position Inaccurate ({geoStatus.distanceMeters}m away)
-                    </span>
-                    <span style={{ fontSize: "12px", color: "#94a3b8" }}>
-                      (Laptops & Wi-Fi IP location can be inaccurate. Click "I am on Chetana Campus" to confirm).
-                    </span>
+                  <div className="emp-att-times">
+                    <div className="emp-att-time-row">
+                      <span>Check-in</span>
+                      <strong>
+                        {todayAttendance?.check_in_time
+                          ? new Date(todayAttendance.check_in_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                          : "—"}
+                      </strong>
+                    </div>
+                    <div className="emp-att-time-row">
+                      <span>Check-out</span>
+                      <strong>
+                        {todayAttendance?.check_out_time
+                          ? new Date(todayAttendance.check_out_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                          : "—"}
+                      </strong>
+                    </div>
+                    {todayAttendance?.distance_meters != null && (
+                      <div className="emp-att-time-row">
+                        <span>GPS Distance</span>
+                        <strong style={{ color: "#60a5fa" }}>{todayAttendance.distance_meters}m</strong>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
 
-                {geoStatus.error && (
-                  <div style={{ fontSize: "12px", color: "#f87171" }}>
-                    {geoStatus.error}
+                <div className="emp-dash-card emp-att-actions">
+                  <div className="emp-dash-card-header">Quick Actions</div>
+                  <div className="emp-att-action-grid">
+                    <button className="emp-att-action-btn emp-att-action-btn-green" onClick={() => triggerAutoLocationCheck(false)} disabled={geoStatus.loading}>
+                      <Compass size={18} className={geoStatus.loading ? "emp-spin" : ""} />
+                      <span>Auto Check-In</span>
+                      <small>GPS Location</small>
+                    </button>
+                    <button className="emp-att-action-btn emp-att-action-btn-blue" onClick={() => handleMarkAttendance(todayAttendance?.status || "Present", "check_out")}>
+                      <Clock size={18} />
+                      <span>Check Out</span>
+                      <small>End of Day</small>
+                    </button>
+                    <button className="emp-att-action-btn emp-att-action-btn-amber" onClick={() => handleMarkAttendance("Half Day", "set_status")}>
+                      <Activity size={18} />
+                      <span>Half Day</span>
+                      <small>Half attendance</small>
+                    </button>
+                    <button className="emp-att-action-btn emp-att-action-btn-purple" onClick={() => handleMarkAttendance("Leave", "set_status")}>
+                      <Calendar size={18} />
+                      <span>Mark Leave</span>
+                      <small>Apply leave</small>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Attendance History */}
+              <div className="emp-dash-card">
+                <div className="emp-dash-card-header">
+                  <Clock size={16} />
+                  Attendance History Log
+                </div>
+                {attendanceRecords.length === 0 ? (
+                  <div className="emp-dash-empty">No attendance records yet.</div>
+                ) : (
+                  <div className="emp-table-wrap">
+                    <table className="emp-table">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Status</th>
+                          <th>Check-in</th>
+                          <th>Check-out</th>
+                          <th>Location</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {attendanceRecords.map((r) => (
+                          <tr key={r.id}>
+                            <td className="emp-table-date">{r.date}</td>
+                            <td>
+                              <span className={`emp-chip emp-chip-${(r.status || "Present").toLowerCase().replace(/\s+/g, "")}`}>
+                                {r.status || "Present"}
+                              </span>
+                            </td>
+                            <td>{r.check_in_time ? new Date(r.check_in_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</td>
+                            <td>{r.check_out_time ? new Date(r.check_out_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</td>
+                            <td>
+                              {r.distance_meters != null ? (
+                                <span style={{ fontSize: "12px", color: r.is_within_geofence ? "#34d399" : "#fbbf24", display: "flex", alignItems: "center", gap: "4px" }}>
+                                  <MapPin size={12} />{r.distance_meters}m
+                                </span>
+                              ) : (
+                                <span style={{ fontSize: "12px", color: "#64748b" }}>Standard</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </div>
             </div>
+          )}
 
-            <div className="emp-grid-3">
-              {/* Card 1: Today's Status */}
-              <div className="emp-card">
-                <div style={{ fontSize: "13px", color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", marginBottom: "8px" }}>
-                  Today's Attendance Status
+          {/* ─── TAB 2: TASKS ──────────────────────────────────── */}
+          {!loading && activeTab === "tasks" && (
+            <div className="emp-dash-section">
+              <div className="emp-dash-page-header">
+                <div>
+                  <h1 className="emp-dash-page-title">My Tasks</h1>
+                  <p className="emp-dash-page-sub">Create, track and manage your daily sprint tasks</p>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
-                  {todayAttendance ? (
-                    <span className={`emp-badge emp-badge-${todayAttendance.status.toLowerCase().replace(/\s+/g, "")}`}>
-                      {todayAttendance.status}
-                    </span>
-                  ) : (
-                    <span className="emp-badge emp-badge-pending">Not Marked</span>
-                  )}
-                </div>
+                <button className="emp-btn emp-btn-primary" onClick={openNewTaskModal}>
+                  <Plus size={16} />
+                  Add Task
+                </button>
+              </div>
 
-                <div style={{ fontSize: "13px", color: "#cbd5e1", display: "grid", gap: "6px" }}>
-                  <div>
-                    Check-in Time:{" "}
-                    <strong style={{ color: "#ffffff" }}>
-                      {todayAttendance?.check_in_time
-                        ? new Date(todayAttendance.check_in_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-                        : "Not checked in"}
-                    </strong>
-                  </div>
-                  <div>
-                    Check-out Time:{" "}
-                    <strong style={{ color: "#ffffff" }}>
-                      {todayAttendance?.check_out_time
-                        ? new Date(todayAttendance.check_out_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-                        : "Not checked out"}
-                    </strong>
-                  </div>
-                  {todayAttendance?.distance_meters !== undefined && todayAttendance?.distance_meters !== null && (
+              {/* Task KPIs */}
+              <div className="emp-kpi-row">
+                {[
+                  { label: "Total", value: totalTasks, color: "#6366f1", bg: "rgba(99,102,241,0.12)" },
+                  { label: "Pending", value: pendingTasks, color: "#f59e0b", bg: "rgba(245,158,11,0.12)" },
+                  { label: "In Progress", value: inProgressTasks, color: "#60a5fa", bg: "rgba(59,130,246,0.12)" },
+                  { label: "Completed", value: completedTasks, color: "#34d399", bg: "rgba(16,185,129,0.12)" },
+                ].map((s) => (
+                  <div key={s.label} className="emp-kpi-card" style={{ borderLeft: `3px solid ${s.color}` }}>
+                    <div className="emp-kpi-icon" style={{ background: s.bg, color: s.color }}>
+                      <Zap size={18} />
+                    </div>
                     <div>
-                      Verified Distance:{" "}
-                      <strong style={{ color: "#60a5fa" }}>
-                        {todayAttendance.distance_meters}m from Chetana Campus
-                      </strong>
+                      <div className="emp-kpi-value" style={{ color: s.color }}>{s.value}</div>
+                      <div className="emp-kpi-label">{s.label}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Progress bar */}
+              {totalTasks > 0 && (
+                <div className="emp-dash-card emp-progress-card">
+                  <div className="emp-progress-header">
+                    <span>Overall Completion</span>
+                    <span className="emp-progress-pct">{completionRate}%</span>
+                  </div>
+                  <div className="emp-progress-track">
+                    <div className="emp-progress-bar" style={{ width: `${completionRate}%` }} />
+                  </div>
+                </div>
+              )}
+
+              {/* Filter */}
+              <div className="emp-filter-strip">
+                <Filter size={14} />
+                {["all", "pending", "inprogress", "completed"].map((f) => (
+                  <button
+                    key={f}
+                    className={`emp-filter-pill ${taskStatusFilter === f ? "emp-filter-pill-active" : ""}`}
+                    onClick={() => setTaskStatusFilter(f)}
+                  >
+                    {f === "all" ? "All" : f === "inprogress" ? "In Progress" : f.charAt(0).toUpperCase() + f.slice(1)}
+                  </button>
+                ))}
+              </div>
+
+              {filteredTasks.length === 0 ? (
+                <div className="emp-dash-empty-card">
+                  <CheckSquare size={40} />
+                  <p>No tasks match this filter.</p>
+                  <button className="emp-btn emp-btn-primary emp-btn-sm" onClick={openNewTaskModal}>
+                    <Plus size={14} /> Create First Task
+                  </button>
+                </div>
+              ) : (
+                <div className="emp-task-list">
+                  {filteredTasks.map((t) => (
+                    <div key={t.id} className="emp-task-item">
+                      <div className="emp-task-item-left">
+                        <span className={`emp-task-priority-dot emp-priority-${(t.priority || "Medium").toLowerCase()}`} />
+                        <div>
+                          <div className="emp-task-title">{t.title}</div>
+                          {t.description && <div className="emp-task-desc">{t.description}</div>}
+                          <div className="emp-task-meta">
+                            <span className={`emp-chip emp-chip-${(t.priority || "Medium").toLowerCase()}`}>{t.priority || "Medium"}</span>
+                            <span className="emp-task-date">{t.date}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="emp-task-item-right">
+                        <select
+                          className={`emp-status-select emp-chip emp-chip-${(t.status || "Pending").toLowerCase().replace(/\s+/g, "")}`}
+                          value={t.status || "Pending"}
+                          onChange={(e) => handleQuickStatusChange(t, e.target.value as TaskStatus)}
+                        >
+                          <option value="Pending">Pending</option>
+                          <option value="In Progress">In Progress</option>
+                          <option value="Completed">Completed</option>
+                        </select>
+                        <button className="emp-icon-btn emp-icon-btn-blue" onClick={() => openEditTaskModal(t)} title="Edit">
+                          <Edit2 size={14} />
+                        </button>
+                        <button className="emp-icon-btn emp-icon-btn-red" onClick={() => setDeletingTaskId(t.id)} title="Delete">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ─── TAB 3: DAILY UPDATES ──────────────────────────── */}
+          {!loading && activeTab === "daily_updates" && (
+            <div className="emp-dash-section">
+              <div className="emp-dash-page-header">
+                <div>
+                  <h1 className="emp-dash-page-title">Daily Work Report</h1>
+                  <p className="emp-dash-page-sub">Submit today's progress for management review</p>
+                </div>
+                {todayReportSubmitted && (
+                  <span className="emp-chip emp-chip-present" style={{ padding: "8px 16px", fontSize: "13px" }}>
+                    <CheckCircle size={14} /> Today Submitted
+                  </span>
+                )}
+              </div>
+
+              <div className="emp-updates-layout">
+                {/* Form */}
+                <div className="emp-dash-card emp-updates-form-card">
+                  <div className="emp-dash-card-header">
+                    <FileText size={16} />
+                    Today&apos;s Report — {todayStr}
+                  </div>
+                  <form onSubmit={handleSaveDailyUpdate} className="emp-updates-form">
+                    <div className="emp-form-group">
+                      <label className="emp-form-label">Work Completed Today *</label>
+                      <textarea
+                        className="emp-textarea"
+                        placeholder="Summarize tasks completed, modules delivered, milestones achieved…"
+                        value={todayUpdate.work_completed}
+                        onChange={(e) => setTodayUpdate({ ...todayUpdate, work_completed: e.target.value })}
+                        required
+                        rows={4}
+                      />
+                    </div>
+                    <div className="emp-form-group">
+                      <label className="emp-form-label">Blockers / Issues <span className="emp-form-optional">(optional)</span></label>
+                      <textarea
+                        className="emp-textarea"
+                        placeholder="Any blockers, missing access, or dependencies holding you back…"
+                        value={todayUpdate.blockers}
+                        onChange={(e) => setTodayUpdate({ ...todayUpdate, blockers: e.target.value })}
+                        rows={3}
+                      />
+                    </div>
+                    <div className="emp-form-group">
+                      <label className="emp-form-label">Plan for Tomorrow <span className="emp-form-optional">(optional)</span></label>
+                      <textarea
+                        className="emp-textarea"
+                        placeholder="Key objectives and tasks planned for the next day…"
+                        value={todayUpdate.tomorrow_plan}
+                        onChange={(e) => setTodayUpdate({ ...todayUpdate, tomorrow_plan: e.target.value })}
+                        rows={3}
+                      />
+                    </div>
+                    <div className="emp-form-group">
+                      <label className="emp-form-label">Notes <span className="emp-form-optional">(optional)</span></label>
+                      <input
+                        type="text"
+                        className="emp-input"
+                        placeholder="Additional notes for your manager…"
+                        value={todayUpdate.notes}
+                        onChange={(e) => setTodayUpdate({ ...todayUpdate, notes: e.target.value })}
+                      />
+                    </div>
+                    <button type="submit" className="emp-btn emp-btn-primary" style={{ width: "auto" }}>
+                      <CheckCircle size={16} />
+                      Save Today&apos;s Report
+                    </button>
+                  </form>
+                </div>
+
+                {/* History */}
+                <div className="emp-dash-card emp-updates-history-card">
+                  <div className="emp-dash-card-header">Previous Reports</div>
+                  {dailyUpdates.length === 0 ? (
+                    <div className="emp-dash-empty" style={{ padding: "32px 0" }}>No reports submitted yet.</div>
+                  ) : (
+                    <div className="emp-updates-history">
+                      {dailyUpdates.map((u) => (
+                        <div key={u.id} className="emp-update-entry">
+                          <div className="emp-update-entry-date">{u.date}</div>
+                          <div className="emp-update-entry-work">{u.work_completed}</div>
+                          {u.blockers && (
+                            <div className="emp-update-entry-blocker">
+                              <AlertCircle size={12} /> {u.blockers}
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
               </div>
-
-              {/* Card 2: Manual / Additional Attendance Actions */}
-              <div className="emp-card" style={{ gridColumn: "span 2" }}>
-                <div style={{ fontSize: "15px", fontWeight: 700, color: "#ffffff", marginBottom: "16px" }}>
-                  Attendance Actions
-                </div>
-                <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                  <button
-                    className="emp-btn emp-btn-success emp-btn-sm"
-                    onClick={() => triggerAutoLocationCheck(false)}
-                    style={{ flex: 1, minWidth: "160px" }}
-                  >
-                    <Compass size={14} /> Auto Check-In (Location)
-                  </button>
-
-                  <button
-                    className="emp-btn emp-btn-secondary emp-btn-sm"
-                    onClick={() => handleMarkAttendance(todayAttendance?.status || "Present", "check_out")}
-                    style={{ flex: 1, minWidth: "140px" }}
-                  >
-                    Check Out
-                  </button>
-
-                  <button
-                    className="emp-btn emp-btn-secondary emp-btn-sm"
-                    onClick={() => handleMarkAttendance("Half Day", "set_status")}
-                  >
-                    Mark Half Day
-                  </button>
-
-                  <button
-                    className="emp-btn emp-btn-secondary emp-btn-sm"
-                    onClick={() => handleMarkAttendance("Leave", "set_status")}
-                  >
-                    Mark Leave
-                  </button>
-                </div>
-              </div>
             </div>
+          )}
+        </main>
+      </div>
 
-            {/* Attendance History Table */}
-            <div className="emp-card">
-              <div className="emp-section-header">
-                <h2 className="emp-section-title">
-                  <Clock size={20} /> Attendance History Log
-                </h2>
-              </div>
-
-              {attendanceRecords.length === 0 ? (
-                <div style={{ textTransform: "none", textAlign: "center", padding: "40px", color: "#94a3b8" }}>
-                  No historical attendance records found yet.
-                </div>
-              ) : (
-                <div className="emp-table-wrap">
-                  <table className="emp-table">
-                    <thead>
-                      <tr>
-                        <th>Date</th>
-                        <th>Status</th>
-                        <th>Check-in Time</th>
-                        <th>Check-out Time</th>
-                        <th>Location Verification</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {attendanceRecords.map((r) => (
-                        <tr key={r.id}>
-                          <td>{r.date}</td>
-                          <td>
-                            <span className={`emp-badge emp-badge-${r.status.toLowerCase().replace(/\s+/g, "")}`}>
-                              {r.status}
-                            </span>
-                          </td>
-                          <td>
-                            {r.check_in_time
-                              ? new Date(r.check_in_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-                              : "—"}
-                          </td>
-                          <td>
-                            {r.check_out_time
-                              ? new Date(r.check_out_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-                              : "—"}
-                          </td>
-                          <td>
-                            {r.distance_meters !== undefined && r.distance_meters !== null ? (
-                              <span style={{ fontSize: "12px", color: r.is_within_geofence ? "#34d399" : "#fbbf24" }}>
-                                <MapPin size={12} style={{ display: "inline", marginRight: "4px" }} />
-                                {r.distance_meters}m from Chetana
-                              </span>
-                            ) : (
-                              <span style={{ fontSize: "12px", color: "#94a3b8" }}>Standard</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* TAB 2: TASKS */}
-        {activeTab === "tasks" && (
-          <div>
-            <div className="emp-section-header">
-              <h2 className="emp-section-title">
-                <CheckSquare size={20} /> My Daily Tasks
-              </h2>
-              <button className="emp-btn emp-btn-primary emp-btn-sm" onClick={openNewTaskModal}>
-                <Plus size={16} /> Add New Task
-              </button>
-            </div>
-
-            {/* Filter Bar */}
-            <div className="emp-filter-bar">
-              <div className="emp-filter-item">
-                <Filter size={15} style={{ color: "#94a3b8" }} />
-                <span className="emp-label" style={{ margin: 0 }}>Filter by Status:</span>
-                <select
-                  className="emp-select"
-                  style={{ width: "auto", padding: "6px 12px" }}
-                  value={taskStatusFilter}
-                  onChange={(e) => setTaskStatusFilter(e.target.value)}
-                >
-                  <option value="all">All Tasks</option>
-                  <option value="pending">Pending</option>
-                  <option value="inprogress">In Progress</option>
-                  <option value="completed">Completed</option>
-                </select>
-              </div>
-            </div>
-
-            {filteredTasks.length === 0 ? (
-              <div className="emp-card" style={{ textAlign: "center", padding: "40px", color: "#94a3b8" }}>
-                No tasks match your current filter. Click "Add New Task" to create one.
-              </div>
-            ) : (
-              <div className="emp-table-wrap">
-                <table className="emp-table">
-                  <thead>
-                    <tr>
-                      <th>Task Title</th>
-                      <th>Description</th>
-                      <th>Priority</th>
-                      <th>Status</th>
-                      <th>Date</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredTasks.map((t) => (
-                      <tr key={t.id}>
-                        <td>
-                          <strong style={{ color: "#ffffff" }}>{t.title}</strong>
-                        </td>
-                        <td style={{ maxWidth: "260px", color: "#94a3b8", fontSize: "13px" }}>
-                          {t.description || "—"}
-                        </td>
-                        <td>
-                          <span className={`emp-badge emp-badge-${t.priority.toLowerCase()}`}>
-                            {t.priority}
-                          </span>
-                        </td>
-                        <td>
-                          <select
-                            className={`emp-select emp-badge emp-badge-${t.status.toLowerCase().replace(/\s+/g, "")}`}
-                            style={{ cursor: "pointer", border: "none" }}
-                            value={t.status}
-                            onChange={(e) => handleQuickStatusChange(t, e.target.value as TaskStatus)}
-                          >
-                            <option value="Pending" style={{ background: "#1e293b", color: "#ffffff" }}>Pending</option>
-                            <option value="In Progress" style={{ background: "#1e293b", color: "#ffffff" }}>In Progress</option>
-                            <option value="Completed" style={{ background: "#1e293b", color: "#ffffff" }}>Completed</option>
-                          </select>
-                        </td>
-                        <td>{t.date}</td>
-                        <td>
-                          <div style={{ display: "flex", gap: "8px" }}>
-                            <button
-                              className="emp-btn emp-btn-secondary emp-btn-sm"
-                              onClick={() => openEditTaskModal(t)}
-                              title="Edit task"
-                            >
-                              <Edit2 size={13} />
-                            </button>
-                            <button
-                              className="emp-btn emp-btn-danger emp-btn-sm"
-                              onClick={() => setDeletingTaskId(t.id)}
-                              title="Delete task"
-                            >
-                              <Trash2 size={13} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TAB 3: DAILY WORK UPDATE */}
-        {activeTab === "daily_updates" && (
-          <div>
-            <div className="emp-grid-3">
-              {/* Left Column: Form to submit/update today's work report */}
-              <div className="emp-card" style={{ gridColumn: "span 2" }}>
-                <h3 className="emp-section-title" style={{ fontSize: "16px", marginBottom: "16px" }}>
-                  <FileText size={18} /> Today's Work Report ({todayStr})
-                </h3>
-
-                <form onSubmit={handleSaveDailyUpdate}>
-                  <div className="emp-form-group">
-                    <label className="emp-label">Work Completed Today *</label>
-                    <textarea
-                      className="emp-textarea"
-                      placeholder="Summary of completed tasks, achievements, modules delivered..."
-                      value={todayUpdate.work_completed}
-                      onChange={(e) => setTodayUpdate({ ...todayUpdate, work_completed: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="emp-form-group">
-                    <label className="emp-label">Problems / Blockers (Optional)</label>
-                    <textarea
-                      className="emp-textarea"
-                      placeholder="Any technical blockers, missing access, dependencies..."
-                      value={todayUpdate.blockers}
-                      onChange={(e) => setTodayUpdate({ ...todayUpdate, blockers: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="emp-form-group">
-                    <label className="emp-label">Plan for Tomorrow (Optional)</label>
-                    <textarea
-                      className="emp-textarea"
-                      placeholder="Key objectives and tasks planned for tomorrow..."
-                      value={todayUpdate.tomorrow_plan}
-                      onChange={(e) => setTodayUpdate({ ...todayUpdate, tomorrow_plan: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="emp-form-group">
-                    <label className="emp-label">Optional Notes</label>
-                    <input
-                      type="text"
-                      className="emp-input"
-                      placeholder="Additional notes for manager/team..."
-                      value={todayUpdate.notes}
-                      onChange={(e) => setTodayUpdate({ ...todayUpdate, notes: e.target.value })}
-                    />
-                  </div>
-
-                  <button type="submit" className="emp-btn emp-btn-primary" style={{ width: "auto" }}>
-                    Save Today's Work Update
-                  </button>
-                </form>
-              </div>
-
-              {/* Right Column: Historical Reports */}
-              <div className="emp-card">
-                <h3 className="emp-section-title" style={{ fontSize: "16px", marginBottom: "16px" }}>
-                  Previous Daily Updates
-                </h3>
-
-                {dailyUpdates.length === 0 ? (
-                  <div style={{ color: "#94a3b8", fontSize: "13px" }}>No previous daily updates submitted.</div>
-                ) : (
-                  <div style={{ display: "grid", gap: "12px", maxHeight: "400px", overflowY: "auto" }}>
-                    {dailyUpdates.map((u) => (
-                      <div
-                        key={u.id}
-                        style={{
-                          background: "rgba(30, 41, 59, 0.4)",
-                          padding: "12px",
-                          borderRadius: "8px",
-                          border: "1px solid rgba(255, 255, 255, 0.05)",
-                        }}
-                      >
-                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#3b82f6", marginBottom: "4px" }}>
-                          {u.date}
-                        </div>
-                        <div style={{ fontSize: "13px", color: "#f1f5f9", fontWeight: 600 }}>{u.work_completed}</div>
-                        {u.blockers && (
-                          <div style={{ fontSize: "12px", color: "#f87171", marginTop: "4px" }}>
-                            <strong>Blockers:</strong> {u.blockers}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-      </main>
-
-      {/* CREATE / EDIT TASK MODAL */}
+      {/* ─── TASK MODAL ──────────────────────────────────────── */}
       {isTaskModalOpen && (
         <div className="emp-modal-overlay">
           <div className="emp-modal">
             <div className="emp-modal-header">
-              <h3 className="emp-modal-title">
-                {editingTask ? "Edit Task" : "Add New Daily Task"}
-              </h3>
+              <div className="emp-modal-title-group">
+                <div className="emp-modal-icon">{editingTask ? <Edit2 size={18} /> : <Plus size={18} />}</div>
+                <h3 className="emp-modal-title">{editingTask ? "Edit Task" : "New Task"}</h3>
+              </div>
               <button className="emp-modal-close" onClick={() => setIsTaskModalOpen(false)}>
-                &times;
+                <X size={18} />
               </button>
             </div>
-
             <form onSubmit={handleSaveTask}>
               <div className="emp-form-group">
-                <label className="emp-label">Task Title *</label>
+                <label className="emp-form-label">Task Title *</label>
                 <input
                   type="text"
                   className="emp-input"
@@ -907,53 +943,39 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
                   value={taskTitle}
                   onChange={(e) => setTaskTitle(e.target.value)}
                   required
+                  autoFocus
                 />
               </div>
-
               <div className="emp-form-group">
-                <label className="emp-label">Description (Optional)</label>
+                <label className="emp-form-label">Description <span className="emp-form-optional">(optional)</span></label>
                 <textarea
                   className="emp-textarea"
-                  placeholder="Detailed description of task deliverables..."
+                  placeholder="Detailed description of deliverables…"
                   value={taskDesc}
                   onChange={(e) => setTaskDesc(e.target.value)}
+                  rows={3}
                 />
               </div>
-
-              <div className="emp-grid-3" style={{ marginBottom: "20px" }}>
-                <div>
-                  <label className="emp-label">Priority</label>
-                  <select
-                    className="emp-select"
-                    value={taskPriority}
-                    onChange={(e) => setTaskPriority(e.target.value as TaskPriority)}
-                  >
+              <div className="emp-modal-selects">
+                <div className="emp-form-group">
+                  <label className="emp-form-label">Priority</label>
+                  <select className="emp-select" value={taskPriority} onChange={(e) => setTaskPriority(e.target.value as TaskPriority)}>
                     <option value="Low">Low</option>
                     <option value="Medium">Medium</option>
                     <option value="High">High</option>
                   </select>
                 </div>
-
-                <div>
-                  <label className="emp-label">Status</label>
-                  <select
-                    className="emp-select"
-                    value={taskStatus}
-                    onChange={(e) => setTaskStatus(e.target.value as TaskStatus)}
-                  >
+                <div className="emp-form-group">
+                  <label className="emp-form-label">Status</label>
+                  <select className="emp-select" value={taskStatus} onChange={(e) => setTaskStatus(e.target.value as TaskStatus)}>
                     <option value="Pending">Pending</option>
                     <option value="In Progress">In Progress</option>
                     <option value="Completed">Completed</option>
                   </select>
                 </div>
               </div>
-
-              <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
-                <button
-                  type="button"
-                  className="emp-btn emp-btn-secondary emp-btn-sm"
-                  onClick={() => setIsTaskModalOpen(false)}
-                >
+              <div className="emp-modal-footer">
+                <button type="button" className="emp-btn emp-btn-ghost emp-btn-sm" onClick={() => setIsTaskModalOpen(false)}>
                   Cancel
                 </button>
                 <button type="submit" className="emp-btn emp-btn-primary emp-btn-sm">
@@ -965,26 +987,16 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
         </div>
       )}
 
-      {/* DELETE CONFIRMATION MODAL */}
+      {/* ─── DELETE MODAL ────────────────────────────────────── */}
       {deletingTaskId && (
         <div className="emp-modal-overlay">
-          <div className="emp-modal" style={{ maxWidth: "400px" }}>
-            <h3 className="emp-modal-title" style={{ color: "#f87171", marginBottom: "12px" }}>
-              Confirm Delete
-            </h3>
-            <p style={{ fontSize: "14px", color: "#cbd5e1", marginBottom: "20px" }}>
-              Are you sure you want to delete this task? This action cannot be undone.
-            </p>
-            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
-              <button
-                className="emp-btn emp-btn-secondary emp-btn-sm"
-                onClick={() => setDeletingTaskId(null)}
-              >
-                Cancel
-              </button>
-              <button className="emp-btn emp-btn-danger emp-btn-sm" onClick={handleDeleteTask}>
-                Delete Task
-              </button>
+          <div className="emp-modal emp-modal-sm">
+            <div className="emp-modal-delete-icon"><Trash2 size={28} /></div>
+            <h3 className="emp-modal-title" style={{ textAlign: "center", marginBottom: "8px" }}>Delete Task?</h3>
+            <p className="emp-modal-delete-sub">This action is permanent and cannot be undone.</p>
+            <div className="emp-modal-footer">
+              <button className="emp-btn emp-btn-ghost emp-btn-sm" onClick={() => setDeletingTaskId(null)}>Cancel</button>
+              <button className="emp-btn emp-btn-danger emp-btn-sm" onClick={handleDeleteTask}>Delete</button>
             </div>
           </div>
         </div>

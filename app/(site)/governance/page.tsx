@@ -31,8 +31,10 @@ export default async function GovernancePage() {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 36, marginBottom: 64 }}>
-        {committees.map((comm) => (
-          <article className="event-card" key={comm.id || comm.name}>
+        {committees.map((comm) => {
+          const sectionId = comm.id?.replace(/^gov-/, "") || comm.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+          return (
+            <article className="event-card" key={comm.id || comm.name} id={sectionId}>
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
               <div className="card-icon-wrap" style={{ width: 44, height: 44, marginBottom: 0 }}>
                 <Users size={22} />
@@ -46,10 +48,16 @@ export default async function GovernancePage() {
             <p className="event-card-description">{comm.description}</p>
 
             <div className="grid-3" style={{ marginTop: 24 }}>
-              {comm.members.map((m) => {
+              {comm.members.map((m, idx) => {
+                const isFunctional = comm.id === "functional-committee" || comm.name.toLowerCase().includes("functional");
+                // Extract section name if role starts with "Lead — "
+                const sectionTitle = isFunctional && m.role.includes("—") 
+                  ? m.role.split("—")[1].trim()
+                  : null;
+
                 const memberCard = (
                   <div
-                    key={m.name}
+                    key={m.name + idx}
                     style={{
                       background: "rgba(255, 255, 255, 0.03)",
                       border: "1px solid var(--ciel-gold-border)",
@@ -62,6 +70,17 @@ export default async function GovernancePage() {
                     }}
                   >
                     <div>
+                      {sectionTitle && (
+                        <div style={{ marginBottom: 12, paddingBottom: 10, borderBottom: "1px solid rgba(212, 160, 23, 0.15)" }}>
+                          <span className="badge badge-brand" style={{ fontSize: 11, marginBottom: 4, display: "inline-block" }}>
+                            Section {sectionTitle.match(/^(\d+)[:.]/)?.[1] || idx + 1}
+                          </span>
+                          <h3 style={{ fontSize: 16, margin: "4px 0 0", color: "var(--ciel-gold-bright)", fontWeight: 700 }}>
+                            {sectionTitle.replace(/^\d+[:.]\s*/, "")}
+                          </h3>
+                        </div>
+                      )}
+
                       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
                         {m.avatar && (m.avatar.startsWith("/") || m.avatar.startsWith("http")) ? (
                           // eslint-disable-next-line @next/next/no-img-element
@@ -80,7 +99,9 @@ export default async function GovernancePage() {
                             <span>{m.name}</span>
                             {m.linkedinUrl && <LinkedInIcon size={15} color="#60A5FA" />}
                           </strong>
-                          <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>{m.role}</span>
+                          <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+                            {sectionTitle ? "Committee Lead" : m.role}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -98,7 +119,7 @@ export default async function GovernancePage() {
                     href={m.linkedinUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    key={m.name}
+                    key={m.name + idx}
                     style={{ textDecoration: "none", color: "inherit", display: "block" }}
                   >
                     {memberCard}
@@ -109,7 +130,8 @@ export default async function GovernancePage() {
               })}
             </div>
           </article>
-        ))}
+        );
+      })}
       </div>
 
       <div className="status-card" style={{ maxWidth: "100%", textAlign: "center" }}>

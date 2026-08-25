@@ -54,27 +54,15 @@ export default async function DownloadsPage() {
               </div>
             </div>
 
-            {doc.fileUrl ? (
-              <a
-                className="button button-primary button-small"
-                href={doc.fileUrl}
-                download
-                target="_blank"
-                rel="noreferrer"
-              >
-                <Download size={15} /> Download {doc.format}
-              </a>
-            ) : (
-              <button
-                className="button button-primary button-small"
-                type="button"
-                onClick={() => {
-                  alert(`Downloading ${doc.title} (${doc.format})`);
-                }}
-              >
-                <Download size={15} /> Download {doc.format}
-              </button>
-            )}
+            <a
+              className="button button-primary button-small"
+              href={doc.fileUrl || `/downloads#${doc.id}`}
+              download={doc.fileUrl ? undefined : `${doc.title}.${doc.format.toLowerCase()}`}
+              target={doc.fileUrl ? "_blank" : undefined}
+              rel="noreferrer"
+            >
+              <Download size={15} /> Download {doc.format}
+            </a>
           </article>
         ))}
       </div>
