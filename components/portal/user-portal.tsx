@@ -1978,10 +1978,11 @@ export function UserPortal({ profile, registration, members, downloads }: Portal
                   <div>
                     <label className="field-label">Time Slot</label>
                     <input
-                      type="text"
+                      type="time"
                       className="input"
                       value={mentorForm.time}
                       onChange={(e) => setMentorForm({ ...mentorForm, time: e.target.value })}
+                      style={{ cursor: "pointer" }}
                     />
                   </div>
                 </div>

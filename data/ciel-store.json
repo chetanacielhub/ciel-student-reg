@@ -244,7 +244,18 @@
       "createdAt": "2026-08-08T08:58:00.072Z"
     }
   ],
-  "events": [],
+  "events": [
+    {
+      "title": "abc",
+      "category": "Hackathon",
+      "date": "2026-06-20",
+      "time": "20:24 - 21:23",
+      "venue": "CIEL Innovation Hub",
+      "desc": "",
+      "posterUrl": "",
+      "id": "ev-1788011647447"
+    }
+  ],
   "news": [],
   "downloads": [
     {

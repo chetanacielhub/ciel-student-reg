@@ -2113,6 +2113,8 @@ function ERPEventsTab({ initialEvents = [] }: { initialEvents?: CielEventItem[] 
     title: "",
     category: "Hackathon",
     date: "",
+    startTime: "",
+    endTime: "",
     time: "",
     venue: "",
     desc: "",
@@ -2150,15 +2152,22 @@ function ERPEventsTab({ initialEvents = [] }: { initialEvents?: CielEventItem[] 
     setSubmitting(true);
 
     try {
+      const timeFormatted = form.startTime
+        ? (form.endTime ? `${form.startTime} - ${form.endTime}` : form.startTime)
+        : form.time;
+
       const res = await fetch("/api/admin/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          time: timeFormatted,
+        }),
       });
       const json = await res.json();
       if (res.ok && json.event) {
         setEvents((prev) => [json.event, ...prev]);
-        setForm({ title: "", category: "Hackathon", date: "", time: "", venue: "", desc: "", posterUrl: "" });
+        setForm({ title: "", category: "Hackathon", date: "", startTime: "", endTime: "", time: "", venue: "", desc: "", posterUrl: "" });
         setIsAdding(false);
       } else {
         alert(json.error || "Failed to add event");
@@ -2217,21 +2226,128 @@ function ERPEventsTab({ initialEvents = [] }: { initialEvents?: CielEventItem[] 
               </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
               <div>
-                <label className="field-label">Date *</label>
-                <input className="input" required placeholder="" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+                <label className="field-label" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <Calendar size={15} className="text-gold" /> Select Date from Calendar *
+                </label>
+                <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                  <input
+                    type="date"
+                    className="input"
+                    required
+                    value={form.date}
+                    onChange={(e) => setForm({ ...form, date: e.target.value })}
+                    onClick={(e) => (e.currentTarget as any).showPicker?.()}
+                    style={{ cursor: "pointer", width: "100%", paddingRight: 38, fontSize: 14 }}
+                  />
+                  <button
+                    type="button"
+                    title="Open Calendar Picker"
+                    onClick={(e) => {
+                      const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                      input?.showPicker?.();
+                      input?.focus();
+                    }}
+                    style={{
+                      position: "absolute",
+                      right: 10,
+                      background: "none",
+                      border: "none",
+                      color: "var(--ciel-gold-bright)",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Calendar size={18} />
+                  </button>
+                </div>
               </div>
 
               <div>
-                <label className="field-label">Time</label>
-                <input className="input" placeholder="" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} />
-              </div>
+                <label className="field-label" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <Clock size={15} className="text-gold" /> Select Time from Clock
+                </label>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                    <input
+                      type="time"
+                      className="input"
+                      value={form.startTime}
+                      onChange={(e) => setForm({ ...form, startTime: e.target.value })}
+                      onClick={(e) => (e.currentTarget as any).showPicker?.()}
+                      style={{ cursor: "pointer", width: "100%", paddingRight: 32, fontSize: 13.5 }}
+                    />
+                    <button
+                      type="button"
+                      title="Open Start Clock"
+                      onClick={(e) => {
+                        const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                        input?.showPicker?.();
+                        input?.focus();
+                      }}
+                      style={{
+                        position: "absolute",
+                        right: 8,
+                        background: "none",
+                        border: "none",
+                        color: "var(--ciel-gold-bright)",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Clock size={16} />
+                    </button>
+                  </div>
 
-              <div>
-                <label className="field-label">Venue</label>
-                <input className="input" placeholder="" value={form.venue} onChange={(e) => setForm({ ...form, venue: e.target.value })} />
+                  <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                    <input
+                      type="time"
+                      className="input"
+                      value={form.endTime}
+                      onChange={(e) => setForm({ ...form, endTime: e.target.value })}
+                      onClick={(e) => (e.currentTarget as any).showPicker?.()}
+                      style={{ cursor: "pointer", width: "100%", paddingRight: 32, fontSize: 13.5 }}
+                    />
+                    <button
+                      type="button"
+                      title="Open End Clock"
+                      onClick={(e) => {
+                        const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                        input?.showPicker?.();
+                        input?.focus();
+                      }}
+                      style={{
+                        position: "absolute",
+                        right: 8,
+                        background: "none",
+                        border: "none",
+                        color: "var(--ciel-gold-bright)",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Clock size={16} />
+                    </button>
+                  </div>
+                </div>
               </div>
+            </div>
+
+            <div>
+              <label className="field-label">Venue / Campus Location</label>
+              <input
+                className="input"
+                placeholder=""
+                value={form.venue}
+                onChange={(e) => setForm({ ...form, venue: e.target.value })}
+              />
             </div>
 
             <div>
