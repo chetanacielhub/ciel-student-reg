@@ -120,21 +120,22 @@ export default async function AdminDashboardPage() {
   const images = await getGalleryImages();
 
   // ── Fetch dynamic store items ─────────────────────────────────────────────
-  const { getCielEvents, getDownloadDocs, getGoogleForms } = await import("@/lib/dynamic-store");
-  const [initialMentors, initialCouncil, initialGovernance, initialEvents, initialDownloads, initialGoogleForms] = await Promise.all([
+  const { getCielEvents, getDownloadDocs, getGoogleForms, getVentureProjects } = await import("@/lib/dynamic-store");
+  const [initialMentors, initialCouncil, initialGovernance, initialEvents, initialDownloads, initialGoogleForms, initialProjects] = await Promise.all([
     getMentors(),
     getStudentCouncilLeads(),
     getGovernanceCommittees(),
     getCielEvents(),
     getDownloadDocs(),
     getGoogleForms(false),
+    getVentureProjects(),
   ]);
 
   // ── Stats ─────────────────────────────────────────────────────────────────
   const teamNames = new Set(registrations.map((r) => r.teamName).filter((n) => n !== "—"));
   const stats = {
     totalRegistrations: registrations.length,
-    teamCount: teamNames.size,
+    teamCount: teamNames.size || initialProjects.length,
     leaderCount: registrations.filter((r) => r.role === "team_leader").length,
     memberCount: registrations.filter((r) => r.role === "team_member").length,
     soloCount: registrations.filter((r) => r.role === "solo").length,
@@ -146,6 +147,7 @@ export default async function AdminDashboardPage() {
     eventsCount: initialEvents.length,
     downloadsCount: initialDownloads.length,
     formsCount: initialGoogleForms.length,
+    projectsCount: initialProjects.length,
   };
 
   return (
@@ -159,6 +161,7 @@ export default async function AdminDashboardPage() {
       initialEvents={initialEvents}
       initialDownloads={initialDownloads}
       initialGoogleForms={initialGoogleForms}
+      initialProjects={initialProjects}
       stats={stats}
       eventTitle={event?.title ?? "CIEL Incubation Program"}
     />

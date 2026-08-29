@@ -343,8 +343,8 @@ export function DashboardView({
             >
               <Zap size={24} style={{ color: "var(--text-muted)", flexShrink: 0 }} />
               <div>
-                <strong style={{ display: "block", color: "var(--text-white)" }}>Stage 3: Makerspace Prototyping &amp; Seed Grant Evaluation</strong>
-                <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Access 3D printers, IoT hardware, and grant support.</span>
+                <strong style={{ display: "block", color: "var(--text-white)" }}>Stage 3: Tech Lab &amp; Ideation Pitch Evaluation</strong>
+                <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Access the Tech Lab, conference pitch room, and business scaling seminars.</span>
               </div>
             </div>
           </div>

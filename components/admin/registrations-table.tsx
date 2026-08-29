@@ -62,7 +62,7 @@ export function RegistrationsTable({ rows }: { rows: AdminRegistrationRow[] }) {
             <input
               className="input input-with-icon admin-search"
               type="search"
-              placeholder="Search name, team, roll…"
+              placeholder=""
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               aria-label="Search registrations"

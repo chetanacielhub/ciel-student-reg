@@ -143,7 +143,7 @@ export function SignUpForm() {
               style={{ padding: "10px 12px 10px 38px", fontSize: 13.5 }}
               name="fullName"
               type="text"
-              placeholder="Rohan Sharma"
+              placeholder=""
               value={values.fullName}
               onChange={(e) => updateValue("fullName", e.target.value)}
             />
@@ -162,7 +162,7 @@ export function SignUpForm() {
               style={{ padding: "10px 12px 10px 38px", fontSize: 13.5 }}
               name="phone"
               type="tel"
-              placeholder="+919876543210"
+              placeholder=""
               value={values.phone}
               onChange={(e) => updateValue("phone", e.target.value.replace(/\s/g, ""))}
             />
@@ -183,7 +183,7 @@ export function SignUpForm() {
             style={{ padding: "10px 12px 10px 38px", fontSize: 13.5 }}
             name="email"
             type="email"
-            placeholder="you@gmail.com"
+            placeholder=""
             value={values.email}
             onChange={(e) => updateValue("email", e.target.value)}
           />
@@ -204,7 +204,7 @@ export function SignUpForm() {
               style={{ padding: "10px 12px 10px 38px", fontSize: 13.5 }}
               name="password"
               type={showPassword ? "text" : "password"}
-              placeholder="Min. 8 chars"
+              placeholder=""
               value={values.password}
               onChange={(e) => updateValue("password", e.target.value)}
             />
@@ -231,7 +231,7 @@ export function SignUpForm() {
               style={{ padding: "10px 12px 10px 38px", fontSize: 13.5 }}
               name="confirmPassword"
               type={showPassword ? "text" : "password"}
-              placeholder="Repeat password"
+              placeholder=""
               value={values.confirmPassword}
               onChange={(e) => updateValue("confirmPassword", e.target.value)}
             />

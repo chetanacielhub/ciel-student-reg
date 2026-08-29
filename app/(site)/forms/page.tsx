@@ -223,7 +223,7 @@ export default function GoogleFormsPage() {
               <Search size={14} className="aside-search-icon" />
               <input
                 type="text"
-                placeholder="Search forms..."
+                placeholder=""
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="aside-input"

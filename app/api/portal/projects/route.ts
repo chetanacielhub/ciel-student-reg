@@ -15,18 +15,23 @@ export async function GET(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, name, problemStatement, stage, progress, pitchDeck } = body;
+    const { id, name, problemStatement, stage, progress, pitchDeck, documents, traction, teamName, leaderEmail, leaderName } = body;
 
     const updated = await updateVentureProject(id || "proj-1", {
       name,
+      teamName,
       problemStatement,
       stage,
       progress: typeof progress === "number" ? progress : undefined,
       pitchDeck,
+      documents,
+      traction,
+      leaderEmail,
+      leaderName,
     });
 
     if (!updated) {
-      return NextResponse.json({ error: "Project not found to update." }, { status: 44 });
+      return NextResponse.json({ error: "Project not found to update." }, { status: 404 });
     }
 
     revalidatePath("/dashboard");

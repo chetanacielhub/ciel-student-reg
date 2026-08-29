@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   ChevronRight,
   Compass,
+  Cpu,
   FileCheck2,
   Flame,
   Globe,
@@ -22,12 +23,15 @@ import {
   LineChart,
   MapPin,
   Microscope,
+  Presentation,
   Quote,
   Rocket,
   ShieldCheck,
   Sparkles,
   Target,
+  TrendingUp,
   Trophy,
+  Tv,
   UserCheck,
   Users,
   UsersRound,
@@ -64,7 +68,7 @@ const ANGLED_PANELS = [
 const TESTIMONIALS = [
   {
     quote:
-      "CIEL provided our venture with initial seed grant support, 3D printing makerspace access, and patent attorneys. That incubation ecosystem accelerated our market launch by over 12 months.",
+      "CIEL provided our startup with constant business upscaling seminars, tech lab access, conference room pitching sessions, and a wide mentor network that guided our venture from scratch to execution.",
     author: "Rohan Deshmukh",
     role: "Founder, AgriTech Dynamics",
     badge: "CIEL Incubated Founder",
@@ -216,23 +220,23 @@ export function HomeView({ event }: HomeViewProps) {
               <div className="ref-kpi-item">
                 <div style={{ marginBottom: 6 }}><Users size={18} className="text-gold" /></div>
                 <div className="ref-kpi-num">
-                  <CounterAnimation value="500+" />
+                  <CounterAnimation value="~200" />
                 </div>
-                <div className="ref-kpi-label">Student Innovators</div>
+                <div className="ref-kpi-label">Student Council Members</div>
               </div>
 
               <div className="ref-kpi-item">
                 <div style={{ marginBottom: 6 }}><Rocket size={18} className="text-gold" /></div>
                 <div className="ref-kpi-num">
-                  <CounterAnimation value="50+" />
+                  <CounterAnimation value="10–12" />
                 </div>
-                <div className="ref-kpi-label">Ideas Incubated</div>
+                <div className="ref-kpi-label">Startups Registered</div>
               </div>
 
               <div className="ref-kpi-item">
                 <div style={{ marginBottom: 6 }}><Building2 size={18} className="text-gold" /></div>
                 <div className="ref-kpi-num">
-                  <CounterAnimation value="20+" />
+                  <CounterAnimation value="3–5" />
                 </div>
                 <div className="ref-kpi-label">Industry Partners</div>
               </div>
@@ -242,7 +246,7 @@ export function HomeView({ event }: HomeViewProps) {
                 <div className="ref-kpi-num">
                   <CounterAnimation value="∞" />
                 </div>
-                <div className="ref-kpi-label">Possibilities</div>
+                <div className="ref-kpi-label">Infinite Possibilities</div>
               </div>
             </div>
           </ScaleIn>
@@ -290,7 +294,7 @@ export function HomeView({ event }: HomeViewProps) {
       </section>
 
       {/* 3. ABOUT CIEL SECTION */}
-      <section className="page-section" style={{ background: "rgba(17, 19, 26, 0.5)", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)" }}>
+      <section className="page-section" style={{ borderTop: "1px solid rgba(212, 175, 55, 0.15)", borderBottom: "1px solid rgba(212, 175, 55, 0.15)" }}>
         <div className="shell">
           <div className="grid-2" style={{ alignItems: "center" }}>
             <FadeIn>
@@ -314,31 +318,49 @@ export function HomeView({ event }: HomeViewProps) {
               </div>
             </FadeIn>
 
-            <StaggerContainer className="grid-2" style={{ gap: 16 }}>
-              <StaggerItem className="role-feature">
-                <div className="role-feature-icon"><Layers size={22} /></div>
-                <h3>Prototyping Labs</h3>
-                <p>3D printers, IoT testing kits, and fabrication workbenches.</p>
-              </StaggerItem>
+            <FadeIn>
+              <div className="ecosystem-pillars-card">
+                <div className="pillar-item">
+                  <div className="pillar-icon">
+                    <Presentation size={20} />
+                  </div>
+                  <div>
+                    <h3 className="pillar-title">Business Upscaling Seminars</h3>
+                    <p className="pillar-desc">Seminars on starting an idea from scratch, founder workshops, and business scaling.</p>
+                  </div>
+                </div>
 
-              <StaggerItem className="role-feature">
-                <div className="role-feature-icon"><Microscope size={22} /></div>
-                <h3>IPR Cell</h3>
-                <p>Prior art search, patent drafting, and royalty counsel.</p>
-              </StaggerItem>
+                <div className="pillar-item">
+                  <div className="pillar-icon">
+                    <Layers size={20} />
+                  </div>
+                  <div>
+                    <h3 className="pillar-title">Tech Lab</h3>
+                    <p className="pillar-desc">Dedicated technology laboratory and compute workspace for digital and software solutions.</p>
+                  </div>
+                </div>
 
-              <StaggerItem className="role-feature">
-                <div className="role-feature-icon"><Zap size={22} /></div>
-                <h3>Seed Funding</h3>
-                <p>Grants up to ₹5 Lakhs per evaluated project.</p>
-              </StaggerItem>
+                <div className="pillar-item">
+                  <div className="pillar-icon">
+                    <Tv size={20} />
+                  </div>
+                  <div>
+                    <h3 className="pillar-title">Conference Room with Projector</h3>
+                    <p className="pillar-desc">Professional discussion room equipped with projector for brainstorming and pitch sessions.</p>
+                  </div>
+                </div>
 
-              <StaggerItem className="role-feature">
-                <div className="role-feature-icon"><Globe size={22} /></div>
-                <h3>Industry MoUs</h3>
-                <p>Corporate pilot projects and enterprise mentorship.</p>
-              </StaggerItem>
-            </StaggerContainer>
+                <div className="pillar-item">
+                  <div className="pillar-icon">
+                    <Users size={20} />
+                  </div>
+                  <div>
+                    <h3 className="pillar-title">Wide Mentor Support &amp; Network</h3>
+                    <p className="pillar-desc">Direct access to seasoned industry leaders, alumni entrepreneurs, and founder guidance.</p>
+                  </div>
+                </div>
+              </div>
+            </FadeIn>
           </div>
         </div>
       </section>
@@ -392,20 +414,20 @@ export function HomeView({ event }: HomeViewProps) {
                 </div>
               </div>
               <p style={{ fontSize: 15, color: "var(--text-secondary)", lineHeight: 1.7, marginBottom: 24 }}>
-                Supports student founders and research teams with seed funding, co-working facilities, makerspace lab access, legal incorporation assistance, and GST registration.
+                Supports student founders and research teams with business upscaling seminars, tech lab facilities, projector-equipped conference rooms for pitch discussions, and an active mentor network.
               </p>
               <div className="grid-3" style={{ marginBottom: 24 }}>
                 <div style={{ background: "rgba(255,255,255,0.03)", padding: 16, borderRadius: 8, border: "1px solid var(--line)" }}>
-                  <strong style={{ color: "var(--text-white)", display: "block", marginBottom: 4 }}>Seed Grant Support</strong>
-                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Grants up to ₹5 Lakhs per venture</span>
+                  <strong style={{ color: "var(--text-white)", display: "block", marginBottom: 4 }}>Ideation &amp; Growth Seminars</strong>
+                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Starting ideas from scratch &amp; scaling</span>
                 </div>
                 <div style={{ background: "rgba(255,255,255,0.03)", padding: 16, borderRadius: 8, border: "1px solid var(--line)" }}>
-                  <strong style={{ color: "var(--text-white)", display: "block", marginBottom: 4 }}>Makerspace Facilities</strong>
-                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>3D Printing, PCB &amp; IoT Workbenches</span>
+                  <strong style={{ color: "var(--text-white)", display: "block", marginBottom: 4 }}>Tech Lab &amp; Conference Room</strong>
+                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Tech workspace &amp; projector pitch room</span>
                 </div>
                 <div style={{ background: "rgba(255,255,255,0.03)", padding: 16, borderRadius: 8, border: "1px solid var(--line)" }}>
-                  <strong style={{ color: "var(--text-white)", display: "block", marginBottom: 4 }}>Legal &amp; IP Filing</strong>
-                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Incorporation &amp; Patent prior art search</span>
+                  <strong style={{ color: "var(--text-white)", display: "block", marginBottom: 4 }}>Wide Mentor Support</strong>
+                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>1-on-1 industry network &amp; guidance</span>
                 </div>
               </div>
               <Link className="button button-primary" href="/incubation">
@@ -426,24 +448,24 @@ export function HomeView({ event }: HomeViewProps) {
                 </div>
               </div>
               <p style={{ fontSize: 15, color: "var(--text-secondary)", lineHeight: 1.7, marginBottom: 24 }}>
-                Fast-tracks market-ready startups with venture capital syndicates, corporate pilot connects, customer acquisition strategies, and Demo Day presentations.
+                Accelerates growth-stage ventures like 24 Organic Mantra, DryGrab, GD, Summit Roof Cleaning, Byte Elephants, and Lets Balance Kitchen with business scaling diagnostics, tech lab access, and industry mentor networks.
               </p>
               <div className="grid-3" style={{ marginBottom: 24 }}>
                 <div style={{ background: "rgba(255,255,255,0.03)", padding: 16, borderRadius: 8, border: "1px solid var(--line)" }}>
-                  <strong style={{ color: "var(--text-white)", display: "block", marginBottom: 4 }}>VC &amp; Angel Network</strong>
-                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Demo Day access with leading investors</span>
+                  <strong style={{ color: "var(--text-white)", display: "block", marginBottom: 4 }}>Business Diagnostics</strong>
+                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Unit economics &amp; scaling models</span>
                 </div>
                 <div style={{ background: "rgba(255,255,255,0.03)", padding: 16, borderRadius: 8, border: "1px solid var(--line)" }}>
-                  <strong style={{ color: "var(--text-white)", display: "block", marginBottom: 4 }}>Enterprise Pilots</strong>
-                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Corporate MoUs for B2B validation</span>
+                  <strong style={{ color: "var(--text-white)", display: "block", marginBottom: 4 }}>Tech Lab &amp; Pitches</strong>
+                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Projector rooms for strategy</span>
                 </div>
                 <div style={{ background: "rgba(255,255,255,0.03)", padding: 16, borderRadius: 8, border: "1px solid var(--line)" }}>
-                  <strong style={{ color: "var(--text-white)", display: "block", marginBottom: 4 }}>GTM Mentorship</strong>
-                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Sales pipeline &amp; growth architecture</span>
+                  <strong style={{ color: "var(--text-white)", display: "block", marginBottom: 4 }}>Enterprise Network</strong>
+                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>1-on-1 industry mentorship</span>
                 </div>
               </div>
               <Link className="button button-primary" href="/accelerator">
-                Explore Accelerator Program <ArrowRight size={16} />
+                Explore Accelerator Cohort <ArrowRight size={16} />
               </Link>
             </article>
           )}
@@ -455,29 +477,29 @@ export function HomeView({ event }: HomeViewProps) {
                   <Heart size={32} />
                 </div>
                 <div>
-                  <h3 style={{ fontSize: 26, margin: 0 }}>Social Impact &amp; Rural Hub</h3>
-                  <span style={{ fontSize: 13.5, color: "var(--ciel-gold-bright)" }}>Grassroots &amp; Sustainable Innovation</span>
+                  <h3 style={{ fontSize: 26, margin: 0 }}>Social Entrepreneurship &amp; Women Empowerment</h3>
+                  <span style={{ fontSize: 13.5, color: "var(--ciel-gold-bright)" }}>Empowering Women Founders &amp; Artisans</span>
                 </div>
               </div>
               <p style={{ fontSize: 15, color: "var(--text-secondary)", lineHeight: 1.7, marginBottom: 24 }}>
-                Empowers grassroots innovators, women entrepreneurs, and rural technology projects addressing sustainability, agritech, and community health.
+                Empowering women through our flagship Yearly Women Entrepreneur Summit, hands-on jewellery making training to start independent businesses, festive Diwali Mela marketplace, and sustainable packaging workshops.
               </p>
               <div className="grid-3" style={{ marginBottom: 24 }}>
                 <div style={{ background: "rgba(255,255,255,0.03)", padding: 16, borderRadius: 8, border: "1px solid var(--line)" }}>
-                  <strong style={{ color: "var(--text-white)", display: "block", marginBottom: 4 }}>Women Cell</strong>
-                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Dedicated grants for women founders</span>
+                  <strong style={{ color: "var(--text-white)", display: "block", marginBottom: 4 }}>Women Entrepreneur Summit</strong>
+                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Yearly flagship conference &amp; leadership</span>
                 </div>
                 <div style={{ background: "rgba(255,255,255,0.03)", padding: 16, borderRadius: 8, border: "1px solid var(--line)" }}>
-                  <strong style={{ color: "var(--text-white)", display: "block", marginBottom: 4 }}>Agritech &amp; Rural Tech</strong>
-                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Field trials &amp; telemetry grants</span>
+                  <strong style={{ color: "var(--text-white)", display: "block", marginBottom: 4 }}>Jewellery Making &amp; Diwali Mela</strong>
+                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Craft training &amp; festive sales stalls</span>
                 </div>
                 <div style={{ background: "rgba(255,255,255,0.03)", padding: 16, borderRadius: 8, border: "1px solid var(--line)" }}>
-                  <strong style={{ color: "var(--text-white)", display: "block", marginBottom: 4 }}>MSME Partnership</strong>
-                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Technology modernization for MSMEs</span>
+                  <strong style={{ color: "var(--text-white)", display: "block", marginBottom: 4 }}>Sustainable Packaging</strong>
+                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Eco-friendly packaging &amp; skill workshops</span>
                 </div>
               </div>
               <Link className="button button-primary" href="/social-impact">
-                Explore Social Impact Hub <ArrowRight size={16} />
+                Explore Social Entrepreneurship <ArrowRight size={16} />
               </Link>
             </article>
           )}
@@ -485,8 +507,8 @@ export function HomeView({ event }: HomeViewProps) {
       </section>
 
       {/* 5. INNOVATION JOURNEY ROADMAP */}
-      <section className="page-section" style={{ background: "rgba(17, 19, 26, 0.6)", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)" }}>
-        <div className="shell">
+      <section className="page-section pathway-section">
+        <div className="shell" style={{ position: "relative", zIndex: 2 }}>
           <FadeIn>
             <div className="section-heading">
               <span className="eyebrow">
@@ -494,7 +516,7 @@ export function HomeView({ event }: HomeViewProps) {
                 Venture Development Pathway
               </span>
               <h2>The CIEL Innovation Journey</h2>
-              <p>A systematic stage-gated roadmap guiding student &amp; research teams from idea to commercial scale.</p>
+              <p>A systematic stage-gated roadmap guiding student innovators and founders from idea to commercial scale.</p>
             </div>
           </FadeIn>
 
@@ -502,39 +524,57 @@ export function HomeView({ event }: HomeViewProps) {
             <div className="timeline-line" />
             <div className="timeline-steps">
               <div className="timeline-step">
+                <div className="timeline-step-icon">
+                  <Lightbulb size={22} />
+                </div>
                 <div className="step-num">Step 01</div>
-                <div className="step-title">Ideation</div>
-                <div className="step-desc">Campus Hackathons &amp; Workshops</div>
+                <div className="step-title">Ideation from Scratch</div>
+                <div className="step-desc">Seminars on starting ideas &amp; problem validation</div>
               </div>
 
               <div className="timeline-step">
+                <div className="timeline-step-icon">
+                  <Cpu size={22} />
+                </div>
                 <div className="step-num">Step 02</div>
-                <div className="step-title">Prototyping</div>
-                <div className="step-desc">Makerspace &amp; IoT Fab Workbench</div>
+                <div className="step-title">Tech Lab Build</div>
+                <div className="step-desc">Tech Lab workstations &amp; development computing</div>
               </div>
 
               <div className="timeline-step">
+                <div className="timeline-step-icon">
+                  <Tv size={22} />
+                </div>
                 <div className="step-num">Step 03</div>
-                <div className="step-title">IPR &amp; Filing</div>
-                <div className="step-desc">Patent Prior Art Search &amp; Drafting</div>
+                <div className="step-title">Projector Pitches</div>
+                <div className="step-desc">Conference room reviews with projectors</div>
               </div>
 
               <div className="timeline-step">
+                <div className="timeline-step-icon">
+                  <TrendingUp size={22} />
+                </div>
                 <div className="step-num">Step 04</div>
-                <div className="step-title">Seed Support</div>
-                <div className="step-desc">Up to ₹5L Seed Grant Disbursement</div>
+                <div className="step-title">Business Upscaling</div>
+                <div className="step-desc">Constant seminars on scaling and unit economics</div>
               </div>
 
               <div className="timeline-step">
+                <div className="timeline-step-icon">
+                  <Users size={22} />
+                </div>
                 <div className="step-num">Step 05</div>
-                <div className="step-title">Incubation</div>
-                <div className="step-desc">Legal Incorporation &amp; Mentorship</div>
+                <div className="step-title">Incubation Cell</div>
+                <div className="step-desc">1-on-1 mentor guidance &amp; ~200 council support</div>
               </div>
 
               <div className="timeline-step">
+                <div className="timeline-step-icon">
+                  <Rocket size={22} />
+                </div>
                 <div className="step-num">Step 06</div>
-                <div className="step-title">Scale &amp; VC</div>
-                <div className="step-desc">Investor Demo Day &amp; Pilot MoUs</div>
+                <div className="step-title">Startup Accelerator</div>
+                <div className="step-desc">Accelerated cohort pilots &amp; market expansion</div>
               </div>
             </div>
           </div>
@@ -554,8 +594,8 @@ export function HomeView({ event }: HomeViewProps) {
           </div>
         </FadeIn>
 
-        <StaggerContainer className="grid-2" style={{ marginBottom: 36 }}>
-          {FEATURED_STARTUPS.slice(0, 2).map((st) => (
+        <StaggerContainer className="grid-2" style={{ marginBottom: 36, gap: 20 }}>
+          {FEATURED_STARTUPS.slice(0, 4).map((st) => (
             <StaggerItem key={st.id} className="luxury-card">
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
                 <span className="badge badge-brand">{st.sector}</span>
@@ -566,7 +606,7 @@ export function HomeView({ event }: HomeViewProps) {
                 {st.description}
               </p>
               <div style={{ fontSize: 13, color: "var(--ciel-gold-bright)", fontWeight: 600 }}>
-                Seed Grant Allocated: {st.fundingRaised}
+                Status: {st.fundingRaised}
               </div>
             </StaggerItem>
           ))}

@@ -22,20 +22,23 @@ export default async function AdminLoginPage({
 
   return (
     <div className="admin-login-page">
+      {/* Pinned Top-Right Theme Toggle */}
+      <div style={{ position: "fixed", top: "20px", right: "24px", zIndex: 100000 }}>
+        <AdminThemeToggle />
+      </div>
+
       <div className="admin-login-card">
-        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px" }}>
-          <AdminThemeToggle />
+        {/* Centered Logo */}
+        <div style={{ marginBottom: "22px", display: "flex", justifyContent: "center" }}>
+          <Logo size="small" />
         </div>
 
-        {/* Logo */}
-        <div style={{ marginBottom: "32px", display: "flex", justifyContent: "center" }}>
-          <Logo size="medium" />
-        </div>
-
-        {/* Icon + Title */}
+        {/* Icon Badge */}
         <div className="admin-login-icon">
           <ShieldCheck size={28} />
         </div>
+
+        {/* Clean, Modern Heading */}
         <h1 className="admin-login-title">Admin Portal</h1>
         <p className="admin-login-sub">
           Enter your administrator credentials to access the CIEL control panel.
@@ -56,14 +59,14 @@ export default async function AdminLoginPage({
               Username
             </label>
             <div className="input-wrap">
-              <ShieldCheck className="input-icon" size={17} aria-hidden="true" />
+              <ShieldCheck className="input-icon" size={18} aria-hidden="true" />
               <input
                 className="input input-with-icon"
                 id="admin-username"
                 name="username"
                 type="text"
                 autoComplete="username"
-                placeholder="admin"
+                placeholder=""
                 required
               />
             </div>
@@ -74,14 +77,14 @@ export default async function AdminLoginPage({
               Password
             </label>
             <div className="input-wrap">
-              <LockKeyhole className="input-icon" size={17} aria-hidden="true" />
+              <LockKeyhole className="input-icon" size={18} aria-hidden="true" />
               <input
                 className="input input-with-icon"
                 id="admin-password"
                 name="password"
                 type="password"
                 autoComplete="current-password"
-                placeholder="••••••••"
+                placeholder=""
                 required
               />
             </div>
@@ -90,7 +93,7 @@ export default async function AdminLoginPage({
           <button
             className="button button-primary button-wide"
             type="submit"
-            style={{ marginTop: "8px" }}
+            style={{ marginTop: "10px" }}
           >
             <LockKeyhole size={16} />
             Sign in to Admin Panel

@@ -37,7 +37,7 @@ export default function ForgotPasswordPage() {
                 className="input input-with-icon"
                 id="reset-email"
                 type="email"
-                placeholder="name@institution.edu"
+                placeholder=""
                 required
               />
             </div>

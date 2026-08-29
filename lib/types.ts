@@ -214,6 +214,22 @@ export type VentureProjectItem = {
   grantStatus?: "under_review" | "approved" | "grant_awarded" | "needs_revision";
   reviewerNotes?: string;
   journeyMilestones: JourneyMilestone[];
+  documents?: Array<{
+    id: string;
+    title: string;
+    category: string;
+    filename: string;
+    format: string;
+    size: string;
+    date: string;
+    url: string;
+  }>;
+  traction?: {
+    funding?: string;
+    activePilots?: string;
+    iprStatus?: string;
+    mrr?: string;
+  };
   updatedAt: string;
 };
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Award,
   Calendar,
@@ -30,12 +31,17 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Logo } from "@/components/ui/logo";
 
 export function SiteHeaderClient({ signedIn }: { signedIn: boolean }) {
+  const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  if (pathname?.startsWith("/dashboard")) {
+    return null;
+  }
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
@@ -105,9 +111,6 @@ export function SiteHeaderClient({ signedIn }: { signedIn: boolean }) {
           </Link>
           <Link className="mobile-nav-link" href="/social-impact" onClick={() => setMobileMenuOpen(false)}>
             <Heart size={18} /> Social Impact Hub
-          </Link>
-          <Link className="mobile-nav-link" href="/research-ipr" onClick={() => setMobileMenuOpen(false)}>
-            <Microscope size={18} /> Research &amp; IPR Cell
           </Link>
           <Link className="mobile-nav-link" href="/showcase" onClick={() => setMobileMenuOpen(false)}>
             <Trophy size={18} /> Incubated Portfolio
@@ -216,9 +219,6 @@ export function SiteHeaderClient({ signedIn }: { signedIn: boolean }) {
                 <Link className="dropdown-link" href="/social-impact">
                   <Heart size={15} /> Social Impact Hub
                 </Link>
-                <Link className="dropdown-link" href="/research-ipr">
-                  <Microscope size={15} /> Research &amp; IPR Cell
-                </Link>
                 <Link className="dropdown-link" href="/showcase">
                   <Trophy size={15} /> Incubated Portfolio
                 </Link>
@@ -257,7 +257,7 @@ export function SiteHeaderClient({ signedIn }: { signedIn: boolean }) {
                     Dashboard
                   </Link>
                   <form action="/auth/sign-out" method="post">
-                    <button className="button button-ghost button-small" type="submit">
+                    <button className="btn-signout-red" type="submit">
                       Sign out
                     </button>
                   </form>

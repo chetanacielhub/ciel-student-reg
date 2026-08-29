@@ -112,6 +112,7 @@ type Props = {
   initialEvents?: CielEventItem[];
   initialDownloads?: DownloadItem[];
   initialGoogleForms?: GoogleFormItem[];
+  initialProjects?: VentureProjectItem[];
   stats: AdminStats;
   eventTitle: string;
 };
@@ -294,11 +295,22 @@ function ERPDashboardTab({ stats }: { stats: AdminStats }) {
 }
 
 /** 2. USER MANAGEMENT ERP TAB */
-function ERPUsersTab({ profiles }: { profiles: ProfileRow[] }) {
+function ERPUsersTab({
+  profiles,
+  registrations = [],
+  projects = [],
+}: {
+  profiles: ProfileRow[];
+  registrations?: RegistrationRow[];
+  projects?: VentureProjectItem[];
+}) {
   const [query, setQuery] = useState("");
+  const [selectedUserForJourney, setSelectedUserForJourney] = useState<ProfileRow | null>(null);
   const [userList, setUserList] = useState(
     profiles.map((p) => ({ ...p, status: "active" as "active" | "suspended" | "pending" }))
   );
+  const [grantSaving, setGrantSaving] = useState(false);
+  const [grantMsg, setGrantMsg] = useState<string | null>(null);
 
   const filtered = userList.filter((p) => {
     const q = query.trim().toLowerCase();
@@ -322,7 +334,7 @@ function ERPUsersTab({ profiles }: { profiles: ProfileRow[] }) {
       <div className="adm-section-head">
         <div>
           <h2>User Accounts Management</h2>
-          <p>Approve, suspend, or manage platform user credentials · {filtered.length} total</p>
+          <p>Approve, suspend, or view complete real-time innovator journeys &amp; documents · {filtered.length} total</p>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <button className="adm-btn adm-btn-outline" onClick={() => alert("Exporting Users CSV...")}>
@@ -336,7 +348,7 @@ function ERPUsersTab({ profiles }: { profiles: ProfileRow[] }) {
           <Search size={16} className="adm-search-icon" />
           <input
             type="search"
-            placeholder="Search name, email, phone..."
+            placeholder=""
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="adm-search-input"
@@ -382,6 +394,14 @@ function ERPUsersTab({ profiles }: { profiles: ProfileRow[] }) {
                   </td>
                   <td>
                     <div style={{ display: "flex", gap: 8 }}>
+                      <button
+                        className="adm-btn adm-btn-outline"
+                        style={{ padding: "4px 8px", fontSize: 11, color: "var(--ciel-gold-bright)", borderColor: "rgba(212, 175, 55, 0.3)" }}
+                        onClick={() => setSelectedUserForJourney(p)}
+                        title="View Live Innovator Journey & Uploaded Documents"
+                      >
+                        <Eye size={13} /> View Journey
+                      </button>
                       {p.status === "active" ? (
                         <button
                           className="adm-btn adm-btn-outline"
@@ -414,6 +434,366 @@ function ERPUsersTab({ profiles }: { profiles: ProfileRow[] }) {
           </tbody>
         </table>
       </div>
+
+      {/* Innovator Whole Journey & Documents Modal */}
+      {selectedUserForJourney && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.85)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20,
+            backdropFilter: "blur(8px)",
+          }}
+        >
+          <div
+            className="luxury-card"
+            style={{
+              width: "100%",
+              maxWidth: 860,
+              maxHeight: "90vh",
+              overflowY: "auto",
+              padding: 32,
+              background: "#0E1118",
+              border: "1px solid rgba(212, 175, 55, 0.35)",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.9)",
+            }}
+          >
+            {/* Modal Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, paddingBottom: 16, borderBottom: "1px solid var(--line)" }}>
+              <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+                <div className="card-icon-wrap" style={{ width: 46, height: 46, margin: 0 }}>
+                  <Eye size={22} />
+                </div>
+                <div>
+                  <h2 style={{ fontSize: 20, color: "var(--text-white)", margin: 0 }}>
+                    Innovator Journey &amp; Uploaded Documents
+                  </h2>
+                  <span style={{ fontSize: 13, color: "var(--ciel-gold-bright)" }}>
+                    {selectedUserForJourney.full_name || "Innovator"} · {selectedUserForJourney.email || "No Email"}
+                  </span>
+                </div>
+              </div>
+              <button
+                className="adm-btn adm-btn-outline"
+                onClick={() => setSelectedUserForJourney(null)}
+                style={{ padding: "6px 10px" }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* User & Venture Identity */}
+            {(() => {
+              const userReg = registrations.find(
+                (r) =>
+                  (r.email && selectedUserForJourney.email && r.email.toLowerCase() === selectedUserForJourney.email.toLowerCase()) ||
+                  (r.fullName && selectedUserForJourney.full_name && r.fullName.toLowerCase() === selectedUserForJourney.full_name.toLowerCase())
+              );
+
+              const userProject =
+                projects.find(
+                  (p) =>
+                    (selectedUserForJourney.email && p.leaderEmail?.toLowerCase() === selectedUserForJourney.email.toLowerCase()) ||
+                    (selectedUserForJourney.full_name && p.leaderName?.toLowerCase() === selectedUserForJourney.full_name.toLowerCase()) ||
+                    (userReg?.teamName && p.teamName?.toLowerCase() === userReg.teamName.toLowerCase()) ||
+                    (p.teamId === selectedUserForJourney.id) ||
+                    (p.id === selectedUserForJourney.id)
+                ) || projects[0] || null;
+
+              const teamName = userProject?.name || userProject?.teamName || userReg?.teamName || "Venture Project";
+              const problemStatement = userProject?.problemStatement || userReg?.problemStatement || "Problem statement pending submission by founder.";
+              const role = userReg?.role ? userReg.role.replace("_", " ").toUpperCase() : "INNOVATOR";
+              const institution = userReg?.institution || "Chetana Institute of Management & Research";
+              const rollNumber = userReg?.rollNumber || "STU-2026";
+              const stage = userProject?.stage || "idea";
+              const progress = userProject?.progress ?? 25;
+              const milestones = userProject?.journeyMilestones || [];
+              const userDocs = [
+                ...(userProject?.documents || []),
+                ...(userProject?.pitchDeck && !(userProject?.documents || []).some((d) => d.url === userProject.pitchDeck)
+                  ? [
+                      {
+                        id: "pitch-deck-pdf",
+                        title: `${teamName} Pitch Deck`,
+                        category: "Pitch Deck",
+                        filename: "Pitch_Deck.pdf",
+                        format: "PDF",
+                        size: "Verified PDF",
+                        date: "Recent",
+                        url: userProject.pitchDeck,
+                      },
+                    ]
+                  : []),
+              ];
+              const traction = userProject?.traction || {
+                funding: "Not Sanctioned Yet",
+                activePilots: "0 Pilots Active",
+                iprStatus: "Not Filed",
+                mrr: "₹0 / mo",
+              };
+              const grantStatus = userProject?.grantStatus || "under_review";
+
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                  {/* 1. Innovator Profile Grid */}
+                  <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--line)", borderRadius: 12, padding: 20 }}>
+                    <h3 style={{ fontSize: 15, color: "var(--text-white)", marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
+                      <UserCheck size={16} className="text-gold" /> Institutional &amp; Account Overview
+                    </h3>
+                    <div className="grid-2" style={{ gap: 16 }}>
+                      <div>
+                        <span style={{ fontSize: 12, color: "var(--text-muted)", display: "block" }}>Full Name</span>
+                        <strong style={{ fontSize: 14, color: "var(--text-white)" }}>{selectedUserForJourney.full_name || "—"}</strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: 12, color: "var(--text-muted)", display: "block" }}>Phone Number</span>
+                        <strong style={{ fontSize: 14, color: "var(--text-white)" }}>{selectedUserForJourney.phone || "Not provided"}</strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: 12, color: "var(--text-muted)", display: "block" }}>Campus / Institution</span>
+                        <strong style={{ fontSize: 14, color: "var(--text-white)" }}>{institution}</strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: 12, color: "var(--text-muted)", display: "block" }}>Student Roll ID</span>
+                        <strong style={{ fontSize: 14, color: "var(--text-white)" }}>{rollNumber}</strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: 12, color: "var(--text-muted)", display: "block" }}>Registered Role</span>
+                        <span className="badge badge-brand" style={{ fontSize: 11, marginTop: 4 }}>{role}</span>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: 12, color: "var(--text-muted)", display: "block" }}>Registration Date</span>
+                        <strong style={{ fontSize: 14, color: "var(--text-secondary)" }}>
+                          {new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(new Date(selectedUserForJourney.created_at))}
+                        </strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 2. Real-Time Venture Project & Stage */}
+                  <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--line)", borderRadius: 12, padding: 20 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                      <h3 style={{ fontSize: 15, color: "var(--text-white)", margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
+                        <Rocket size={16} className="text-gold" /> Registered Venture Project
+                      </h3>
+                      <span className="badge badge-brand" style={{ textTransform: "uppercase" }}>
+                        STAGE: {stage} ({progress}% PROGRESS)
+                      </span>
+                    </div>
+                    <div style={{ marginBottom: 12 }}>
+                      <span style={{ fontSize: 12, color: "var(--text-muted)", display: "block" }}>Project / Venture Name</span>
+                      <strong style={{ fontSize: 16, color: "var(--ciel-gold-bright)" }}>{teamName}</strong>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: 12, color: "var(--text-muted)", display: "block" }}>Problem Statement</span>
+                      <p style={{ fontSize: 13.5, color: "var(--text-secondary)", margin: "4px 0 0", lineHeight: 1.6 }}>
+                        {problemStatement}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 3. Real-Time Traction & Metrics */}
+                  <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--line)", borderRadius: 12, padding: 20 }}>
+                    <h3 style={{ fontSize: 15, color: "var(--text-white)", marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
+                      <TrendingUp size={16} className="text-gold" /> Venture Traction &amp; Financials
+                    </h3>
+                    <div className="grid-2" style={{ gap: 14 }}>
+                      <div style={{ padding: 12, background: "rgba(255,255,255,0.03)", borderRadius: 8, border: "1px solid var(--line)" }}>
+                        <span style={{ fontSize: 12, color: "var(--text-muted)", display: "block" }}>Grant / Funding Status</span>
+                        <strong style={{ fontSize: 14, color: "var(--ciel-gold-bright)" }}>{traction.funding || "Not Sanctioned Yet"}</strong>
+                      </div>
+                      <div style={{ padding: 12, background: "rgba(255,255,255,0.03)", borderRadius: 8, border: "1px solid var(--line)" }}>
+                        <span style={{ fontSize: 12, color: "var(--text-muted)", display: "block" }}>Active User Pilots</span>
+                        <strong style={{ fontSize: 14, color: "#60A5FA" }}>{traction.activePilots || "0 Pilots Active"}</strong>
+                      </div>
+                      <div style={{ padding: 12, background: "rgba(255,255,255,0.03)", borderRadius: 8, border: "1px solid var(--line)" }}>
+                        <span style={{ fontSize: 12, color: "var(--text-muted)", display: "block" }}>IPR &amp; Patents</span>
+                        <strong style={{ fontSize: 14, color: "#34D399" }}>{traction.iprStatus || "Not Filed"}</strong>
+                      </div>
+                      <div style={{ padding: 12, background: "rgba(255,255,255,0.03)", borderRadius: 8, border: "1px solid var(--line)" }}>
+                        <span style={{ fontSize: 12, color: "var(--text-muted)", display: "block" }}>Monthly Revenue / Run-Rate</span>
+                        <strong style={{ fontSize: 14, color: "var(--text-white)" }}>{traction.mrr || "₹0 / mo"}</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 4. Live Synchronized Journey Milestones */}
+                  <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--line)", borderRadius: 12, padding: 20 }}>
+                    <h3 style={{ fontSize: 15, color: "var(--text-white)", marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
+                      <Calendar size={16} className="text-gold" /> Innovation Journey Milestone Log ({milestones.length})
+                    </h3>
+                    {milestones.length === 0 ? (
+                      <div style={{ textAlign: "center", padding: "24px 16px", background: "rgba(255,255,255,0.02)", borderRadius: 8, border: "1px dashed var(--line)" }}>
+                        <Clock size={24} className="text-gold" style={{ margin: "0 auto 8px", opacity: 0.8 }} />
+                        <p style={{ fontSize: 13, color: "var(--text-secondary)", margin: 0 }}>
+                          No journey milestones logged yet by this founder in their innovator dashboard.
+                        </p>
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                        {milestones.map((m) => (
+                          <div key={m.id} style={{ display: "flex", gap: 14, padding: 14, background: "rgba(255,255,255,0.03)", borderRadius: 8, border: "1px solid var(--line)" }}>
+                            <CheckCircle2 size={18} style={{ color: "#10B981", marginTop: 2, flexShrink: 0 }} />
+                            <div style={{ flex: 1 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                                <strong style={{ fontSize: 13.5, color: "var(--text-white)" }}>{m.title}</strong>
+                                <span className="badge badge-brand" style={{ fontSize: 10, textTransform: "uppercase" }}>{m.stage}</span>
+                              </div>
+                              <p style={{ fontSize: 12.5, color: "var(--text-secondary)", margin: "4px 0" }}>{m.description}</p>
+                              <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Logged on {m.date}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 5. Live Uploaded Documents & Pitch Decks */}
+                  <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--line)", borderRadius: 12, padding: 20 }}>
+                    <h3 style={{ fontSize: 15, color: "var(--text-white)", marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
+                      <FileText size={16} className="text-gold" /> Uploaded Venture Documents &amp; Pitch Decks ({userDocs.length})
+                    </h3>
+                    {userDocs.length === 0 ? (
+                      <div style={{ textAlign: "center", padding: "24px 16px", background: "rgba(255,255,255,0.02)", borderRadius: 8, border: "1px dashed var(--line)" }}>
+                        <FileText size={24} className="text-gold" style={{ margin: "0 auto 8px", opacity: 0.8 }} />
+                        <p style={{ fontSize: 13, color: "var(--text-secondary)", margin: 0 }}>
+                          No documents or pitch decks uploaded yet by this innovator.
+                        </p>
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                        {userDocs.map((doc) => (
+                          <div key={doc.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 14, background: "rgba(255,255,255,0.03)", borderRadius: 8, border: "1px solid var(--line)" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                              <FileCheck size={22} className="text-gold" />
+                              <div>
+                                <strong style={{ color: "var(--text-white)", fontSize: 14, display: "block" }}>
+                                  {doc.title || doc.filename}
+                                </strong>
+                                <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                                  {doc.category} · {doc.format} · {doc.size} · {doc.date}
+                                </span>
+                              </div>
+                            </div>
+                            <div style={{ display: "flex", gap: 8 }}>
+                              <a
+                                className="adm-btn adm-btn-outline"
+                                style={{ padding: "6px 12px", fontSize: 12 }}
+                                href={doc.url}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                <Download size={13} /> View / Download
+                              </a>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 6. Admin Evaluation & Grant Sanction Action */}
+                  <div style={{ background: "rgba(212, 175, 55, 0.06)", border: "1px solid rgba(212, 175, 55, 0.3)", borderRadius: 12, padding: 20 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                      <ShieldCheck size={18} className="text-gold" />
+                      <strong style={{ color: "var(--ciel-gold-bright)", fontSize: 14.5 }}>
+                        CIEL Incubation &amp; Pre-Seed Grant Evaluation
+                      </strong>
+                    </div>
+
+                    <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 12 }}>
+                      <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>Current Status:</span>
+                      <span className={`badge ${grantStatus === "approved" ? "badge-brand" : "badge-neutral"}`} style={{ textTransform: "uppercase" }}>
+                        {grantStatus.replace("_", " ")}
+                      </span>
+                    </div>
+
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <button
+                        type="button"
+                        className="adm-btn adm-btn-primary"
+                        style={{ padding: "6px 12px", fontSize: 12 }}
+                        disabled={grantSaving}
+                        onClick={async () => {
+                          if (!userProject) return;
+                          setGrantSaving(true);
+                          try {
+                            const res = await fetch("/api/admin/projects", {
+                              method: "PUT",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                projectId: userProject.id,
+                                grantStatus: "approved",
+                                reviewerNotes: "Incubation Grant Sanctioned by CIEL Evaluation Board.",
+                              }),
+                            });
+                            if (res.ok) {
+                              setGrantMsg("Incubation & Pre-Seed Grant Sanctioned!");
+                            }
+                          } catch {
+                            // Ignore
+                          } finally {
+                            setGrantSaving(false);
+                          }
+                        }}
+                      >
+                        ✓ Sanction / Approve Grant
+                      </button>
+
+                      <button
+                        type="button"
+                        className="adm-btn adm-btn-outline"
+                        style={{ padding: "6px 12px", fontSize: 12 }}
+                        disabled={grantSaving}
+                        onClick={async () => {
+                          if (!userProject) return;
+                          setGrantSaving(true);
+                          try {
+                            await fetch("/api/admin/projects", {
+                              method: "PUT",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                projectId: userProject.id,
+                                grantStatus: "under_review",
+                                reviewerNotes: "Project dossier under formal evaluation by CIEL.",
+                              }),
+                            });
+                            setGrantMsg("Status updated to Under Review.");
+                          } catch {
+                            // Ignore
+                          } finally {
+                            setGrantSaving(false);
+                          }
+                        }}
+                      >
+                        Set Under Review
+                      </button>
+                    </div>
+
+                    {grantMsg && (
+                      <span style={{ fontSize: 12, color: "#34D399", marginTop: 8, display: "block" }}>
+                        {grantMsg}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Modal Actions */}
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 24, paddingTop: 16, borderTop: "1px solid var(--line)" }}>
+              <button className="adm-btn adm-btn-outline" onClick={() => setSelectedUserForJourney(null)}>
+                Close Dossier
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -452,7 +832,7 @@ function ERPRegistrationsTab({ rows, eventTitle }: { rows: RegistrationRow[]; ev
           <Search size={16} className="adm-search-icon" />
           <input
             type="search"
-            placeholder="Search name, team, roll number, problem..."
+            placeholder=""
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="adm-search-input"
@@ -687,7 +1067,7 @@ function ERPMentorsTab({ initialMentors }: { initialMentors: MentorItem[] }) {
           <Search size={16} className="adm-search-icon" />
           <input
             type="search"
-            placeholder="Search mentor name, designation, organization..."
+            placeholder=""
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="adm-search-input"
@@ -775,17 +1155,17 @@ function ERPMentorsTab({ initialMentors }: { initialMentors: MentorItem[] }) {
             <form onSubmit={handleAddMentor} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
                 <label className="field-label">Full Name *</label>
-                <input required className="input" placeholder="e.g. Dr. Sunita Deshmukh" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                <input required className="input" placeholder="" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               </div>
 
               <div>
                 <label className="field-label">Designation / Title *</label>
-                <input required className="input" placeholder="e.g. Managing Partner / Senior VP" value={form.designation} onChange={(e) => setForm({ ...form, designation: e.target.value })} />
+                <input required className="input" placeholder="" value={form.designation} onChange={(e) => setForm({ ...form, designation: e.target.value })} />
               </div>
 
               <div>
                 <label className="field-label">Organization / Firm</label>
-                <input className="input" placeholder="e.g. Vanguard Capital / Tech Hub" value={form.organization} onChange={(e) => setForm({ ...form, organization: e.target.value })} />
+                <input className="input" placeholder="" value={form.organization} onChange={(e) => setForm({ ...form, organization: e.target.value })} />
               </div>
 
               <div>
@@ -800,12 +1180,12 @@ function ERPMentorsTab({ initialMentors }: { initialMentors: MentorItem[] }) {
 
               <div>
                 <label className="field-label">LinkedIn Profile URL (Optional)</label>
-                <input className="input" type="url" placeholder="https://linkedin.com/in/username" value={form.linkedinUrl} onChange={(e) => setForm({ ...form, linkedinUrl: e.target.value })} />
+                <input className="input" type="url" placeholder="" value={form.linkedinUrl} onChange={(e) => setForm({ ...form, linkedinUrl: e.target.value })} />
               </div>
 
               <div>
                 <label className="field-label">Core Expertise (Comma separated)</label>
-                <input className="input" placeholder="e.g. Angel Funding, SaaS Scaling, Patent Strategy" value={form.expertise} onChange={(e) => setForm({ ...form, expertise: e.target.value })} />
+                <input className="input" placeholder="" value={form.expertise} onChange={(e) => setForm({ ...form, expertise: e.target.value })} />
               </div>
 
               <div>
@@ -829,7 +1209,7 @@ function ERPMentorsTab({ initialMentors }: { initialMentors: MentorItem[] }) {
                   <input
                     className="input"
                     style={{ flex: 1, minWidth: 160 }}
-                    placeholder="https://... or Initials (e.g. SD)"
+                    placeholder=""
                     value={form.avatar}
                     onChange={(e) => setForm({ ...form, avatar: e.target.value })}
                   />
@@ -934,7 +1314,7 @@ function ERPCouncilTab({ initialCouncil }: { initialCouncil: StudentCouncilLeadI
           <Search size={16} className="adm-search-icon" />
           <input
             type="search"
-            placeholder="Search council member name, role, department..."
+            placeholder=""
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="adm-search-input"
@@ -1008,27 +1388,27 @@ function ERPCouncilTab({ initialCouncil }: { initialCouncil: StudentCouncilLeadI
             <form onSubmit={handleAddLead} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
                 <label className="field-label">Student Name *</label>
-                <input required className="input" placeholder="e.g. Aarav Sharma" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                <input required className="input" placeholder="" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               </div>
 
               <div>
                 <label className="field-label">Council Designation / Role *</label>
-                <input required className="input" placeholder="e.g. President, Student Innovation Council" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} />
+                <input required className="input" placeholder="" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} />
               </div>
 
               <div>
                 <label className="field-label">Department / Branch</label>
-                <input className="input" placeholder="e.g. Computer Engineering" value={form.branch} onChange={(e) => setForm({ ...form, branch: e.target.value })} />
+                <input className="input" placeholder="" value={form.branch} onChange={(e) => setForm({ ...form, branch: e.target.value })} />
               </div>
 
               <div>
                 <label className="field-label">Academic Year</label>
-                <input className="input" placeholder="e.g. Final Year / Pre-Final Year" value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} />
+                <input className="input" placeholder="" value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} />
               </div>
 
               <div>
                 <label className="field-label">LinkedIn Profile URL (Optional)</label>
-                <input className="input" type="url" placeholder="https://linkedin.com/in/username" value={form.linkedinUrl} onChange={(e) => setForm({ ...form, linkedinUrl: e.target.value })} />
+                <input className="input" type="url" placeholder="" value={form.linkedinUrl} onChange={(e) => setForm({ ...form, linkedinUrl: e.target.value })} />
               </div>
 
               <div>
@@ -1052,7 +1432,7 @@ function ERPCouncilTab({ initialCouncil }: { initialCouncil: StudentCouncilLeadI
                   <input
                     className="input"
                     style={{ flex: 1, minWidth: 160 }}
-                    placeholder="https://... or Initials (e.g. AS)"
+                    placeholder=""
                     value={form.avatar}
                     onChange={(e) => setForm({ ...form, avatar: e.target.value })}
                   />
@@ -1306,12 +1686,12 @@ function ERPGovernanceTab({ initialGovernance }: { initialGovernance: Governance
             <form onSubmit={handleAddCommittee} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
                 <label className="field-label">Committee Name *</label>
-                <input required className="input" placeholder="e.g. Research &amp; Ethics Board" value={commForm.name} onChange={(e) => setCommForm({ ...commForm, name: e.target.value })} />
+                <input required className="input" placeholder="" value={commForm.name} onChange={(e) => setCommForm({ ...commForm, name: e.target.value })} />
               </div>
 
               <div>
                 <label className="field-label">Description / Scope</label>
-                <textarea className="input" rows={3} placeholder="Describes committee role and authority..." value={commForm.description} onChange={(e) => setCommForm({ ...commForm, description: e.target.value })} />
+                <textarea className="input" rows={3} placeholder="" value={commForm.description} onChange={(e) => setCommForm({ ...commForm, description: e.target.value })} />
               </div>
 
               <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 10 }}>
@@ -1356,7 +1736,7 @@ function ERPGovernanceTab({ initialGovernance }: { initialGovernance: Governance
 
               <div>
                 <label className="field-label">Member Name *</label>
-                <input required className="input" placeholder="e.g. Dr. B. R. Patil" value={memberForm.name} onChange={(e) => setMemberForm({ ...memberForm, name: e.target.value })} />
+                <input required className="input" placeholder="" value={memberForm.name} onChange={(e) => setMemberForm({ ...memberForm, name: e.target.value })} />
               </div>
 
               {((memberForm.committeeName || selectedCommittee).toLowerCase().includes("functional")) ? (
@@ -1398,7 +1778,7 @@ function ERPGovernanceTab({ initialGovernance }: { initialGovernance: Governance
                   <input
                     required
                     className="input"
-                    placeholder="e.g. Lead — 1: Innovation and Research"
+                    placeholder=""
                     value={memberForm.role}
                     onChange={(e) => setMemberForm({ ...memberForm, role: e.target.value })}
                   />
@@ -1406,13 +1786,13 @@ function ERPGovernanceTab({ initialGovernance }: { initialGovernance: Governance
               ) : (
                 <div>
                   <label className="field-label">Designation / Role in Committee *</label>
-                  <input required className="input" placeholder="e.g. Chairman, Governing Board" value={memberForm.role} onChange={(e) => setMemberForm({ ...memberForm, role: e.target.value })} />
+                  <input required className="input" placeholder="" value={memberForm.role} onChange={(e) => setMemberForm({ ...memberForm, role: e.target.value })} />
                 </div>
               )}
 
               <div>
                 <label className="field-label">LinkedIn Profile URL (Optional)</label>
-                <input className="input" type="url" placeholder="https://linkedin.com/in/username" value={memberForm.linkedinUrl} onChange={(e) => setMemberForm({ ...memberForm, linkedinUrl: e.target.value })} />
+                <input className="input" type="url" placeholder="" value={memberForm.linkedinUrl} onChange={(e) => setMemberForm({ ...memberForm, linkedinUrl: e.target.value })} />
               </div>
 
               <div>
@@ -1436,7 +1816,7 @@ function ERPGovernanceTab({ initialGovernance }: { initialGovernance: Governance
                   <input
                     className="input"
                     style={{ flex: 1, minWidth: 160 }}
-                    placeholder="https://... or Initials (e.g. BP)"
+                    placeholder=""
                     value={memberForm.avatar || ""}
                     onChange={(e) => setMemberForm({ ...memberForm, avatar: e.target.value })}
                   />
@@ -1538,7 +1918,7 @@ function ERPProjectsTab({ initialProjects = [] }: { initialProjects?: VenturePro
           <Search size={16} className="adm-search-icon" />
           <input
             type="search"
-            placeholder="Search venture name, problem statement, team leader..."
+            placeholder=""
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="adm-search-input"
@@ -1687,7 +2067,7 @@ function ERPProjectsTab({ initialProjects = [] }: { initialProjects?: VenturePro
                 <textarea
                   className="input"
                   rows={3}
-                  placeholder="Feedback notes visible to innovator on their portal..."
+                  placeholder=""
                   value={reviewForm.reviewerNotes}
                   onChange={(e) => setReviewForm({ ...reviewForm, reviewerNotes: e.target.value })}
                 />
@@ -1821,7 +2201,7 @@ function ERPEventsTab({ initialEvents = [] }: { initialEvents?: CielEventItem[] 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
               <div>
                 <label className="field-label">Event Title *</label>
-                <input className="input" required placeholder="CIEL Annual Hackathon 2026" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+                <input className="input" required placeholder="" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
               </div>
 
               <div>
@@ -1840,23 +2220,23 @@ function ERPEventsTab({ initialEvents = [] }: { initialEvents?: CielEventItem[] 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
               <div>
                 <label className="field-label">Date *</label>
-                <input className="input" required placeholder="March 15-16, 2026" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+                <input className="input" required placeholder="" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
               </div>
 
               <div>
                 <label className="field-label">Time</label>
-                <input className="input" placeholder="09:00 AM - 05:00 PM" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} />
+                <input className="input" placeholder="" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} />
               </div>
 
               <div>
                 <label className="field-label">Venue</label>
-                <input className="input" placeholder="CIEL Prototyping Labs" value={form.venue} onChange={(e) => setForm({ ...form, venue: e.target.value })} />
+                <input className="input" placeholder="" value={form.venue} onChange={(e) => setForm({ ...form, venue: e.target.value })} />
               </div>
             </div>
 
             <div>
               <label className="field-label">Event Description</label>
-              <textarea className="input" rows={3} placeholder="Event details and registration instructions..." value={form.desc} onChange={(e) => setForm({ ...form, desc: e.target.value })} />
+              <textarea className="input" rows={3} placeholder="" value={form.desc} onChange={(e) => setForm({ ...form, desc: e.target.value })} />
             </div>
 
             <div>
@@ -2044,7 +2424,7 @@ function ERPDownloadsTab({ initialDownloads = [] }: { initialDownloads?: Downloa
             <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
               <div>
                 <label className="field-label">Document Title *</label>
-                <input className="input" required placeholder="CIEL Incubation & Seed Support Policy Handbook" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+                <input className="input" required placeholder="" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
               </div>
 
               <div>
@@ -2061,7 +2441,7 @@ function ERPDownloadsTab({ initialDownloads = [] }: { initialDownloads?: Downloa
 
             <div>
               <label className="field-label">Description *</label>
-              <textarea className="input" rows={2} required placeholder="Summary of terms, equity share, and guidelines..." value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+              <textarea className="input" rows={2} required placeholder="" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             </div>
 
             <div>
@@ -2289,7 +2669,7 @@ function ERPGoogleFormsTab({ initialForms }: { initialForms: GoogleFormItem[] })
                   type="text"
                   className="input"
                   required
-                  placeholder="e.g. Incubation Cohort 2026 Application"
+                  placeholder=""
                   value={formState.title}
                   onChange={(e) => setFormState({ ...formState, title: e.target.value })}
                 />
@@ -2316,7 +2696,7 @@ function ERPGoogleFormsTab({ initialForms }: { initialForms: GoogleFormItem[] })
                 type="url"
                 className="input"
                 required
-                placeholder="https://docs.google.com/forms/d/e/.../viewform"
+                placeholder=""
                 value={formState.formUrl}
                 onChange={(e) => setFormState({ ...formState, formUrl: e.target.value })}
               />
@@ -2330,7 +2710,7 @@ function ERPGoogleFormsTab({ initialForms }: { initialForms: GoogleFormItem[] })
               <textarea
                 className="input"
                 rows={3}
-                placeholder="Brief guidelines or summary of what this form is for..."
+                placeholder=""
                 value={formState.description}
                 onChange={(e) => setFormState({ ...formState, description: e.target.value })}
               />
@@ -2487,9 +2867,11 @@ export function AdminDashboardClient({
   initialEvents = [],
   initialDownloads = [],
   initialGoogleForms = [],
+  initialProjects = [],
   stats,
   eventTitle,
 }: Props) {
+  const [projects, setProjects] = useState<VentureProjectItem[]>(initialProjects);
   const [activeTab, setActiveTab] = useState<AdminTab>("dashboard");
   const [theme, setTheme] = useState<"dark" | "light">("dark");
 
@@ -2635,7 +3017,7 @@ export function AdminDashboardClient({
 
         {/* Render Tab Views */}
         {activeTab === "dashboard" && <ERPDashboardTab stats={stats} />}
-        {activeTab === "users" && <ERPUsersTab profiles={profiles} />}
+        {activeTab === "users" && <ERPUsersTab profiles={profiles} registrations={registrations} projects={projects} />}
         {activeTab === "registrations" && <ERPRegistrationsTab rows={registrations} eventTitle={eventTitle} />}
         {activeTab === "projects" && <ERPProjectsTab />}
         {activeTab === "gallery" && <ERPGalleryTab initialImages={images} />}

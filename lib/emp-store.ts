@@ -45,10 +45,25 @@ export interface DailyUpdateRecord {
   updated_at: string;
 }
 
+export interface MonthlyReportRecord {
+  id: string;
+  employee_id: string;
+  month: string; // YYYY-MM e.g. "2026-08"
+  key_achievements: string;
+  major_challenges: string;
+  next_month_goals: string;
+  learnings_skills?: string;
+  support_needed?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 interface EmpStoreJson {
   attendance: AttendanceRecord[];
   tasks: TaskRecord[];
   dailyUpdates: DailyUpdateRecord[];
+  monthlyReports: MonthlyReportRecord[];
 }
 
 const STORE_PATH = path.join(process.cwd(), "data", "emp-store.json");
@@ -64,12 +79,14 @@ async function ensureLocalStore(): Promise<EmpStoreJson> {
       attendance: Array.isArray(parsed.attendance) ? parsed.attendance : [],
       tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
       dailyUpdates: Array.isArray(parsed.dailyUpdates) ? parsed.dailyUpdates : [],
+      monthlyReports: Array.isArray(parsed.monthlyReports) ? parsed.monthlyReports : [],
     };
   } catch {
     const initial: EmpStoreJson = {
       attendance: [],
       tasks: [],
       dailyUpdates: [],
+      monthlyReports: [],
     };
     const dir = path.dirname(STORE_PATH);
     await fs.mkdir(dir, { recursive: true });
@@ -431,3 +448,122 @@ export async function saveDailyUpdate(
 
   return updatedRecord;
 }
+
+/* ============================================================================
+ * 4. MONTHLY REPORT OPERATIONS
+ * ============================================================================ */
+
+export async function getMonthlyReports(filter?: {
+  employee_id?: string;
+  month?: string;
+}): Promise<MonthlyReportRecord[]> {
+  const store = await ensureLocalStore();
+  let records = [...(store.monthlyReports || [])];
+
+  if (filter?.employee_id) {
+    records = records.filter((r) => r.employee_id === filter.employee_id);
+  }
+  if (filter?.month) {
+    records = records.filter((r) => r.month === filter.month);
+  }
+
+  return records.sort((a, b) => (b.month > a.month ? 1 : b.created_at > a.created_at ? 1 : -1));
+}
+
+export async function saveMonthlyReport(
+  employee_id: string,
+  data: {
+    month: string;
+    key_achievements: string;
+    major_challenges?: string;
+    next_month_goals: string;
+    learnings_skills?: string;
+    support_needed?: string;
+    notes?: string;
+  }
+): Promise<MonthlyReportRecord> {
+  const targetMonth = data.month || new Date().toISOString().slice(0, 7);
+  const nowIso = new Date().toISOString();
+
+  const store = await ensureLocalStore();
+  if (!store.monthlyReports) store.monthlyReports = [];
+
+  const existingIdx = store.monthlyReports.findIndex(
+    (r) => r.employee_id === employee_id && r.month === targetMonth
+  );
+
+  let updatedRecord: MonthlyReportRecord;
+
+  if (existingIdx >= 0) {
+    const existing = store.monthlyReports[existingIdx];
+    updatedRecord = {
+      ...existing,
+      key_achievements: data.key_achievements,
+      major_challenges: data.major_challenges || "",
+      next_month_goals: data.next_month_goals,
+      learnings_skills: data.learnings_skills || "",
+      support_needed: data.support_needed || "",
+      notes: data.notes || "",
+      updated_at: nowIso,
+    };
+    store.monthlyReports[existingIdx] = updatedRecord;
+  } else {
+    updatedRecord = {
+      id: `mrep-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      employee_id,
+      month: targetMonth,
+      key_achievements: data.key_achievements,
+      major_challenges: data.major_challenges || "",
+      next_month_goals: data.next_month_goals,
+      learnings_skills: data.learnings_skills || "",
+      support_needed: data.support_needed || "",
+      notes: data.notes || "",
+      created_at: nowIso,
+      updated_at: nowIso,
+    };
+    store.monthlyReports.unshift(updatedRecord);
+  }
+
+  await writeLocalStore(store);
+
+  // Optional Supabase sync
+  try {
+    const supabase = createAdminClient();
+    await supabase.from("employee_monthly_reports").upsert({
+      id: updatedRecord.id,
+      employee_id: updatedRecord.employee_id,
+      month: updatedRecord.month,
+      key_achievements: updatedRecord.key_achievements,
+      major_challenges: updatedRecord.major_challenges,
+      next_month_goals: updatedRecord.next_month_goals,
+      learnings_skills: updatedRecord.learnings_skills,
+      support_needed: updatedRecord.support_needed,
+      notes: updatedRecord.notes,
+      created_at: updatedRecord.created_at,
+      updated_at: updatedRecord.updated_at,
+    });
+  } catch {
+    // Non-blocking fallback
+  }
+
+  return updatedRecord;
+}
+
+export async function deleteMonthlyReport(id: string, employee_id: string): Promise<boolean> {
+  const store = await ensureLocalStore();
+  if (!store.monthlyReports) return false;
+  const initialLen = store.monthlyReports.length;
+  store.monthlyReports = store.monthlyReports.filter(
+    (r) => !(r.id === id && (r.employee_id === employee_id || employee_id === "admin"))
+  );
+  if (store.monthlyReports.length !== initialLen) {
+    await writeLocalStore(store);
+    try {
+      const supabase = createAdminClient();
+      await supabase.from("employee_monthly_reports").delete().eq("id", id);
+    } catch {}
+    return true;
+  }
+  return false;
+}
+

@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, LayoutDashboard, UserRoundPlus } from "lucide-react";
+import { ArrowRight, LayoutDashboard, UserRoundPlus, Globe, LogOut } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { EVENT_SLUG } from "@/lib/config";
 import { CIEL_DOWNLOADS } from "@/lib/ciel-data";
 import { UserPortal } from "@/components/portal/user-portal";
+import { Logo } from "@/components/ui/logo";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export const metadata: Metadata = {
   title: "User Portal | CIEL Innovation Hub",
@@ -164,23 +166,70 @@ export default async function DashboardPage() {
   }
 
   return (
-    <section className="shell page-section">
-      <div className="page-heading" style={{ marginBottom: 16 }}>
-        <div>
-          <span className="eyebrow">
-            <LayoutDashboard size={14} aria-hidden="true" />
-            CIEL Innovation &amp; Startup Management Portal
+    <div style={{ minHeight: "100vh", padding: "16px 24px 40px", maxWidth: 1440, margin: "0 auto" }}>
+      {/* Sleek Participant Portal Top Bar */}
+      <header
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "12px 20px",
+          marginBottom: 20,
+          background: "rgba(255, 255, 255, 0.03)",
+          border: "1px solid var(--line)",
+          borderRadius: "var(--radius-md)",
+          backdropFilter: "blur(12px)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <Logo href="/dashboard" size="small" />
+          <div style={{ height: 20, width: 1, background: "var(--line)" }} />
+          <span
+            style={{
+              fontSize: 11,
+              fontWeight: 800,
+              letterSpacing: "1px",
+              textTransform: "uppercase",
+              color: "var(--ciel-gold-bright)",
+              background: "rgba(212, 175, 55, 0.1)",
+              padding: "3px 10px",
+              borderRadius: 20,
+              border: "1px solid rgba(212, 175, 55, 0.25)",
+            }}
+          >
+            Innovator Portal
           </span>
-          <h1>Venture Management Dashboard</h1>
         </div>
-      </div>
 
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <Link
+            href="/"
+            className="button button-ghost button-small"
+            style={{ fontSize: 13, gap: 6 }}
+          >
+            <Globe size={14} /> Public Website
+          </Link>
+
+          <ThemeToggle />
+
+          <form action="/auth/sign-out" method="post" style={{ margin: 0 }}>
+            <button
+              type="submit"
+              className="btn-signout-red"
+            >
+              <LogOut size={14} /> Sign Out
+            </button>
+          </form>
+        </div>
+      </header>
+
+      {/* Main Portal Viewport */}
       <UserPortal
         profile={activeProfile}
         registration={registration}
         members={members}
         downloads={CIEL_DOWNLOADS}
       />
-    </section>
+    </div>
   );
 }

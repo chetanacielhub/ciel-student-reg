@@ -26,14 +26,14 @@ export default async function StudentCouncilPage() {
           <h1>Student Innovation Council</h1>
         </div>
         <p>
-          The Student Innovation Council (SIC) is a student-led body under CIEL driving grassroots innovation, organizing campus hackathons, managing prototyping labs, and mentoring junior student founders.
+          The Student Innovation Council (SIC) is an active community of nearly 200 members under CIEL driving grassroots innovation, organizing constant business upscaling seminars, coordinating the Tech Lab, and facilitating projector-equipped idea pitch sessions.
         </p>
       </div>
 
       {/* Leadership Grid */}
       <div className="section-heading" style={{ marginBottom: 36, textAlign: "left" }}>
         <h2>Council Leadership</h2>
-        <p>Elected student office bearers across engineering, technology, and management programs.</p>
+        <p>Elected student office bearers representing nearly 200 active student innovators across engineering, technology, and management.</p>
       </div>
 
       <div className="grid-3" style={{ marginBottom: 64 }}>
@@ -90,9 +90,9 @@ export default async function StudentCouncilPage() {
           <div className="card-icon-wrap">
             <Sparkles size={26} />
           </div>
-          <h3>Hackathons &amp; Ideathons</h3>
+          <h3>Business Upscaling &amp; Ideation Seminars</h3>
           <p>
-            The Council organizes quarterly institution-wide 36-hour hackathons, bringing together 500+ student coders, designers, and domain thinkers to solve real-world industry problems.
+            The Council organizes regular seminars on taking ideas from scratch, founder bootcamps, and business scaling masterclasses for students across all departments.
           </p>
         </div>
 
@@ -100,9 +100,9 @@ export default async function StudentCouncilPage() {
           <div className="card-icon-wrap">
             <Award size={26} />
           </div>
-          <h3>Makerspace Lab Managers</h3>
+          <h3>Tech Lab &amp; Conference Pitch Sessions</h3>
           <p>
-            Trained student leads operate 3D printers, laser cutters, and IoT development kits, offering peer-to-peer technical guidance for hardware prototyping.
+            Student leads facilitate tech lab workspace access and organize conference room pitch sessions with projectors for idea reviews and mentor discussions.
           </p>
         </div>
       </div>

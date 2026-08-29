@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="cielGoldLettering" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D9A834" />
+      <stop offset="50%" stop-color="#C29023" />
+      <stop offset="100%" stop-color="#A17412" />
+    </linearGradient>
+  </defs>
+
+  <!-- Clean Pure White Background with subtle rounded corners -->
+  <rect width="128" height="128" rx="24" fill="#FFFFFF" stroke="#E2D4A8" stroke-width="1.5" />
+
+  <!-- CiEL Brand Typography in Gold on White -->
+  <text
+    x="64"
+    y="76"
+    text-anchor="middle"
+    font-family="'Playfair Display', 'Cormorant Garamond', 'Cinzel', serif"
+    font-size="46"
+    font-weight="700"
+    letter-spacing="-0.5"
+    fill="url(#cielGoldLettering)"
+  >
+    CiEL
+  </text>
+
+  <!-- Sub-label -->
+  <text
+    x="64"
+    y="98"
+    text-anchor="middle"
+    font-family="'Inter', -apple-system, sans-serif"
+    font-size="8"
+    font-weight="700"
+    letter-spacing="2"
+    text-transform="uppercase"
+    fill="#C29023"
+  >
+    INNOVATION
+  </text>
+</svg>

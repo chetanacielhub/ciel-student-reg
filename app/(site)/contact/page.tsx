@@ -105,12 +105,12 @@ export default function ContactPage() {
           >
             <div>
               <label style={{ fontSize: 13, color: "var(--text-secondary)", display: "block", marginBottom: 5, fontWeight: 500 }}>Full Name *</label>
-              <input type="text" className="input" placeholder="e.g. Dr. Rajesh Kulkarni" required style={{ padding: "10px 14px", height: 42, fontSize: 13.5 }} />
+              <input type="text" className="input" placeholder="" required style={{ padding: "10px 14px", height: 42, fontSize: 13.5 }} />
             </div>
 
             <div>
               <label style={{ fontSize: 13, color: "var(--text-secondary)", display: "block", marginBottom: 5, fontWeight: 500 }}>Email Address *</label>
-              <input type="email" className="input" placeholder="name@institution.edu" required style={{ padding: "10px 14px", height: 42, fontSize: 13.5 }} />
+              <input type="email" className="input" placeholder="" required style={{ padding: "10px 14px", height: 42, fontSize: 13.5 }} />
             </div>
 
             <div>
@@ -125,7 +125,7 @@ export default function ContactPage() {
 
             <div>
               <label style={{ fontSize: 13, color: "var(--text-secondary)", display: "block", marginBottom: 5, fontWeight: 500 }}>Message *</label>
-              <textarea className="input" rows={3} placeholder="Detail your proposal or questions..." required style={{ padding: "10px 14px", minHeight: 80, fontSize: 13.5, resize: "vertical" }} />
+              <textarea className="input" rows={3} placeholder="" required style={{ padding: "10px 14px", minHeight: 80, fontSize: 13.5, resize: "vertical" }} />
             </div>
 
             <button className="button button-primary button-wide" type="submit" style={{ marginTop: 6, height: 44, fontSize: 14 }}>

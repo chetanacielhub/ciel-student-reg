@@ -389,70 +389,113 @@ export async function updateVentureProject(
   const store = await ensureStore();
   if (!store.projects) store.projects = [];
 
-  let idx = store.projects.findIndex((p) => p.id === id || p.teamId === id);
-  if (idx < 0 && store.projects.length > 0) {
-    idx = 0; // Default fallback for single venture local testing
-  }
+  let idx = store.projects.findIndex(
+    (p) =>
+      p.id === id ||
+      p.teamId === id ||
+      (updates.leaderEmail && p.leaderEmail?.toLowerCase() === updates.leaderEmail.toLowerCase()) ||
+      (updates.teamName && p.teamName?.toLowerCase() === updates.teamName.toLowerCase())
+  );
 
-  if (idx >= 0) {
-    store.projects[idx] = {
-      ...store.projects[idx],
-      ...updates,
+  if (idx < 0) {
+    const newProj: VentureProjectItem = {
+      id: id || `proj-${Date.now()}`,
+      teamName: updates.teamName || updates.name || "Innovator Venture",
+      name: updates.name || "Innovator Venture",
+      problemStatement: updates.problemStatement || "",
+      stage: updates.stage || "idea",
+      progress: updates.progress ?? 20,
+      pitchDeck: updates.pitchDeck || "",
+      websiteUrl: updates.websiteUrl || "",
+      grantStatus: updates.grantStatus || "under_review",
+      reviewerNotes: updates.reviewerNotes || "",
+      journeyMilestones: updates.journeyMilestones || [],
+      documents: updates.documents || [],
+      traction: updates.traction,
+      leaderEmail: updates.leaderEmail,
+      leaderName: updates.leaderName,
       updatedAt: new Date().toISOString(),
     };
+    store.projects.push(newProj);
     await saveStore(store);
-
-    try {
-      const supabase = createAdminClient();
-      await supabase
-        .from("projects")
-        .update({
-          name: updates.name,
-          description: updates.problemStatement,
-          stage: updates.stage,
-          progress: updates.progress,
-          pitch_deck: updates.pitchDeck,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", store.projects[idx].id);
-    } catch {
-      // Ignore
-    }
-
-    return store.projects[idx];
+    return newProj;
   }
 
-  return null;
+  store.projects[idx] = {
+    ...store.projects[idx],
+    ...updates,
+    documents: updates.documents !== undefined ? updates.documents : store.projects[idx].documents,
+    traction: updates.traction !== undefined ? updates.traction : store.projects[idx].traction,
+    updatedAt: new Date().toISOString(),
+  };
+  await saveStore(store);
+
+  try {
+    const supabase = createAdminClient();
+    await supabase
+      .from("projects")
+      .update({
+        name: updates.name,
+        description: updates.problemStatement,
+        stage: updates.stage,
+        progress: updates.progress,
+        pitch_deck: updates.pitchDeck,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", store.projects[idx].id);
+  } catch {
+    // Ignore
+  }
+
+  return store.projects[idx];
 }
 
 export async function addJourneyMilestone(
   projectId: string,
-  milestone: Omit<JourneyMilestone, "id">
+  milestone: Omit<JourneyMilestone, "id">,
+  userEmail?: string
 ): Promise<JourneyMilestone | null> {
   const store = await ensureStore();
   if (!store.projects) store.projects = [];
 
-  let project = store.projects.find((p) => p.id === projectId || p.teamId === projectId);
-  if (!project && store.projects.length > 0) {
-    project = store.projects[0];
+  let project = store.projects.find(
+    (p) =>
+      p.id === projectId ||
+      p.teamId === projectId ||
+      (userEmail && p.leaderEmail?.toLowerCase() === userEmail.toLowerCase())
+  );
+
+  if (!project) {
+    if (store.projects.length > 0) {
+      project = store.projects[0];
+    } else {
+      project = {
+        id: projectId || `proj-${Date.now()}`,
+        teamName: "Innovator Venture",
+        name: "Innovator Venture",
+        problemStatement: "",
+        stage: milestone.stage || "idea",
+        progress: 25,
+        journeyMilestones: [],
+        documents: [],
+        updatedAt: new Date().toISOString(),
+      };
+      store.projects.push(project);
+    }
   }
 
-  if (project) {
-    const newMilestone: JourneyMilestone = {
-      id: `jm-${Date.now()}`,
-      projectId: project.id,
-      ...milestone,
-    };
+  const newMilestone: JourneyMilestone = {
+    id: `jm-${Date.now()}`,
+    projectId: project.id,
+    ...milestone,
+  };
 
-    if (!project.journeyMilestones) project.journeyMilestones = [];
-    project.journeyMilestones.unshift(newMilestone);
-    project.updatedAt = new Date().toISOString();
+  if (!project.journeyMilestones) project.journeyMilestones = [];
+  project.journeyMilestones.unshift(newMilestone);
+  project.updatedAt = new Date().toISOString();
 
-    await saveStore(store);
-    return newMilestone;
-  }
-
-  return null;
+  await saveStore(store);
+  return newMilestone;
 }
 
 export async function updateAdminProjectGrantStatus(

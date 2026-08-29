@@ -33,7 +33,7 @@ export default function LoginPage() {
                 name="email"
                 type="email"
                 autoComplete="email"
-                placeholder="name@institution.edu"
+                placeholder=""
                 required
               />
             </div>
@@ -56,7 +56,7 @@ export default function LoginPage() {
                 name="password"
                 type="password"
                 autoComplete="current-password"
-                placeholder="••••••••"
+                placeholder=""
                 required
               />
             </div>

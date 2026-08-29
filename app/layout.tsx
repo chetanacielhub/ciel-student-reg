@@ -29,7 +29,12 @@ export const metadata: Metadata = {
   description:
     "Institutional innovation ecosystem fostering entrepreneurship, incubation, acceleration, social impact, research, and student innovation.",
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/ciel-favicon.png", type: "image/png" },
+    ],
+    shortcut: "/favicon.svg",
+    apple: "/ciel-favicon.png",
   },
 };
 

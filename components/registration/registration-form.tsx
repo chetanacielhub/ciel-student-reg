@@ -120,15 +120,15 @@ export function RegistrationHelp() {
       <ul style={{ display: "flex", flexDirection: "column", gap: 14, padding: 0, margin: 0, listStyle: "none", fontSize: 13.5, color: "var(--text-secondary)" }}>
         <li style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
           <CheckCircle2 size={17} style={{ color: "var(--ciel-gold)", flexShrink: 0, marginTop: 2 }} />
-          <span><strong>Seed Support:</strong> Up to ₹5 Lakhs in prototype grants.</span>
+          <span><strong>Constant Seminars:</strong> Upscaling business &amp; starting ideas from scratch.</span>
         </li>
         <li style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
           <CheckCircle2 size={17} style={{ color: "var(--ciel-gold)", flexShrink: 0, marginTop: 2 }} />
-          <span><strong>Makerspace Access:</strong> 3D printers, IoT kits &amp; PCB workbenches.</span>
+          <span><strong>Tech Lab &amp; Conference Room:</strong> Dedicated computing workspace &amp; projector pitch room.</span>
         </li>
         <li style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
           <CheckCircle2 size={17} style={{ color: "var(--ciel-gold)", flexShrink: 0, marginTop: 2 }} />
-          <span><strong>IPR Assistance:</strong> Patent prior art search &amp; filing counsel.</span>
+          <span><strong>Wide Mentor Network:</strong> 1-on-1 industry guidance &amp; founder advisory.</span>
         </li>
       </ul>
 
@@ -475,7 +475,7 @@ export function RegistrationForm({
                   id="rollNumber"
                   type="text"
                   className="input"
-                  placeholder="e.g. 2026-COMP-042"
+                  placeholder=""
                   style={{ padding: "12px 16px", borderRadius: 8 }}
                   value={values.rollNumber}
                   onChange={(e) => {
@@ -518,7 +518,7 @@ export function RegistrationForm({
                   id="teamName"
                   type="text"
                   className="input"
-                  placeholder={values.role === "team_member" ? "e.g. AgriTech Innovators" : "e.g. Quantum Telemetry Systems"}
+                  placeholder=""
                   style={{ padding: "12px 16px", borderRadius: 8 }}
                   value={values.teamName}
                   onChange={(e) => {
@@ -538,7 +538,7 @@ export function RegistrationForm({
                     id="problemStatement"
                     rows={4}
                     className="input"
-                    placeholder="Describe the target problem, proposed technological solution, and commercial impact (minimum 15 characters)..."
+                    placeholder=""
                     style={{ resize: "vertical", padding: "12px 16px", borderRadius: 8 }}
                     value={values.problemStatement}
                     onChange={(e) => {

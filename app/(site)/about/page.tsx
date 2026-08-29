@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Award, Compass, Eye, Layers, Target, Zap } from "lucide-react";
+import { Compass, Eye, Layers, Presentation, Target, Tv, Users } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "About CIEL | Vision & Institutional Mission",
   description:
-    "Centre for Innovation & Entrepreneurship Learning (CIEL) is an institutional innovation ecosystem under Chetana Institute fostering student founders, research, and venture acceleration.",
+    "Centre for Innovation & Entrepreneurship Learning (CIEL) is an institutional innovation ecosystem under Chetana Institute fostering student founders, business upscaling, and venture guidance.",
 };
 
 export default function AboutPage() {
@@ -20,7 +20,7 @@ export default function AboutPage() {
           <h1>About CIEL</h1>
         </div>
         <p>
-          Centre for Innovation &amp; Entrepreneurship Learning (CIEL) is a premier institutional incubator dedicated to nurturing student innovators, researchers, and early-stage entrepreneurs into high-impact ventures.
+          Centre for Innovation &amp; Entrepreneurship Learning (CIEL) is an institutional incubator at Chetana Institute dedicated to nurturing student innovators, early-stage ideas, and registered ventures through experiential learning, dedicated facilities, and active mentor networks.
         </p>
       </div>
 
@@ -47,49 +47,76 @@ export default function AboutPage() {
         </article>
       </div>
 
-      {/* Core Operational Pillars */}
+      {/* Core Facilities & Offerings */}
       <div style={{ marginBottom: 64 }}>
-        <div className="section-heading" style={{ marginBottom: 40 }}>
-          <h2>Core Institutional Pillars</h2>
-          <p>Structured support systems designed to accelerate innovation at every stage.</p>
+        <div className="section-heading" style={{ marginBottom: 36 }}>
+          <h2>Core Facilities &amp; Support</h2>
+          <p>Practical resources and direct guidance provided to every innovator at CIEL.</p>
         </div>
 
-        <div className="grid-3">
-          <div className="role-feature">
-            <div className="role-feature-icon">
-              <Layers size={24} />
+        <div className="ecosystem-pillars-card" style={{ maxWidth: 960, margin: "0 auto" }}>
+          <div className="pillar-item">
+            <div className="pillar-icon">
+              <Presentation size={20} />
             </div>
-            <h3>Makerspace &amp; Prototyping</h3>
-            <p>State-of-the-art 3D printing, IoT testing workbench, mechanical fabrication, and high-performance computing labs.</p>
+            <div>
+              <h3 className="pillar-title">Business Upscaling &amp; Ideation Seminars</h3>
+              <p className="pillar-desc">
+                Constant seminars and masterclasses focused on starting an idea from scratch, business validation, and practical scaling.
+              </p>
+            </div>
           </div>
 
-          <div className="role-feature">
-            <div className="role-feature-icon">
-              <Award size={24} />
+          <div className="pillar-item">
+            <div className="pillar-icon">
+              <Layers size={20} />
             </div>
-            <h3>IPR &amp; Patent Cell</h3>
-            <p>Dedicated legal counsel for prior art search, patent drafting, copyright registration, and commercial licensing.</p>
+            <div>
+              <h3 className="pillar-title">Tech Lab</h3>
+              <p className="pillar-desc">
+                Dedicated technology workspace and development computing infrastructure for building and testing digital solutions.
+              </p>
+            </div>
           </div>
 
-          <div className="role-feature">
-            <div className="role-feature-icon">
-              <Zap size={24} />
+          <div className="pillar-item">
+            <div className="pillar-icon">
+              <Tv size={20} />
             </div>
-            <h3>Seed Grant &amp; VC Network</h3>
-            <p>Direct seed funding up to ₹5 Lakhs per venture, with Demo Day presentations before leading angel syndicates.</p>
+            <div>
+              <h3 className="pillar-title">Conference Room with Projector</h3>
+              <p className="pillar-desc">
+                Equipped conference room featuring high-definition projection for interactive idea discussions and team pitch sessions.
+              </p>
+            </div>
+          </div>
+
+          <div className="pillar-item">
+            <div className="pillar-icon">
+              <Users size={20} />
+            </div>
+            <div>
+              <h3 className="pillar-title">Wide Mentor Support &amp; Network</h3>
+              <p className="pillar-desc">
+                Direct 1-on-1 access to seasoned industry leaders, faculty advisors, and experienced entrepreneurs for founder guidance.
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Call to action banner */}
       <div className="status-card" style={{ maxWidth: "100%", textAlign: "center" }}>
-        <h2>Ready to Launch Your Innovation at CIEL?</h2>
+        <h2>Ready to Build Your Venture at CIEL?</h2>
         <p style={{ maxWidth: 600, margin: "12px auto 28px" }}>
-          Submit your venture application today and gain access to prototyping facilities, mentorship, and grant support.
+          Join nearly 200 student council members and registered startups collaborating with our industry partners.
         </p>
         <div className="inline-actions" style={{ justifyContent: "center" }}>
+          <Link className="button button-primary button-large" href="/register">
+            Apply to CIEL
+          </Link>
           <Link className="button button-secondary button-large" href="/governance">
-            Governance &amp; Committee Structure
+            Governance Structure
           </Link>
         </div>
       </div>

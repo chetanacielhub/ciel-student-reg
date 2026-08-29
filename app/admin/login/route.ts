@@ -8,7 +8,10 @@ export async function POST(req: NextRequest) {
 
   const creds = getAdminCredentials();
 
-  if (username !== creds.username || password !== creds.password) {
+  if (
+    username.trim().toLowerCase() !== creds.username.trim().toLowerCase() ||
+    password !== creds.password
+  ) {
     return NextResponse.redirect(new URL("/admin?error=invalid", req.url), {
       status: 303,
     });

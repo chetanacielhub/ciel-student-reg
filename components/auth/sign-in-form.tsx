@@ -98,7 +98,7 @@ export function SignInForm({ nextPath }: { nextPath: string }) {
             name="email"
             type="email"
             autoComplete="email"
-            placeholder="you@gmail.com"
+            placeholder=""
             value={email}
             onChange={(event) => {
               setEmail(event.target.value);
@@ -127,7 +127,7 @@ export function SignInForm({ nextPath }: { nextPath: string }) {
             name="password"
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"
-            placeholder="••••••••"
+            placeholder=""
             value={password}
             onChange={(event) => {
               setPassword(event.target.value);
