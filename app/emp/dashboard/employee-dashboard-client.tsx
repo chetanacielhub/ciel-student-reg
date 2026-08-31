@@ -109,14 +109,20 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
   const [taskDesc, setTaskDesc] = useState("");
   const [taskPriority, setTaskPriority] = useState<TaskPriority>("Medium");
   const [taskStatus, setTaskStatus] = useState<TaskStatus>("Pending");
+  const [taskDate, setTaskDate] = useState<string>(todayStr);
 
   // Task Delete Confirmation Modal
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
 
-  const loadDashboardData = async () => {
-    setLoading(true);
+  const loadDashboardData = async (showLoadingSpinner: boolean = false) => {
+    if (showLoadingSpinner) setLoading(true);
     try {
-      const attRes = await fetch("/emp/api/attendance");
+      const [attRes, taskRes, repRes] = await Promise.all([
+        fetch("/emp/api/attendance", { cache: "no-store" }),
+        fetch("/emp/api/tasks", { cache: "no-store" }),
+        fetch("/emp/api/monthly-reports", { cache: "no-store" }),
+      ]);
+
       const attData = await attRes.json();
       if (attData.success) {
         setAttendanceRecords(attData.data);
@@ -124,13 +130,11 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
         setTodayAttendance(todayRec || null);
       }
 
-      const taskRes = await fetch("/emp/api/tasks");
       const taskData = await taskRes.json();
       if (taskData.success) {
         setTasks(taskData.data);
       }
 
-      const repRes = await fetch("/emp/api/monthly-reports");
       const repData = await repRes.json();
       if (repData.success) {
         setMonthlyReports(repData.data);
@@ -248,7 +252,7 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
   };
 
   useEffect(() => {
-    loadDashboardData();
+    loadDashboardData(true);
     triggerAutoLocationCheck(false);
   }, []);
 
@@ -283,6 +287,7 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
     setTaskDesc("");
     setTaskPriority("Medium");
     setTaskStatus("Pending");
+    setTaskDate(todayStr);
     setIsTaskModalOpen(true);
   };
 
@@ -292,12 +297,16 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
     setTaskDesc(t.description || "");
     setTaskPriority(t.priority);
     setTaskStatus(t.status);
+    setTaskDate(t.date || todayStr);
     setIsTaskModalOpen(true);
   };
 
   const handleSaveTask = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!taskTitle.trim()) return;
+    if (!taskTitle.trim()) {
+      setActionMessage({ type: "error", text: "Task title is required." });
+      return;
+    }
 
     try {
       if (editingTask) {
@@ -306,10 +315,11 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             id: editingTask.id,
-            title: taskTitle,
-            description: taskDesc,
+            title: taskTitle.trim(),
+            description: taskDesc.trim(),
             priority: taskPriority,
             status: taskStatus,
+            date: taskDate || todayStr,
           }),
         });
         const data = await res.json();
@@ -320,7 +330,7 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
           setEditingTask(null);
           setTaskTitle("");
           setTaskDesc("");
-          loadDashboardData();
+          loadDashboardData(false);
         } else {
           setActionMessage({ type: "error", text: data.error || "Failed to update task." });
         }
@@ -333,17 +343,18 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
             description: taskDesc.trim(),
             priority: taskPriority,
             status: taskStatus,
+            date: taskDate || todayStr,
           }),
         });
         const data = await res.json();
         if (data.success && data.data) {
-          setActionMessage({ type: "success", text: "New task created!" });
+          setActionMessage({ type: "success", text: "New task created successfully!" });
           setTasks((prev) => [data.data, ...prev.filter((t) => t.id !== data.data.id)]);
           setIsTaskModalOpen(false);
           setEditingTask(null);
           setTaskTitle("");
           setTaskDesc("");
-          loadDashboardData();
+          loadDashboardData(false);
         } else {
           setActionMessage({ type: "error", text: data.error || "Failed to create task." });
         }
@@ -681,6 +692,14 @@ ${monthlyReportForm.support_needed || "None requested"}`;
               <button className="emp-banner-close" onClick={() => setActionMessage(null)}>
                 <X size={14} />
               </button>
+            </div>
+          )}
+
+          {/* Loading State */}
+          {loading && (
+            <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--emp-text-muted)" }}>
+              <RefreshCw size={28} className="spin-icon" style={{ margin: "0 auto 12px auto" }} />
+              <p>Loading dashboard data...</p>
             </div>
           )}
 
@@ -1373,7 +1392,17 @@ ${monthlyReportForm.support_needed || "None requested"}`;
                   rows={3}
                 />
               </div>
-              <div className="emp-modal-selects">
+              <div className="emp-modal-selects" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>
+                <div className="emp-form-group">
+                  <label className="emp-form-label">Date</label>
+                  <input
+                    type="date"
+                    className="emp-input"
+                    value={taskDate}
+                    onChange={(e) => setTaskDate(e.target.value)}
+                    required
+                  />
+                </div>
                 <div className="emp-form-group">
                   <label className="emp-form-label">Priority</label>
                   <select

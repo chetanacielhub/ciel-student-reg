@@ -9,6 +9,9 @@ import {
   TaskPriority,
 } from "@/lib/emp-store";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(req: NextRequest) {
   const session = await getEmpSession();
   if (!session) {
@@ -21,9 +24,9 @@ export async function GET(req: NextRequest) {
   const status = (searchParams.get("status") as TaskStatus) || undefined;
   const priority = (searchParams.get("priority") as TaskPriority) || undefined;
 
-  let empFilter = session.id;
+  let empFilter: string | undefined = session.id;
   if (session.role === "admin") {
-    empFilter = requestedEmpId || undefined!;
+    empFilter = requestedEmpId && requestedEmpId !== "all" ? requestedEmpId : undefined;
   }
 
   const tasks = await getTasks({
@@ -33,7 +36,10 @@ export async function GET(req: NextRequest) {
     priority,
   });
 
-  return NextResponse.json({ success: true, data: tasks });
+  return NextResponse.json(
+    { success: true, data: tasks },
+    { headers: { "Cache-Control": "no-store, max-age=0" } }
+  );
 }
 
 export async function POST(req: NextRequest) {
@@ -44,7 +50,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { title, description, priority, status, date } = body;
+    const { title, description, priority, status, date, employee_id } = body;
 
     if (!title || !title.trim()) {
       return NextResponse.json(
@@ -53,18 +59,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const targetEmpId = session.role === "admin" && employee_id ? employee_id : session.id;
+
     const newTask = await createTask(
-      session.id,
+      targetEmpId,
       title.trim(),
-      description || "",
+      description ? description.trim() : "",
       priority || "Medium",
       status || "Pending",
       date
     );
 
-    return NextResponse.json({ success: true, data: newTask }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Failed to create task." }, { status: 500 });
+    return NextResponse.json(
+      { success: true, data: newTask },
+      { status: 201, headers: { "Cache-Control": "no-store, max-age=0" } }
+    );
+  } catch (err: any) {
+    console.error("Failed to create task:", err);
+    return NextResponse.json({ error: err?.message || "Failed to create task." }, { status: 500 });
   }
 }
 
@@ -76,19 +88,21 @@ export async function PUT(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { id, title, description, status, priority } = body;
+    const { id, title, description, status, priority, date, employee_id } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Task ID is required." }, { status: 400 });
     }
 
-    // Verify employee owns task
-    const updated = await updateTask(id, session.id, {
-      title,
-      description,
-      status,
-      priority,
-    });
+    const updates: any = {};
+    if (title !== undefined) updates.title = title.trim();
+    if (description !== undefined) updates.description = description;
+    if (status !== undefined) updates.status = status;
+    if (priority !== undefined) updates.priority = priority;
+    if (date !== undefined) updates.date = date;
+    if (session.role === "admin" && employee_id !== undefined) updates.employee_id = employee_id;
+
+    const updated = await updateTask(id, session.id, updates);
 
     if (!updated) {
       return NextResponse.json(
@@ -97,9 +111,13 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ success: true, data: updated });
-  } catch {
-    return NextResponse.json({ error: "Failed to update task." }, { status: 500 });
+    return NextResponse.json(
+      { success: true, data: updated },
+      { headers: { "Cache-Control": "no-store, max-age=0" } }
+    );
+  } catch (err: any) {
+    console.error("Failed to update task:", err);
+    return NextResponse.json({ error: err?.message || "Failed to update task." }, { status: 500 });
   }
 }
 
@@ -125,8 +143,12 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: "Failed to delete task." }, { status: 500 });
+    return NextResponse.json(
+      { success: true },
+      { headers: { "Cache-Control": "no-store, max-age=0" } }
+    );
+  } catch (err: any) {
+    console.error("Failed to delete task:", err);
+    return NextResponse.json({ error: err?.message || "Failed to delete task." }, { status: 500 });
   }
 }

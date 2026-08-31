@@ -75,9 +75,24 @@ async function ensureLocalStore(): Promise<EmpStoreJson> {
     await fs.mkdir(dir, { recursive: true });
     const content = await fs.readFile(STORE_PATH, "utf-8");
     const parsed = JSON.parse(content);
+    
+    const tasks = Array.isArray(parsed.tasks)
+      ? parsed.tasks.map((t: any) => ({
+          id: t.id || `tsk-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          employee_id: t.employee_id || "emp-1",
+          date: t.date || getTodayString(),
+          title: t.title || "Untitled Task",
+          description: t.description || "",
+          status: (t.status as TaskStatus) || "Pending",
+          priority: (t.priority as TaskPriority) || "Medium",
+          created_at: t.created_at || new Date().toISOString(),
+          updated_at: t.updated_at || new Date().toISOString(),
+        }))
+      : [];
+
     return {
       attendance: Array.isArray(parsed.attendance) ? parsed.attendance : [],
-      tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
+      tasks,
       dailyUpdates: Array.isArray(parsed.dailyUpdates) ? parsed.dailyUpdates : [],
       monthlyReports: Array.isArray(parsed.monthlyReports) ? parsed.monthlyReports : [],
     };
@@ -303,11 +318,12 @@ export async function createTask(
 export async function updateTask(
   task_id: string,
   employee_id: string,
-  updates: Partial<Pick<TaskRecord, "title" | "description" | "status" | "priority">>
+  updates: Partial<Pick<TaskRecord, "title" | "description" | "status" | "priority" | "date" | "employee_id">>
 ): Promise<TaskRecord | null> {
   const nowIso = new Date().toISOString();
   const store = await ensureLocalStore();
-  const idx = store.tasks.findIndex((t) => t.id === task_id && (t.employee_id === employee_id || employee_id === "admin"));
+  const isSuperUser = employee_id === "admin" || employee_id === "emp-admin";
+  const idx = store.tasks.findIndex((t) => t.id === task_id && (t.employee_id === employee_id || isSuperUser));
 
   if (idx < 0) return null;
 
@@ -341,7 +357,8 @@ export async function updateTask(
 export async function deleteTask(task_id: string, employee_id: string): Promise<boolean> {
   const store = await ensureLocalStore();
   const initialLen = store.tasks.length;
-  store.tasks = store.tasks.filter((t) => !(t.id === task_id && (t.employee_id === employee_id || employee_id === "admin")));
+  const isSuperUser = employee_id === "admin" || employee_id === "emp-admin";
+  store.tasks = store.tasks.filter((t) => !(t.id === task_id && (t.employee_id === employee_id || isSuperUser)));
 
   if (store.tasks.length !== initialLen) {
     await writeLocalStore(store);
@@ -553,8 +570,9 @@ export async function deleteMonthlyReport(id: string, employee_id: string): Prom
   const store = await ensureLocalStore();
   if (!store.monthlyReports) return false;
   const initialLen = store.monthlyReports.length;
+  const isSuperUser = employee_id === "admin" || employee_id === "emp-admin";
   store.monthlyReports = store.monthlyReports.filter(
-    (r) => !(r.id === id && (r.employee_id === employee_id || employee_id === "admin"))
+    (r) => !(r.id === id && (r.employee_id === employee_id || isSuperUser))
   );
   if (store.monthlyReports.length !== initialLen) {
     await writeLocalStore(store);

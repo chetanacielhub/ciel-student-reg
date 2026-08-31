@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { getEmpSession, getAuthorizedEmpUsers } from "@/lib/emp-auth";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   const session = await getEmpSession();
   if (!session || session.role !== "admin") {

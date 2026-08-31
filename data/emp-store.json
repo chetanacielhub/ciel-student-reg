@@ -1,6 +1,20 @@
 {
   "attendance": [
     {
+      "id": "att-1788177157166-siji2",
+      "employee_id": "emp-3",
+      "date": "2026-08-31",
+      "status": "Present",
+      "check_in_time": "2026-08-31T11:52:37.164Z",
+      "check_out_time": null,
+      "created_at": "2026-08-31T11:52:37.164Z",
+      "updated_at": "2026-08-31T11:52:44.318Z",
+      "location_lat": 19.060446,
+      "location_lng": 72.848009,
+      "distance_meters": 448.4,
+      "is_within_geofence": true
+    },
+    {
       "id": "att-1788002858377-ye4qh",
       "employee_id": "emp-1",
       "date": "2026-08-29",
@@ -45,6 +59,17 @@
   ],
   "tasks": [
     {
+      "id": "tsk-1788177455269-72l66",
+      "employee_id": "emp-3",
+      "date": "2026-08-31",
+      "title": "asdcf",
+      "description": "dfvgb",
+      "status": "Pending",
+      "priority": "Medium",
+      "created_at": "2026-08-31T11:57:35.267Z",
+      "updated_at": "2026-08-31T11:57:35.267Z"
+    },
+    {
       "id": "tsk-1787656404895-gxh0b",
       "employee_id": "emp-1",
       "date": "2026-08-25",
@@ -70,7 +95,10 @@
       "id": "tsk-1787649876609-dg04y",
       "employee_id": "emp-1",
       "date": "2026-08-25",
+      "title": "Update Project Status",
+      "description": "",
       "status": "Pending",
+      "priority": "Medium",
       "created_at": "2026-08-25T09:24:35.931Z",
       "updated_at": "2026-08-25T11:17:28.598Z"
     },

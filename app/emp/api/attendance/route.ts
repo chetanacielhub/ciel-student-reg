@@ -7,6 +7,9 @@ import {
 } from "@/lib/emp-store";
 import { checkChetanaGeofence } from "@/lib/geo-utils";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(req: NextRequest) {
   const session = await getEmpSession();
   if (!session) {

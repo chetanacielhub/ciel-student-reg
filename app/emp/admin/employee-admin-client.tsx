@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import type { EmpSessionData } from "@/lib/emp-auth";
 import { EmpThemeToggle } from "../emp-theme-toggle";
 import { Logo } from "@/components/ui/logo";
-import type { AttendanceRecord, TaskRecord, MonthlyReportRecord } from "@/lib/emp-store";
+import type {
+  AttendanceRecord,
+  TaskRecord,
+  MonthlyReportRecord,
+  TaskStatus,
+  TaskPriority,
+} from "@/lib/emp-store";
 import {
   Users,
   Calendar,
@@ -27,6 +33,10 @@ import {
   TrendingUp,
   Sparkles,
   CalendarDays,
+  Plus,
+  Edit2,
+  Trash2,
+  CheckCircle,
 } from "lucide-react";
 
 type EmployeeInfo = { id: string; name: string; email: string };
@@ -53,6 +63,7 @@ export default function EmployeeAdminClient({ adminUser }: { adminUser: EmpSessi
   const [allMonthlyReports, setAllMonthlyReports] = useState<MonthlyReportRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [dataError, setDataError] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Filters
   const [empFilter, setEmpFilter] = useState<string>("all");
@@ -61,6 +72,19 @@ export default function EmployeeAdminClient({ adminUser }: { adminUser: EmpSessi
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
 
+  // Task Modal state
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<TaskRecord | null>(null);
+  const [taskEmpId, setTaskEmpId] = useState<string>("emp-1");
+  const [taskTitle, setTaskTitle] = useState("");
+  const [taskDesc, setTaskDesc] = useState("");
+  const [taskPriority, setTaskPriority] = useState<"Low" | "Medium" | "High">("Medium");
+  const [taskStatus, setTaskStatus] = useState<"Pending" | "In Progress" | "Completed">("Pending");
+  const [taskDate, setTaskDate] = useState<string>(todayStr);
+
+  // Task Delete Confirmation Modal
+  const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
+
   // Modal preview
   const [previewModal, setPreviewModal] = useState<{
     report: MonthlyReportRecord;
@@ -68,15 +92,15 @@ export default function EmployeeAdminClient({ adminUser }: { adminUser: EmpSessi
     empEmail: string;
   } | null>(null);
 
-  const fetchAdminData = async () => {
-    setLoading(true);
+  const fetchAdminData = async (showLoadingSpinner: boolean = false) => {
+    if (showLoadingSpinner) setLoading(true);
     setDataError(null);
     try {
       const [empRes, attRes, taskRes, repRes] = await Promise.all([
-        fetch("/emp/api/employees"),
-        fetch("/emp/api/attendance"),
-        fetch("/emp/api/tasks"),
-        fetch("/emp/api/monthly-reports"),
+        fetch("/emp/api/employees", { cache: "no-store" }),
+        fetch("/emp/api/attendance", { cache: "no-store" }),
+        fetch("/emp/api/tasks", { cache: "no-store" }),
+        fetch("/emp/api/monthly-reports", { cache: "no-store" }),
       ]);
 
       const empData = await empRes.json();
@@ -97,13 +121,132 @@ export default function EmployeeAdminClient({ adminUser }: { adminUser: EmpSessi
   };
 
   useEffect(() => {
-    fetchAdminData();
+    fetchAdminData(true);
   }, []);
 
   const handleLogout = async () => {
     await fetch("/emp/api/auth/logout", { method: "POST" });
     router.push("/emp/login");
     router.refresh();
+  };
+
+  const openNewTaskModal = (defaultEmpId?: string) => {
+    setEditingTask(null);
+    setTaskEmpId(defaultEmpId || (employees.length > 0 ? employees[0].id : "emp-1"));
+    setTaskTitle("");
+    setTaskDesc("");
+    setTaskPriority("Medium");
+    setTaskStatus("Pending");
+    setTaskDate(todayStr);
+    setIsTaskModalOpen(true);
+  };
+
+  const openEditTaskModal = (t: TaskRecord) => {
+    setEditingTask(t);
+    setTaskEmpId(t.employee_id);
+    setTaskTitle(t.title);
+    setTaskDesc(t.description || "");
+    setTaskPriority(t.priority);
+    setTaskStatus(t.status);
+    setTaskDate(t.date || todayStr);
+    setIsTaskModalOpen(true);
+  };
+
+  const handleSaveTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!taskTitle.trim()) {
+      setActionMessage({ type: "error", text: "Task title is required." });
+      return;
+    }
+
+    try {
+      if (editingTask) {
+        const res = await fetch("/emp/api/tasks", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: editingTask.id,
+            employee_id: taskEmpId,
+            title: taskTitle.trim(),
+            description: taskDesc.trim(),
+            priority: taskPriority,
+            status: taskStatus,
+            date: taskDate || todayStr,
+          }),
+        });
+        const data = await res.json();
+        if (data.success && data.data) {
+          setActionMessage({ type: "success", text: "Task updated successfully." });
+          setAllTasks((prev) => prev.map((t) => (t.id === data.data.id ? data.data : t)));
+          setIsTaskModalOpen(false);
+          setEditingTask(null);
+          fetchAdminData(false);
+        } else {
+          setActionMessage({ type: "error", text: data.error || "Failed to update task." });
+        }
+      } else {
+        const res = await fetch("/emp/api/tasks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            employee_id: taskEmpId,
+            title: taskTitle.trim(),
+            description: taskDesc.trim(),
+            priority: taskPriority,
+            status: taskStatus,
+            date: taskDate || todayStr,
+          }),
+        });
+        const data = await res.json();
+        if (data.success && data.data) {
+          setActionMessage({ type: "success", text: "New task assigned & created successfully!" });
+          setAllTasks((prev) => [data.data, ...prev.filter((t) => t.id !== data.data.id)]);
+          setIsTaskModalOpen(false);
+          setEditingTask(null);
+          fetchAdminData(false);
+        } else {
+          setActionMessage({ type: "error", text: data.error || "Failed to create task." });
+        }
+      }
+    } catch {
+      setActionMessage({ type: "error", text: "Task operation failed." });
+    }
+  };
+
+  const handleQuickStatusChange = async (t: TaskRecord, newStatus: TaskStatus) => {
+    try {
+      const res = await fetch("/emp/api/tasks", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: t.id, status: newStatus }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAllTasks((prev) => prev.map((item) => (item.id === t.id ? { ...item, status: newStatus } : item)));
+        setActionMessage({ type: "success", text: `Task marked as ${newStatus}.` });
+        fetchAdminData(false);
+      }
+    } catch {
+      setActionMessage({ type: "error", text: "Failed to change task status." });
+    }
+  };
+
+  const handleDeleteTask = async () => {
+    if (!deletingTaskId) return;
+    try {
+      const res = await fetch(`/emp/api/tasks?id=${deletingTaskId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        setActionMessage({ type: "success", text: "Task deleted." });
+        setAllTasks((prev) => prev.filter((t) => t.id !== deletingTaskId));
+        setDeletingTaskId(null);
+        fetchAdminData(false);
+      } else {
+        setActionMessage({ type: "error", text: data.error || "Failed to delete task." });
+      }
+    } catch {
+      setActionMessage({ type: "error", text: "Delete operation failed." });
+    }
   };
 
   // Helper map for Employee name & email
@@ -283,7 +426,7 @@ export default function EmployeeAdminClient({ adminUser }: { adminUser: EmpSessi
 
           <button
             className="emp-tab"
-            onClick={fetchAdminData}
+            onClick={() => fetchAdminData(true)}
             disabled={loading}
             style={{ marginLeft: "auto", opacity: loading ? 0.6 : 1 }}
           >
@@ -299,6 +442,22 @@ export default function EmployeeAdminClient({ adminUser }: { adminUser: EmpSessi
             {loading ? "Refreshing..." : "Refresh Data"}
           </button>
         </div>
+
+        {/* Action / Notification Banner */}
+        {actionMessage && (
+          <div
+            className={`emp-action-banner ${
+              actionMessage.type === "success" ? "emp-banner-success" : "emp-banner-error"
+            }`}
+            style={{ marginBottom: "20px" }}
+          >
+            {actionMessage.type === "success" ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
+            <span>{actionMessage.text}</span>
+            <button className="emp-banner-close" onClick={() => setActionMessage(null)}>
+              <X size={14} />
+            </button>
+          </div>
+        )}
 
         {/* Error Banner */}
         {dataError && (
@@ -582,10 +741,16 @@ export default function EmployeeAdminClient({ adminUser }: { adminUser: EmpSessi
         {/* TAB 3: TASKS MONITORING */}
         {!loading && activeTab === "tasks" && (
           <div>
-            <div className="emp-section-header">
-              <h2 className="emp-section-title">
+            <div className="emp-section-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h2 className="emp-section-title" style={{ margin: 0 }}>
                 <CheckSquare size={20} /> All Employee Tasks & Deliverables
               </h2>
+              <button
+                className="emp-btn emp-btn-primary"
+                onClick={() => openNewTaskModal(empFilter !== "all" ? empFilter : undefined)}
+              >
+                <Plus size={16} /> New Task / Assign
+              </button>
             </div>
 
             {/* Filter Bar */}
@@ -607,6 +772,7 @@ export default function EmployeeAdminClient({ adminUser }: { adminUser: EmpSessi
                       {e.name}
                     </option>
                   ))}
+                  <option value="emp-admin">Admin ({adminUser.name})</option>
                 </select>
               </div>
 
@@ -647,25 +813,39 @@ export default function EmployeeAdminClient({ adminUser }: { adminUser: EmpSessi
 
             {filteredTasks.length === 0 ? (
               <div className="emp-card" style={{ textAlign: "center", padding: "40px", color: "#94a3b8" }}>
-                No tasks match the selected filters.
+                <CheckSquare size={36} style={{ color: "var(--emp-text-faint)", margin: "0 auto 12px auto" }} />
+                <p>No tasks match the selected filters.</p>
+                <button
+                  className="emp-btn emp-btn-secondary emp-btn-sm"
+                  style={{ marginTop: "12px" }}
+                  onClick={() => openNewTaskModal(empFilter !== "all" ? empFilter : undefined)}
+                >
+                  <Plus size={14} /> Create a Task
+                </button>
               </div>
             ) : (
               <div className="emp-table-wrap">
                 <table className="emp-table">
                   <thead>
                     <tr>
-                      <th>Employee</th>
+                      <th>Assigned To</th>
                       <th>Task Title & Details</th>
                       <th>Priority</th>
                       <th>Status</th>
-                      <th>Logged Date</th>
+                      <th>Date</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredTasks.map((t) => (
                       <tr key={t.id}>
                         <td>
-                          <strong style={{ color: "var(--emp-text)" }}>{getEmpName(t.employee_id)}</strong>
+                          <strong style={{ color: "var(--emp-text)" }}>
+                            {t.employee_id === "emp-admin" ? `Admin (${adminUser.name})` : getEmpName(t.employee_id)}
+                          </strong>
+                          <div style={{ fontSize: "11px", color: "var(--emp-text-muted)" }}>
+                            {t.employee_id === "emp-admin" ? adminUser.email : getEmpEmail(t.employee_id)}
+                          </div>
                         </td>
                         <td>
                           <div style={{ fontWeight: 600, color: "var(--emp-text)" }}>{t.title}</div>
@@ -681,15 +861,38 @@ export default function EmployeeAdminClient({ adminUser }: { adminUser: EmpSessi
                           </span>
                         </td>
                         <td>
-                          <span
-                            className={`emp-chip emp-chip-${(t.status || "pending")
+                          <select
+                            className={`emp-status-select emp-chip emp-chip-${(t.status || "Pending")
                               .toLowerCase()
                               .replace(/\s+/g, "")}`}
+                            style={{ fontSize: "12px", padding: "4px 8px" }}
+                            value={t.status || "Pending"}
+                            onChange={(e) => handleQuickStatusChange(t, e.target.value as TaskStatus)}
                           >
-                            {t.status || "Pending"}
-                          </span>
+                            <option value="Pending">Pending</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                          </select>
                         </td>
                         <td>{t.date}</td>
+                        <td>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <button
+                              className="emp-icon-btn emp-icon-btn-blue"
+                              onClick={() => openEditTaskModal(t)}
+                              title="Edit Task"
+                            >
+                              <Edit2 size={13} />
+                            </button>
+                            <button
+                              className="emp-icon-btn emp-icon-btn-red"
+                              onClick={() => setDeletingTaskId(t.id)}
+                              title="Delete Task"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -962,6 +1165,145 @@ export default function EmployeeAdminClient({ adminUser }: { adminUser: EmpSessi
                 onClick={() => window.print()}
               >
                 <Printer size={14} /> Print / Save Dossier PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── ADMIN TASK CREATE / EDIT MODAL ────────────────── */}
+      {isTaskModalOpen && (
+        <div className="emp-modal-overlay">
+          <div className="emp-modal">
+            <div className="emp-modal-header">
+              <div className="emp-modal-title-group">
+                <div className="emp-modal-icon">{editingTask ? <Edit2 size={18} /> : <Plus size={18} />}</div>
+                <h3 className="emp-modal-title">{editingTask ? "Edit Employee Task" : "Assign New Task"}</h3>
+              </div>
+              <button className="emp-modal-close" onClick={() => setIsTaskModalOpen(false)}>
+                <X size={18} />
+              </button>
+            </div>
+            <form onSubmit={handleSaveTask}>
+              <div className="emp-form-group">
+                <label className="emp-form-label">Assign To Employee *</label>
+                <select
+                  className="emp-select"
+                  value={taskEmpId}
+                  onChange={(e) => setTaskEmpId(e.target.value)}
+                  required
+                >
+                  {employees.map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {e.name} ({e.email})
+                    </option>
+                  ))}
+                  <option value="emp-admin">Admin ({adminUser.name})</option>
+                </select>
+              </div>
+
+              <div className="emp-form-group">
+                <label className="emp-form-label">Task Title *</label>
+                <input
+                  type="text"
+                  className="emp-input"
+                  placeholder="e.g. Prepare student cohort certificates"
+                  value={taskTitle}
+                  onChange={(e) => setTaskTitle(e.target.value)}
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <div className="emp-form-group">
+                <label className="emp-form-label">
+                  Description <span className="emp-form-optional">(optional)</span>
+                </label>
+                <textarea
+                  className="emp-textarea"
+                  placeholder="Provide any specific requirements, links or notes..."
+                  value={taskDesc}
+                  onChange={(e) => setTaskDesc(e.target.value)}
+                  rows={3}
+                />
+              </div>
+
+              <div className="emp-modal-selects" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>
+                <div className="emp-form-group">
+                  <label className="emp-form-label">Date</label>
+                  <input
+                    type="date"
+                    className="emp-input"
+                    value={taskDate}
+                    onChange={(e) => setTaskDate(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="emp-form-group">
+                  <label className="emp-form-label">Priority</label>
+                  <select
+                    className="emp-select"
+                    value={taskPriority}
+                    onChange={(e) => setTaskPriority(e.target.value as "Low" | "Medium" | "High")}
+                  >
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                  </select>
+                </div>
+                <div className="emp-form-group">
+                  <label className="emp-form-label">Status</label>
+                  <select
+                    className="emp-select"
+                    value={taskStatus}
+                    onChange={(e) => setTaskStatus(e.target.value as "Pending" | "In Progress" | "Completed")}
+                  >
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="emp-modal-footer">
+                <button
+                  type="button"
+                  className="emp-btn emp-btn-ghost emp-btn-sm"
+                  onClick={() => setIsTaskModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="emp-btn emp-btn-primary emp-btn-sm">
+                  {editingTask ? "Save Changes" : "Assign Task"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ─── TASK DELETE CONFIRMATION MODAL ────────────────── */}
+      {deletingTaskId && (
+        <div className="emp-modal-overlay">
+          <div className="emp-modal emp-modal-sm">
+            <div className="emp-modal-delete-icon">
+              <Trash2 size={28} />
+            </div>
+            <h3 className="emp-modal-title" style={{ textAlign: "center", marginBottom: "8px" }}>
+              Delete Task?
+            </h3>
+            <p className="emp-modal-delete-sub">
+              This action will permanently delete this task record from the portal.
+            </p>
+            <div className="emp-modal-footer">
+              <button
+                className="emp-btn emp-btn-ghost emp-btn-sm"
+                onClick={() => setDeletingTaskId(null)}
+              >
+                Cancel
+              </button>
+              <button className="emp-btn emp-btn-danger emp-btn-sm" onClick={handleDeleteTask}>
+                Delete
               </button>
             </div>
           </div>

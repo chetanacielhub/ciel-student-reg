@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getEmpSession } from "@/lib/emp-auth";
 import { getMonthlyReports, saveMonthlyReport, deleteMonthlyReport } from "@/lib/emp-store";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(req: NextRequest) {
   const session = await getEmpSession();
   if (!session) {
