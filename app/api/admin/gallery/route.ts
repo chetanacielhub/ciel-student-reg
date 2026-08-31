@@ -1,1 +1,4 @@
-export { GET, POST, DELETE, dynamic, revalidate } from "@/app/admin/gallery/route";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+export { GET, POST, DELETE } from "@/app/admin/gallery/route";
