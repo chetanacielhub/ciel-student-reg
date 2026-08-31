@@ -19,6 +19,7 @@ import {
   CheckSquare,
   FileText,
   LogOut,
+  LogIn,
   Plus,
   Trash2,
   Edit2,
@@ -27,10 +28,6 @@ import {
   X,
   Filter,
   User,
-  MapPin,
-  Compass,
-  Navigation,
-  Target,
   RefreshCw,
   TrendingUp,
   Zap,
@@ -41,6 +38,7 @@ import {
   Printer,
   Eye,
   Award,
+  Target,
   BarChart3,
   Copy,
   Check,
@@ -84,23 +82,6 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
 
   const [loading, setLoading] = useState(true);
   const [actionMessage, setActionMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-
-  // Geolocation state
-  const [geoStatus, setGeoStatus] = useState<{
-    loading: boolean;
-    lat: number | null;
-    lng: number | null;
-    distanceMeters: number | null;
-    isWithinGeofence: boolean | null;
-    error: string | null;
-  }>({
-    loading: false,
-    lat: null,
-    lng: null,
-    distanceMeters: null,
-    isWithinGeofence: null,
-    error: null,
-  });
 
   // Task Modal state
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -170,90 +151,8 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
     }
   }, [selectedMonth, monthlyReports]);
 
-  const triggerAutoLocationCheck = (bypass: boolean = false) => {
-    setGeoStatus((prev) => ({ ...prev, loading: true, error: null }));
-
-    const processCoordinates = async (latitude: number, longitude: number) => {
-      try {
-        const res = await fetch("/emp/api/attendance", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "auto_location",
-            latitude,
-            longitude,
-            bypassGeofence: bypass,
-          }),
-        });
-
-        const data = await res.json();
-        const geofence = data.geofence;
-
-        setGeoStatus({
-          loading: false,
-          lat: latitude,
-          lng: longitude,
-          distanceMeters: geofence ? geofence.distanceMeters : null,
-          isWithinGeofence: geofence ? geofence.isWithinGeofence : null,
-          error: data.success ? null : data.error,
-        });
-
-        if (data.success) {
-          setActionMessage({
-            type: "success",
-            text: `🎯 Verified! You are within ${geofence?.distanceMeters}m of Chetana Institute. Marked Present!`,
-          });
-          loadDashboardData();
-        } else {
-          setActionMessage({ type: "error", text: data.error || "Location verification failed." });
-        }
-      } catch {
-        setGeoStatus((prev) => ({ ...prev, loading: false, error: "Network error during location verification." }));
-      }
-    };
-
-    if (bypass) {
-      processCoordinates(19.062828, 72.854651);
-      return;
-    }
-
-    if (!navigator.geolocation) {
-      const msg = "Geolocation is not supported by your browser.";
-      setGeoStatus((prev) => ({ ...prev, loading: false, error: msg }));
-      setActionMessage({ type: "error", text: `⚠️ ${msg}` });
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        processCoordinates(pos.coords.latitude, pos.coords.longitude);
-      },
-      (err) => {
-        let errMsg = "GPS error. Please enable location permissions in your browser.";
-        if (err.code === 1) {
-          errMsg = "Location access was denied. Please click the lock icon in your address bar and allow Location access to check-in.";
-        } else if (err.code === 2) {
-          errMsg = "Device GPS / Location is turned OFF. Please turn ON your device location services and click 'Detect Location'.";
-        } else if (err.code === 3) {
-          errMsg = "GPS request timed out. Please ensure GPS is enabled and try again.";
-        }
-        setGeoStatus((prev) => ({
-          ...prev,
-          loading: false,
-          error: errMsg,
-        }));
-        setActionMessage({
-          type: "error",
-          text: `⚠️ Location Off / Permission Denied: ${errMsg}`,
-        });
-      },
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
-    );
-  };
-
   useEffect(() => {
     loadDashboardData(true);
-    triggerAutoLocationCheck(false);
   }, []);
 
   const handleLogout = async () => {
@@ -271,7 +170,10 @@ export default function EmployeeDashboardClient({ user }: { user: EmpSessionData
       });
       const data = await res.json();
       if (data.success) {
-        setActionMessage({ type: "success", text: `Attendance updated: ${status}` });
+        let msg = `Attendance marked as ${status}`;
+        if (action === "check_in") msg = "✅ Checked in successfully!";
+        if (action === "check_out") msg = "👋 Checked out successfully!";
+        setActionMessage({ type: "success", text: msg });
         loadDashboardData();
       } else {
         setActionMessage({ type: "error", text: data.error || "Failed to mark attendance." });
@@ -708,76 +610,19 @@ ${monthlyReportForm.support_needed || "None requested"}`;
             <div className="emp-dash-section">
               <div className="emp-dash-page-header">
                 <div>
-                  <h1 className="emp-dash-page-title">Attendance & GPS Geofence</h1>
+                  <h1 className="emp-dash-page-title">Attendance</h1>
                   <p className="emp-dash-page-sub">
-                    Verify location inside Chetana Institute campus to record your attendance.
+                    Record your daily check-in and check-out attendance.
                   </p>
                 </div>
                 <button
                   className="emp-btn emp-btn-secondary emp-btn-sm"
-                  onClick={() => triggerAutoLocationCheck(false)}
-                  disabled={geoStatus.loading}
+                  onClick={() => loadDashboardData(true)}
+                  title="Refresh attendance records"
                 >
-                  <RefreshCw size={14} className={geoStatus.loading ? "spin-icon" : ""} />
-                  {geoStatus.loading ? "Checking Location…" : "Detect Location"}
+                  <RefreshCw size={14} />
+                  Refresh
                 </button>
-              </div>
-
-              {/* Geofence Status Banner */}
-              <div
-                className={`emp-geofence-banner ${
-                  geoStatus.isWithinGeofence === true
-                    ? "emp-geofence-in"
-                    : geoStatus.isWithinGeofence === false
-                    ? "emp-geofence-out"
-                    : ""
-                }`}
-              >
-                <div className="emp-geofence-info">
-                  <div className="emp-geofence-icon">
-                    {geoStatus.loading ? (
-                      <Compass size={24} className="spin-icon" style={{ color: "#6366f1" }} />
-                    ) : geoStatus.isWithinGeofence ? (
-                      <Target size={24} style={{ color: "#10b981" }} />
-                    ) : (
-                      <MapPin size={24} style={{ color: "#f59e0b" }} />
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="emp-geofence-title">
-                      {geoStatus.loading
-                        ? "Verifying GPS Coordinates…"
-                        : geoStatus.isWithinGeofence === true
-                        ? "Inside Chetana Institute Campus Zone"
-                        : geoStatus.isWithinGeofence === false
-                        ? "Outside Campus Geofence Boundary"
-                        : "Campus Location Verification Required"}
-                    </h3>
-                    <p className="emp-geofence-sub">
-                      {geoStatus.distanceMeters !== null
-                        ? `Current Distance: ~${geoStatus.distanceMeters}m from campus center (Allowed radius: 2500m)`
-                        : "Enable GPS location access to automatically verify attendance."}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="emp-geofence-actions">
-                  <button
-                    className="emp-btn emp-btn-primary"
-                    onClick={() => triggerAutoLocationCheck(false)}
-                    disabled={geoStatus.loading}
-                  >
-                    <Navigation size={15} />
-                    {geoStatus.loading ? "Verifying…" : "Verify & Check-In"}
-                  </button>
-                  <button
-                    className="emp-btn emp-btn-ghost emp-btn-sm"
-                    onClick={() => triggerAutoLocationCheck(true)}
-                    title="Simulate Chetana Campus coordinates for testing"
-                  >
-                    ⚡ Demo Campus Check-In
-                  </button>
-                </div>
               </div>
 
               {/* Today's Card */}
@@ -786,7 +631,7 @@ ${monthlyReportForm.support_needed || "None requested"}`;
                   <Clock size={16} />
                   <span>Today&apos;s Shift Overview — {todayStr}</span>
                 </div>
-                <div className="emp-today-grid">
+                <div className="emp-today-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
                   <div className="emp-today-item">
                     <span className="emp-today-label">Status</span>
                     <span
@@ -819,26 +664,24 @@ ${monthlyReportForm.support_needed || "None requested"}`;
                         : "—"}
                     </span>
                   </div>
-                  <div className="emp-today-item">
-                    <span className="emp-today-label">Campus Verification</span>
-                    <span className="emp-today-val" style={{ color: "#34d399", fontWeight: 600 }}>
-                      {todayAttendance?.is_within_geofence ? "✓ GPS Verified" : "Manual / Pending"}
-                    </span>
-                  </div>
                 </div>
 
-                <div className="emp-today-actions">
+                <div className="emp-today-actions" style={{ marginTop: "16px" }}>
                   <button
                     className="emp-btn emp-btn-primary"
                     onClick={() => handleMarkAttendance("Present", "check_in")}
+                    style={{ fontWeight: 600, padding: "10px 20px" }}
                   >
-                    Check In Now
+                    <LogIn size={16} />
+                    {todayAttendance?.check_in_time ? "Check In (Updated)" : "Check In"}
                   </button>
                   <button
                     className="emp-btn emp-btn-secondary"
                     onClick={() => handleMarkAttendance("Present", "check_out")}
+                    style={{ fontWeight: 600, padding: "10px 20px" }}
                   >
-                    Check Out
+                    <LogOut size={16} />
+                    {todayAttendance?.check_out_time ? "Check Out (Updated)" : "Check Out"}
                   </button>
                   <button
                     className="emp-btn emp-btn-ghost"
@@ -872,7 +715,6 @@ ${monthlyReportForm.support_needed || "None requested"}`;
                           <th>Status</th>
                           <th>Check-In</th>
                           <th>Check-Out</th>
-                          <th>Location Verification</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -903,17 +745,6 @@ ${monthlyReportForm.support_needed || "None requested"}`;
                                     minute: "2-digit",
                                   })
                                 : "—"}
-                            </td>
-                            <td>
-                              {r.is_within_geofence ? (
-                                <span style={{ color: "#34d399", fontSize: "12.5px" }}>
-                                  ✓ Chetana Campus ({r.distance_meters}m)
-                                </span>
-                              ) : (
-                                <span style={{ color: "var(--emp-text-muted)", fontSize: "12.5px" }}>
-                                  {r.distance_meters ? `${r.distance_meters}m` : "Standard log"}
-                                </span>
-                              )}
                             </td>
                           </tr>
                         ))}

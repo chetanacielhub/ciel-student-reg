@@ -59,6 +59,17 @@
   ],
   "tasks": [
     {
+      "id": "tsk-1788178419177-2m8qj",
+      "employee_id": "emp-3",
+      "date": "2026-08-31",
+      "title": "hbjn",
+      "description": "",
+      "status": "Pending",
+      "priority": "Medium",
+      "created_at": "2026-08-31T12:13:39.175Z",
+      "updated_at": "2026-08-31T12:13:39.175Z"
+    },
+    {
       "id": "tsk-1788177455269-72l66",
       "employee_id": "emp-3",
       "date": "2026-08-31",
@@ -75,10 +86,10 @@
       "date": "2026-08-25",
       "title": "abc",
       "description": "has",
-      "status": "Pending",
+      "status": "Completed",
       "priority": "Medium",
       "created_at": "2026-08-25T11:13:24.892Z",
-      "updated_at": "2026-08-25T11:13:24.892Z"
+      "updated_at": "2026-08-31T12:14:21.680Z"
     },
     {
       "id": "tsk-1787647593330-70cdq",
