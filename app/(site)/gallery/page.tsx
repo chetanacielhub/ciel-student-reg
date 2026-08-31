@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import path from "path";
-import fs from "fs/promises";
 import { Images, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { getGalleryImages } from "@/lib/dynamic-store";
 
 export const metadata: Metadata = {
   title: "Gallery | CIEL Innovation Hub",
@@ -12,24 +11,9 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-async function getImages() {
-  const dir = path.join(process.cwd(), "public", "gallery");
-  try {
-    const files = await fs.readdir(dir);
-    return files
-      .filter(
-        (f) =>
-          !f.startsWith(".") && /\.(jpe?g|png|webp|gif|avif)$/i.test(f)
-      )
-      .map((f) => `/gallery/${f}`)
-      .reverse(); // newest first
-  } catch {
-    return [];
-  }
-}
-
 export default async function GalleryPage() {
-  const images = await getImages();
+  const imagesList = await getGalleryImages();
+  const images = imagesList.map((img) => img.url);
 
   return (
     <section className="shell page-section">

@@ -2,31 +2,18 @@ import type { Metadata } from "next";
 import { requireAdminSession } from "@/lib/admin-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { EVENT_SLUG } from "@/lib/config";
-import { getGovernanceCommittees, getMentors, getStudentCouncilLeads } from "@/lib/dynamic-store";
+import {
+  getGovernanceCommittees,
+  getMentors,
+  getStudentCouncilLeads,
+  getGalleryImages,
+} from "@/lib/dynamic-store";
 import { AdminDashboardClient } from "./admin-dashboard-client";
-import path from "path";
-import fs from "fs/promises";
 
 export const metadata: Metadata = { title: "Admin Dashboard | CIEL" };
 
 // Prevent static caching of admin data
 export const dynamic = "force-dynamic";
-
-async function getGalleryImages() {
-  const dir = path.join(process.cwd(), "public", "gallery");
-  try {
-    const files = await fs.readdir(dir);
-    return files
-      .filter(
-        (f) =>
-          !f.startsWith(".") &&
-          /\.(jpe?g|png|webp|gif|avif)$/i.test(f)
-      )
-      .map((filename) => ({ filename, url: `/gallery/${filename}` }));
-  } catch {
-    return [];
-  }
-}
 
 export default async function AdminDashboardPage() {
   // Guard — only logged-in admins

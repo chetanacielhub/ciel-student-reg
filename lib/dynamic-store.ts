@@ -15,6 +15,16 @@ type StoreData = {
   news?: NewsItem[];
   downloads?: DownloadItem[];
   googleForms?: GoogleFormItem[];
+  gallery?: GalleryImageItem[];
+};
+
+export type GalleryImageItem = {
+  id?: string;
+  filename: string;
+  url: string;
+  title?: string;
+  category?: string;
+  created_at?: string;
 };
 
 const STORE_PATH = path.join(process.cwd(), "data", "ciel-store.json");
@@ -60,6 +70,7 @@ async function ensureStore(): Promise<StoreData> {
       news: Array.isArray(parsed.news) ? parsed.news : [],
       downloads: Array.isArray(parsed.downloads) ? parsed.downloads : CIEL_DOWNLOADS,
       googleForms: Array.isArray(parsed.googleForms) && parsed.googleForms.length > 0 ? parsed.googleForms : DEFAULT_GOOGLE_FORMS,
+      gallery: Array.isArray(parsed.gallery) ? parsed.gallery : [],
     };
   } catch {
     const initial = getInitialData();
@@ -932,4 +943,203 @@ export async function deleteGoogleForm(id: string): Promise<boolean> {
   }
   return true;
 }
+
+// ─── 8. GALLERY IMAGES PRODUCTION STORAGE ────────────────────────────────
+
+export async function getGalleryImages(): Promise<GalleryImageItem[]> {
+  const imageMap = new Map<string, GalleryImageItem>();
+
+  // 1. Try Supabase table gallery_images
+  try {
+    const supabase = createAdminClient();
+    const { data } = await supabase
+      .from("gallery_images")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (data && Array.isArray(data)) {
+      data.forEach((img: any) => {
+        const fn = img.filename || img.title || path.basename(img.url);
+        imageMap.set(fn, {
+          id: img.id,
+          filename: fn,
+          url: img.url,
+          title: img.title || fn,
+          category: img.category || "general",
+          created_at: img.created_at,
+        });
+      });
+    }
+  } catch {
+    // Supabase table not set up or offline
+  }
+
+  // 2. Try JSON local store
+  try {
+    const store = await ensureStore();
+    if (Array.isArray(store.gallery)) {
+      store.gallery.forEach((img) => {
+        if (!imageMap.has(img.filename)) {
+          imageMap.set(img.filename, img);
+        }
+      });
+    }
+  } catch {
+    // Ignore
+  }
+
+  // 3. Try reading pre-bundled static gallery files in public/gallery
+  try {
+    const dir = path.join(process.cwd(), "public", "gallery");
+    const files = await fs.readdir(dir);
+    files
+      .filter((f) => !f.startsWith(".") && /\.(jpe?g|png|webp|gif|avif|svg)$/i.test(f))
+      .forEach((filename) => {
+        if (!imageMap.has(filename)) {
+          imageMap.set(filename, {
+            filename,
+            url: `/gallery/${filename}`,
+            title: filename,
+            category: "general",
+          });
+        }
+      });
+  } catch {
+    // Ignore if directory does not exist
+  }
+
+  return Array.from(imageMap.values());
+}
+
+export async function addGalleryImage(file: {
+  name: string;
+  type: string;
+  buffer: Buffer;
+}): Promise<GalleryImageItem> {
+  const ext = path.extname(file.name).toLowerCase() || ".jpg";
+  const baseOriginalName = path
+    .basename(file.name, ext)
+    .replace(/[^a-zA-Z0-9_-]/g, "_")
+    .slice(0, 30);
+  const safeName = `${Date.now()}-${baseOriginalName || "img"}${ext}`;
+
+  let finalUrl = `/gallery/${safeName}`;
+  let uploadedToCloud = false;
+
+  // 1. Try Supabase Storage (bucket "gallery")
+  try {
+    const supabase = createAdminClient();
+    const bucketName = "gallery";
+
+    // Attempt to ensure bucket exists
+    try {
+      await supabase.storage.createBucket(bucketName, { public: true });
+    } catch {
+      // Bucket may already exist
+    }
+
+    const { error: uploadError } = await supabase.storage
+      .from(bucketName)
+      .upload(safeName, file.buffer, {
+        contentType: file.type || "image/jpeg",
+        upsert: true,
+      });
+
+    if (!uploadError) {
+      const { data: { publicUrl } } = supabase.storage.from(bucketName).getPublicUrl(safeName);
+      if (publicUrl) {
+        finalUrl = publicUrl;
+        uploadedToCloud = true;
+      }
+    }
+  } catch {
+    // Supabase Storage not configured or failed
+  }
+
+  // 2. If not uploaded to cloud storage, convert to Base64 data URL for permanent persistence on serverless (Vercel)
+  if (!uploadedToCloud) {
+    const mime = file.type || "image/jpeg";
+    finalUrl = `data:${mime};base64,${file.buffer.toString("base64")}`;
+  }
+
+  // 3. Try writing to public/gallery (works in local dev & persistent servers)
+  try {
+    const dir = path.join(process.cwd(), "public", "gallery");
+    await fs.mkdir(dir, { recursive: true });
+    await fs.writeFile(path.join(dir, safeName), file.buffer);
+    // On local dev without cloud, prefer clean static URL
+    if (!uploadedToCloud && process.env.NODE_ENV !== "production") {
+      finalUrl = `/gallery/${safeName}`;
+    }
+  } catch {
+    // In serverless read-only filesystems (Vercel), ignore EROFS
+  }
+
+  const newImg: GalleryImageItem = {
+    id: `img-${Date.now()}`,
+    filename: safeName,
+    url: finalUrl,
+    title: file.name,
+    category: "general",
+    created_at: new Date().toISOString(),
+  };
+
+  // 4. Save to Supabase gallery_images table
+  try {
+    const supabase = createAdminClient();
+    await supabase.from("gallery_images").insert({
+      id: newImg.id,
+      filename: newImg.filename,
+      url: newImg.url,
+      title: newImg.title,
+      category: newImg.category,
+    });
+  } catch {
+    // Ignore if table not set up
+  }
+
+  // 5. Save to local JSON store
+  try {
+    const store = await ensureStore();
+    if (!store.gallery) store.gallery = [];
+    store.gallery.unshift(newImg);
+    await saveStore(store);
+  } catch {
+    // Ignore
+  }
+
+  return newImg;
+}
+
+export async function deleteGalleryImage(filename: string): Promise<boolean> {
+  // 1. Delete from Supabase table & Storage
+  try {
+    const supabase = createAdminClient();
+    await supabase.from("gallery_images").delete().eq("filename", filename);
+    await supabase.storage.from("gallery").remove([filename]);
+  } catch {
+    // Ignore
+  }
+
+  // 2. Delete from local JSON store
+  try {
+    const store = await ensureStore();
+    if (store.gallery) {
+      store.gallery = store.gallery.filter((img) => img.filename !== filename);
+      await saveStore(store);
+    }
+  } catch {
+    // Ignore
+  }
+
+  // 3. Try deleting from filesystem
+  try {
+    const filePath = path.join(process.cwd(), "public", "gallery", path.basename(filename));
+    await fs.unlink(filePath);
+  } catch {
+    // Ignore
+  }
+
+  return true;
+}
+
 
