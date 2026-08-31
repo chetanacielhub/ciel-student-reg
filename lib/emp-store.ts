@@ -1,3 +1,5 @@
+import fs from "fs/promises";
+import path from "path";
 import { createAdminClient } from "./supabase/admin";
 
 export type AttendanceStatus = "Present" | "Absent" | "Half Day" | "Leave";
@@ -58,14 +60,40 @@ export interface MonthlyReportRecord {
 }
 
 // ---------------------------------------------------------------------------
-// In-memory fallback store (used when Supabase is unavailable)
+// Persistent JSON fallback — stored in /tmp (writable on Vercel + local)
 // ---------------------------------------------------------------------------
-const memStore = {
-  attendance: [] as AttendanceRecord[],
-  tasks: [] as TaskRecord[],
-  dailyUpdates: [] as DailyUpdateRecord[],
-  monthlyReports: [] as MonthlyReportRecord[],
-};
+interface EmpStoreJson {
+  attendance: AttendanceRecord[];
+  tasks: TaskRecord[];
+  dailyUpdates: DailyUpdateRecord[];
+  monthlyReports: MonthlyReportRecord[];
+}
+
+// Use /tmp which is writable on Vercel serverless AND locally
+const STORE_PATH = path.join("/tmp", "ciel-emp-store.json");
+
+async function readLocalStore(): Promise<EmpStoreJson> {
+  try {
+    const content = await fs.readFile(STORE_PATH, "utf-8");
+    const parsed = JSON.parse(content);
+    return {
+      attendance: Array.isArray(parsed.attendance) ? parsed.attendance : [],
+      tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
+      dailyUpdates: Array.isArray(parsed.dailyUpdates) ? parsed.dailyUpdates : [],
+      monthlyReports: Array.isArray(parsed.monthlyReports) ? parsed.monthlyReports : [],
+    };
+  } catch {
+    return { attendance: [], tasks: [], dailyUpdates: [], monthlyReports: [] };
+  }
+}
+
+async function writeLocalStore(store: EmpStoreJson): Promise<void> {
+  try {
+    await fs.writeFile(STORE_PATH, JSON.stringify(store, null, 2), "utf-8");
+  } catch {
+    // Silently ignore if /tmp is not writable in some edge case
+  }
+}
 
 function getTodayString(): string {
   return new Date().toISOString().split("T")[0];
@@ -84,24 +112,28 @@ export async function getAttendanceRecords(filter?: {
   date?: string;
   status?: string;
 }): Promise<AttendanceRecord[]> {
+  // Try Supabase first
   try {
     const supabase = createAdminClient();
-    let query = supabase.from("employee_attendance").select("*").order("date", { ascending: false });
+    let query = supabase
+      .from("employee_attendance")
+      .select("*")
+      .order("date", { ascending: false });
     if (filter?.employee_id) query = query.eq("employee_id", filter.employee_id);
     if (filter?.date) query = query.eq("date", filter.date);
     if (filter?.status) query = query.ilike("status", filter.status);
 
     const { data, error } = await query;
-    if (error) throw error;
-    return (data as AttendanceRecord[]) || [];
-  } catch {
-    // In-memory fallback
-    let records = [...memStore.attendance];
-    if (filter?.employee_id) records = records.filter((r) => r.employee_id === filter.employee_id);
-    if (filter?.date) records = records.filter((r) => r.date === filter.date);
-    if (filter?.status) records = records.filter((r) => r.status.toLowerCase() === filter.status?.toLowerCase());
-    return records.sort((a, b) => (b.date > a.date ? 1 : -1));
-  }
+    if (!error && data) return data as AttendanceRecord[];
+  } catch {}
+
+  // Local /tmp fallback
+  const store = await readLocalStore();
+  let records = [...store.attendance];
+  if (filter?.employee_id) records = records.filter((r) => r.employee_id === filter.employee_id);
+  if (filter?.date) records = records.filter((r) => r.date === filter.date);
+  if (filter?.status) records = records.filter((r) => r.status.toLowerCase() === filter.status?.toLowerCase());
+  return records.sort((a, b) => (b.date > a.date ? 1 : -1));
 }
 
 export async function getTodayAttendance(employee_id: string): Promise<AttendanceRecord | null> {
@@ -137,15 +169,12 @@ export async function markAttendance(
   try {
     const supabase = createAdminClient();
 
-    // Fetch existing record for today
     const { data: existing } = await supabase
       .from("employee_attendance")
       .select("*")
       .eq("employee_id", employee_id)
       .eq("date", today)
       .maybeSingle();
-
-    let updatedRecord: AttendanceRecord;
 
     if (existing) {
       let check_in = existing.check_in_time;
@@ -166,11 +195,12 @@ export async function markAttendance(
         .select()
         .single();
 
-      if (error) throw error;
-      updatedRecord = data as AttendanceRecord;
+      if (!error && data) return data as AttendanceRecord;
     } else {
       const check_in =
-        action === "check_in" || action === "auto_location" || status === "Present" ? nowIso : null;
+        action === "check_in" || action === "auto_location" || status === "Present"
+          ? nowIso
+          : null;
 
       const { data, error } = await supabase
         .from("employee_attendance")
@@ -187,43 +217,53 @@ export async function markAttendance(
         .select()
         .single();
 
-      if (error) throw error;
-      updatedRecord = data as AttendanceRecord;
+      if (!error && data) return data as AttendanceRecord;
     }
+  } catch {}
 
-    return updatedRecord;
-  } catch {
-    // In-memory fallback
-    const idx = memStore.attendance.findIndex(
-      (r) => r.employee_id === employee_id && r.date === today
-    );
+  // Local /tmp fallback
+  const store = await readLocalStore();
+  const idx = store.attendance.findIndex(
+    (r) => r.employee_id === employee_id && r.date === today
+  );
 
-    let updatedRecord: AttendanceRecord;
-    if (idx >= 0) {
-      const rec = memStore.attendance[idx];
-      let check_in = rec.check_in_time;
-      let check_out = rec.check_out_time;
-      if ((action === "check_in" || action === "auto_location") && !check_in) check_in = nowIso;
-      if (action === "check_out") check_out = nowIso;
-      updatedRecord = { ...rec, status, check_in_time: check_in, check_out_time: check_out, updated_at: nowIso, ...locData };
-      memStore.attendance[idx] = updatedRecord;
-    } else {
-      const check_in = action === "check_in" || action === "auto_location" || status === "Present" ? nowIso : null;
-      updatedRecord = {
-        id: newId("att"),
-        employee_id,
-        date: today,
-        status,
-        check_in_time: check_in,
-        check_out_time: null,
-        created_at: nowIso,
-        updated_at: nowIso,
-        ...locData,
-      };
-      memStore.attendance.unshift(updatedRecord);
-    }
-    return updatedRecord;
+  let updatedRecord: AttendanceRecord;
+  if (idx >= 0) {
+    const rec = store.attendance[idx];
+    let check_in = rec.check_in_time;
+    let check_out = rec.check_out_time;
+    if ((action === "check_in" || action === "auto_location") && !check_in) check_in = nowIso;
+    if (action === "check_out") check_out = nowIso;
+    updatedRecord = {
+      ...rec,
+      status,
+      check_in_time: check_in,
+      check_out_time: check_out,
+      updated_at: nowIso,
+      ...locData,
+    };
+    store.attendance[idx] = updatedRecord;
+  } else {
+    const check_in =
+      action === "check_in" || action === "auto_location" || status === "Present"
+        ? nowIso
+        : null;
+    updatedRecord = {
+      id: newId("att"),
+      employee_id,
+      date: today,
+      status,
+      check_in_time: check_in,
+      check_out_time: null,
+      created_at: nowIso,
+      updated_at: nowIso,
+      ...locData,
+    };
+    store.attendance.unshift(updatedRecord);
   }
+
+  await writeLocalStore(store);
+  return updatedRecord;
 }
 
 /* ============================================================================
@@ -238,24 +278,27 @@ export async function getTasks(filter?: {
 }): Promise<TaskRecord[]> {
   try {
     const supabase = createAdminClient();
-    let query = supabase.from("employee_tasks").select("*").order("created_at", { ascending: false });
+    let query = supabase
+      .from("employee_tasks")
+      .select("*")
+      .order("created_at", { ascending: false });
     if (filter?.employee_id) query = query.eq("employee_id", filter.employee_id);
     if (filter?.date) query = query.eq("date", filter.date);
     if (filter?.status) query = query.eq("status", filter.status);
     if (filter?.priority) query = query.eq("priority", filter.priority);
 
     const { data, error } = await query;
-    if (error) throw error;
-    return (data as TaskRecord[]) || [];
-  } catch {
-    // In-memory fallback
-    let records = [...memStore.tasks];
-    if (filter?.employee_id) records = records.filter((t) => t.employee_id === filter.employee_id);
-    if (filter?.date) records = records.filter((t) => t.date === filter.date);
-    if (filter?.status) records = records.filter((t) => t.status === filter.status);
-    if (filter?.priority) records = records.filter((t) => t.priority === filter.priority);
-    return records.sort((a, b) => (b.created_at > a.created_at ? 1 : -1));
-  }
+    if (!error && data) return data as TaskRecord[];
+  } catch {}
+
+  // Local /tmp fallback
+  const store = await readLocalStore();
+  let records = [...store.tasks];
+  if (filter?.employee_id) records = records.filter((t) => t.employee_id === filter.employee_id);
+  if (filter?.date) records = records.filter((t) => t.date === filter.date);
+  if (filter?.status) records = records.filter((t) => t.status === filter.status);
+  if (filter?.priority) records = records.filter((t) => t.priority === filter.priority);
+  return records.sort((a, b) => (b.created_at > a.created_at ? 1 : -1));
 }
 
 export async function createTask(
@@ -286,24 +329,25 @@ export async function createTask(
       .select()
       .single();
 
-    if (error) throw error;
-    return data as TaskRecord;
-  } catch {
-    // In-memory fallback
-    const newTask: TaskRecord = {
-      id: newId("tsk"),
-      employee_id,
-      date: taskDate,
-      title,
-      description: description || "",
-      status,
-      priority,
-      created_at: nowIso,
-      updated_at: nowIso,
-    };
-    memStore.tasks.unshift(newTask);
-    return newTask;
-  }
+    if (!error && data) return data as TaskRecord;
+  } catch {}
+
+  // Local /tmp fallback
+  const store = await readLocalStore();
+  const newTask: TaskRecord = {
+    id: newId("tsk"),
+    employee_id,
+    date: taskDate,
+    title,
+    description: description || "",
+    status,
+    priority,
+    created_at: nowIso,
+    updated_at: nowIso,
+  };
+  store.tasks.unshift(newTask);
+  await writeLocalStore(store);
+  return newTask;
 }
 
 export async function updateTask(
@@ -324,18 +368,19 @@ export async function updateTask(
     if (!isSuperUser) query = query.eq("employee_id", employee_id);
 
     const { data, error } = await query.select().single();
-    if (error) throw error;
-    return data as TaskRecord;
-  } catch {
-    // In-memory fallback
-    const idx = memStore.tasks.findIndex(
-      (t) => t.id === task_id && (t.employee_id === employee_id || isSuperUser)
-    );
-    if (idx < 0) return null;
-    const updatedTask: TaskRecord = { ...memStore.tasks[idx], ...updates, updated_at: nowIso };
-    memStore.tasks[idx] = updatedTask;
-    return updatedTask;
-  }
+    if (!error && data) return data as TaskRecord;
+  } catch {}
+
+  // Local /tmp fallback
+  const store = await readLocalStore();
+  const idx = store.tasks.findIndex(
+    (t) => t.id === task_id && (t.employee_id === employee_id || isSuperUser)
+  );
+  if (idx < 0) return null;
+  const updatedTask: TaskRecord = { ...store.tasks[idx], ...updates, updated_at: nowIso };
+  store.tasks[idx] = updatedTask;
+  await writeLocalStore(store);
+  return updatedTask;
 }
 
 export async function deleteTask(task_id: string, employee_id: string): Promise<boolean> {
@@ -346,16 +391,20 @@ export async function deleteTask(task_id: string, employee_id: string): Promise<
     let query = supabase.from("employee_tasks").delete().eq("id", task_id);
     if (!isSuperUser) query = query.eq("employee_id", employee_id);
     const { error } = await query;
-    if (error) throw error;
+    if (!error) return true;
+  } catch {}
+
+  // Local /tmp fallback
+  const store = await readLocalStore();
+  const before = store.tasks.length;
+  store.tasks = store.tasks.filter(
+    (t) => !(t.id === task_id && (t.employee_id === employee_id || isSuperUser))
+  );
+  if (store.tasks.length !== before) {
+    await writeLocalStore(store);
     return true;
-  } catch {
-    // In-memory fallback
-    const before = memStore.tasks.length;
-    memStore.tasks = memStore.tasks.filter(
-      (t) => !(t.id === task_id && (t.employee_id === employee_id || isSuperUser))
-    );
-    return memStore.tasks.length !== before;
   }
+  return false;
 }
 
 /* ============================================================================
@@ -368,19 +417,22 @@ export async function getDailyUpdates(filter?: {
 }): Promise<DailyUpdateRecord[]> {
   try {
     const supabase = createAdminClient();
-    let query = supabase.from("employee_daily_updates").select("*").order("date", { ascending: false });
+    let query = supabase
+      .from("employee_daily_updates")
+      .select("*")
+      .order("date", { ascending: false });
     if (filter?.employee_id) query = query.eq("employee_id", filter.employee_id);
     if (filter?.date) query = query.eq("date", filter.date);
 
     const { data, error } = await query;
-    if (error) throw error;
-    return (data as DailyUpdateRecord[]) || [];
-  } catch {
-    let records = [...memStore.dailyUpdates];
-    if (filter?.employee_id) records = records.filter((u) => u.employee_id === filter.employee_id);
-    if (filter?.date) records = records.filter((u) => u.date === filter.date);
-    return records.sort((a, b) => (b.date > a.date ? 1 : -1));
-  }
+    if (!error && data) return data as DailyUpdateRecord[];
+  } catch {}
+
+  const store = await readLocalStore();
+  let records = [...store.dailyUpdates];
+  if (filter?.employee_id) records = records.filter((u) => u.employee_id === filter.employee_id);
+  if (filter?.date) records = records.filter((u) => u.date === filter.date);
+  return records.sort((a, b) => (b.date > a.date ? 1 : -1));
 }
 
 export async function saveDailyUpdate(
@@ -406,8 +458,6 @@ export async function saveDailyUpdate(
       .eq("date", updateDate)
       .maybeSingle();
 
-    let result: DailyUpdateRecord;
-
     if (existing) {
       const { data: updated, error } = await supabase
         .from("employee_daily_updates")
@@ -422,8 +472,7 @@ export async function saveDailyUpdate(
         .select()
         .single();
 
-      if (error) throw error;
-      result = updated as DailyUpdateRecord;
+      if (!error && updated) return updated as DailyUpdateRecord;
     } else {
       const { data: inserted, error } = await supabase
         .from("employee_daily_updates")
@@ -440,44 +489,44 @@ export async function saveDailyUpdate(
         .select()
         .single();
 
-      if (error) throw error;
-      result = inserted as DailyUpdateRecord;
+      if (!error && inserted) return inserted as DailyUpdateRecord;
     }
+  } catch {}
 
-    return result;
-  } catch {
-    // In-memory fallback
-    const idx = memStore.dailyUpdates.findIndex(
-      (u) => u.employee_id === employee_id && u.date === updateDate
-    );
+  // Local /tmp fallback
+  const store = await readLocalStore();
+  const idx = store.dailyUpdates.findIndex(
+    (u) => u.employee_id === employee_id && u.date === updateDate
+  );
 
-    let record: DailyUpdateRecord;
-    if (idx >= 0) {
-      record = {
-        ...memStore.dailyUpdates[idx],
-        work_completed: data.work_completed,
-        blockers: data.blockers || "",
-        tomorrow_plan: data.tomorrow_plan || "",
-        notes: data.notes || "",
-        updated_at: nowIso,
-      };
-      memStore.dailyUpdates[idx] = record;
-    } else {
-      record = {
-        id: newId("upd"),
-        employee_id,
-        date: updateDate,
-        work_completed: data.work_completed,
-        blockers: data.blockers || "",
-        tomorrow_plan: data.tomorrow_plan || "",
-        notes: data.notes || "",
-        created_at: nowIso,
-        updated_at: nowIso,
-      };
-      memStore.dailyUpdates.unshift(record);
-    }
-    return record;
+  let record: DailyUpdateRecord;
+  if (idx >= 0) {
+    record = {
+      ...store.dailyUpdates[idx],
+      work_completed: data.work_completed,
+      blockers: data.blockers || "",
+      tomorrow_plan: data.tomorrow_plan || "",
+      notes: data.notes || "",
+      updated_at: nowIso,
+    };
+    store.dailyUpdates[idx] = record;
+  } else {
+    record = {
+      id: newId("upd"),
+      employee_id,
+      date: updateDate,
+      work_completed: data.work_completed,
+      blockers: data.blockers || "",
+      tomorrow_plan: data.tomorrow_plan || "",
+      notes: data.notes || "",
+      created_at: nowIso,
+      updated_at: nowIso,
+    };
+    store.dailyUpdates.unshift(record);
   }
+
+  await writeLocalStore(store);
+  return record;
 }
 
 /* ============================================================================
@@ -490,19 +539,22 @@ export async function getMonthlyReports(filter?: {
 }): Promise<MonthlyReportRecord[]> {
   try {
     const supabase = createAdminClient();
-    let query = supabase.from("employee_monthly_reports").select("*").order("month", { ascending: false });
+    let query = supabase
+      .from("employee_monthly_reports")
+      .select("*")
+      .order("month", { ascending: false });
     if (filter?.employee_id) query = query.eq("employee_id", filter.employee_id);
     if (filter?.month) query = query.eq("month", filter.month);
 
     const { data, error } = await query;
-    if (error) throw error;
-    return (data as MonthlyReportRecord[]) || [];
-  } catch {
-    let records = [...(memStore.monthlyReports || [])];
-    if (filter?.employee_id) records = records.filter((r) => r.employee_id === filter.employee_id);
-    if (filter?.month) records = records.filter((r) => r.month === filter.month);
-    return records.sort((a, b) => (b.month > a.month ? 1 : b.created_at > a.created_at ? 1 : -1));
-  }
+    if (!error && data) return data as MonthlyReportRecord[];
+  } catch {}
+
+  const store = await readLocalStore();
+  let records = [...(store.monthlyReports || [])];
+  if (filter?.employee_id) records = records.filter((r) => r.employee_id === filter.employee_id);
+  if (filter?.month) records = records.filter((r) => r.month === filter.month);
+  return records.sort((a, b) => (b.month > a.month ? 1 : b.created_at > a.created_at ? 1 : -1));
 }
 
 export async function saveMonthlyReport(
@@ -530,8 +582,6 @@ export async function saveMonthlyReport(
       .eq("month", targetMonth)
       .maybeSingle();
 
-    let result: MonthlyReportRecord;
-
     if (existing) {
       const { data: updated, error } = await supabase
         .from("employee_monthly_reports")
@@ -548,8 +598,7 @@ export async function saveMonthlyReport(
         .select()
         .single();
 
-      if (error) throw error;
-      result = updated as MonthlyReportRecord;
+      if (!error && updated) return updated as MonthlyReportRecord;
     } else {
       const { data: inserted, error } = await supabase
         .from("employee_monthly_reports")
@@ -568,50 +617,50 @@ export async function saveMonthlyReport(
         .select()
         .single();
 
-      if (error) throw error;
-      result = inserted as MonthlyReportRecord;
+      if (!error && inserted) return inserted as MonthlyReportRecord;
     }
+  } catch {}
 
-    return result;
-  } catch {
-    // In-memory fallback
-    if (!memStore.monthlyReports) memStore.monthlyReports = [];
+  // Local /tmp fallback
+  const store = await readLocalStore();
+  if (!store.monthlyReports) store.monthlyReports = [];
 
-    const idx = memStore.monthlyReports.findIndex(
-      (r) => r.employee_id === employee_id && r.month === targetMonth
-    );
+  const idx = store.monthlyReports.findIndex(
+    (r) => r.employee_id === employee_id && r.month === targetMonth
+  );
 
-    let record: MonthlyReportRecord;
-    if (idx >= 0) {
-      record = {
-        ...memStore.monthlyReports[idx],
-        key_achievements: data.key_achievements,
-        major_challenges: data.major_challenges || "",
-        next_month_goals: data.next_month_goals,
-        learnings_skills: data.learnings_skills || "",
-        support_needed: data.support_needed || "",
-        notes: data.notes || "",
-        updated_at: nowIso,
-      };
-      memStore.monthlyReports[idx] = record;
-    } else {
-      record = {
-        id: newId("mrep"),
-        employee_id,
-        month: targetMonth,
-        key_achievements: data.key_achievements,
-        major_challenges: data.major_challenges || "",
-        next_month_goals: data.next_month_goals,
-        learnings_skills: data.learnings_skills || "",
-        support_needed: data.support_needed || "",
-        notes: data.notes || "",
-        created_at: nowIso,
-        updated_at: nowIso,
-      };
-      memStore.monthlyReports.unshift(record);
-    }
-    return record;
+  let record: MonthlyReportRecord;
+  if (idx >= 0) {
+    record = {
+      ...store.monthlyReports[idx],
+      key_achievements: data.key_achievements,
+      major_challenges: data.major_challenges || "",
+      next_month_goals: data.next_month_goals,
+      learnings_skills: data.learnings_skills || "",
+      support_needed: data.support_needed || "",
+      notes: data.notes || "",
+      updated_at: nowIso,
+    };
+    store.monthlyReports[idx] = record;
+  } else {
+    record = {
+      id: newId("mrep"),
+      employee_id,
+      month: targetMonth,
+      key_achievements: data.key_achievements,
+      major_challenges: data.major_challenges || "",
+      next_month_goals: data.next_month_goals,
+      learnings_skills: data.learnings_skills || "",
+      support_needed: data.support_needed || "",
+      notes: data.notes || "",
+      created_at: nowIso,
+      updated_at: nowIso,
+    };
+    store.monthlyReports.unshift(record);
   }
+
+  await writeLocalStore(store);
+  return record;
 }
 
 export async function deleteMonthlyReport(id: string, employee_id: string): Promise<boolean> {
@@ -622,14 +671,18 @@ export async function deleteMonthlyReport(id: string, employee_id: string): Prom
     let query = supabase.from("employee_monthly_reports").delete().eq("id", id);
     if (!isSuperUser) query = query.eq("employee_id", employee_id);
     const { error } = await query;
-    if (error) throw error;
+    if (!error) return true;
+  } catch {}
+
+  const store = await readLocalStore();
+  if (!store.monthlyReports) return false;
+  const before = store.monthlyReports.length;
+  store.monthlyReports = store.monthlyReports.filter(
+    (r) => !(r.id === id && (r.employee_id === employee_id || isSuperUser))
+  );
+  if (store.monthlyReports.length !== before) {
+    await writeLocalStore(store);
     return true;
-  } catch {
-    if (!memStore.monthlyReports) return false;
-    const before = memStore.monthlyReports.length;
-    memStore.monthlyReports = memStore.monthlyReports.filter(
-      (r) => !(r.id === id && (r.employee_id === employee_id || isSuperUser))
-    );
-    return memStore.monthlyReports.length !== before;
   }
+  return false;
 }
