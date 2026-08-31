@@ -964,13 +964,31 @@ function ERPGalleryTab({ initialImages }: { initialImages: GalleryImage[] }) {
 
       if (res.ok && json?.ok) {
         const newFiles = json.files || [{ filename: json.filename, url: json.url || `/gallery/${json.filename}` }];
-        setImages((prev) => [...newFiles, ...prev]);
+        // Optimistically prepend then sync
+        setImages((prev) => {
+          const existing = new Set(prev.map((p) => p.filename));
+          const toAdd = newFiles.filter((n: any) => !existing.has(n.filename));
+          return [...toAdd, ...prev];
+        });
         setSelectedNames([]);
         if (fileRef.current) fileRef.current.value = "";
         setAlertMsg({
           type: "success",
           text: `✅ Successfully uploaded ${newFiles.length} image${newFiles.length > 1 ? "s" : ""} to the gallery!`,
         });
+
+        // Sync fresh list from server
+        try {
+          const freshRes = await fetch("/admin/gallery");
+          if (freshRes.ok) {
+            const freshJson = await freshRes.json();
+            if (freshJson.images && Array.isArray(freshJson.images)) {
+              setImages(freshJson.images);
+            }
+          }
+        } catch {
+          // ignore
+        }
       } else {
         setAlertMsg({
           type: "error",

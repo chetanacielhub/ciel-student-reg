@@ -74,16 +74,24 @@ async function ensureStore(): Promise<StoreData> {
     };
   } catch {
     const initial = getInitialData();
-    await fs.writeFile(STORE_PATH, JSON.stringify(initial, null, 2), "utf-8");
+    try {
+      await fs.writeFile(STORE_PATH, JSON.stringify(initial, null, 2), "utf-8");
+    } catch {
+      // Serverless filesystem fallback
+    }
     return initial;
   }
 }
 
 /** Write store data back to JSON */
 async function saveStore(data: StoreData): Promise<void> {
-  const dir = path.dirname(STORE_PATH);
-  await fs.mkdir(dir, { recursive: true });
-  await fs.writeFile(STORE_PATH, JSON.stringify(data, null, 2), "utf-8");
+  try {
+    const dir = path.dirname(STORE_PATH);
+    await fs.mkdir(dir, { recursive: true });
+    await fs.writeFile(STORE_PATH, JSON.stringify(data, null, 2), "utf-8");
+  } catch {
+    // Graceful catch for read-only serverless filesystems (e.g. Vercel)
+  }
 }
 
 // ─── MENTORS ──────────────────────────────────────────────────────────────
@@ -1083,11 +1091,10 @@ export async function addGalleryImage(file: {
     created_at: new Date().toISOString(),
   };
 
-  // 4. Save to Supabase gallery_images table
+  // 4. Save to Supabase gallery_images table (do not pass custom string ID so Postgres uses uuid_generate_v4)
   try {
     const supabase = createAdminClient();
     await supabase.from("gallery_images").insert({
-      id: newImg.id,
       filename: newImg.filename,
       url: newImg.url,
       title: newImg.title,
@@ -1101,6 +1108,8 @@ export async function addGalleryImage(file: {
   try {
     const store = await ensureStore();
     if (!store.gallery) store.gallery = [];
+    // Ensure no duplicates
+    store.gallery = store.gallery.filter((g) => g.filename !== safeName);
     store.gallery.unshift(newImg);
     await saveStore(store);
   } catch {
