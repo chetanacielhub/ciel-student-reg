@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { NextResponse } from "next/server";
 
 const COOKIE_NAME = "ciel_admin_session";
 const SESSION_TOKEN = "authenticated"; // simple flag
@@ -19,12 +20,24 @@ export async function isAdminAuthenticated(): Promise<boolean> {
   return session?.value === SESSION_TOKEN;
 }
 
-/** Redirect to admin login if not authenticated */
+/** Redirect to admin login if not authenticated (For page server components) */
 export async function requireAdminSession() {
   const ok = await isAdminAuthenticated();
   if (!ok) {
     redirect("/admin");
   }
+}
+
+/** For Route Handlers: Returns a 401 NextResponse if unauthorized, or null if authenticated */
+export async function verifyAdminApiSession(): Promise<NextResponse | null> {
+  const ok = await isAdminAuthenticated();
+  if (!ok) {
+    return NextResponse.json(
+      { error: "Unauthorized. Admin session required." },
+      { status: 401 }
+    );
+  }
+  return null;
 }
 
 export { COOKIE_NAME, SESSION_TOKEN };

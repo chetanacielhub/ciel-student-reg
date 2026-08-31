@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdminSession } from "@/lib/admin-auth";
+import { verifyAdminApiSession } from "@/lib/admin-auth";
 import path from "path";
 import fs from "fs/promises";
 
+export const dynamic = "force-dynamic";
+
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"];
-const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+const MAX_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
 
 async function ensureUploadDir() {
   await fs.mkdir(UPLOAD_DIR, { recursive: true });
 }
 
 export async function POST(req: NextRequest) {
-  await requireAdminSession();
+  const authErr = await verifyAdminApiSession();
+  if (authErr) return authErr;
 
   try {
     const formData = await req.formData();
@@ -30,7 +32,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (file.size > MAX_SIZE_BYTES) {
-      return NextResponse.json({ error: "File size exceeds 10 MB limit." }, { status: 400 });
+      return NextResponse.json({ error: "File size exceeds 25 MB limit." }, { status: 400 });
     }
 
     await ensureUploadDir();

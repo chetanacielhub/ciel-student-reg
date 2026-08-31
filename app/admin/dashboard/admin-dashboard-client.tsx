@@ -337,7 +337,27 @@ function ERPUsersTab({
           <p>Approve, suspend, or view complete real-time innovator journeys &amp; documents · {filtered.length} total</p>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
-          <button className="adm-btn adm-btn-outline" onClick={() => alert("Exporting Users CSV...")}>
+          <button
+            className="adm-btn adm-btn-outline"
+            onClick={() => {
+              const headers = ["Full Name", "Email", "Phone", "Status", "Joined Date"];
+              const rows = userList.map((u) => [
+                u.full_name || "",
+                u.email || "",
+                u.phone || "",
+                u.status || "active",
+                u.created_at ? new Date(u.created_at).toLocaleDateString() : "",
+              ]);
+              const csv = "\uFEFF" + [headers, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+              const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `ciel-users-${new Date().toISOString().split("T")[0]}.csv`;
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+          >
             <Download size={14} /> Export Users CSV
           </button>
         </div>
@@ -910,35 +930,81 @@ function ERPGalleryTab({ initialImages }: { initialImages: GalleryImage[] }) {
   const [images, setImages] = useState<GalleryImage[]>(initialImages);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [selectedNames, setSelectedNames] = useState<string[]>([]);
+  const [alertMsg, setAlertMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      setSelectedNames(Array.from(files).map((f) => f.name));
+      setAlertMsg(null);
+    } else {
+      setSelectedNames([]);
+    }
+  }
 
   async function handleUpload(e: React.FormEvent) {
     e.preventDefault();
-    const file = fileRef.current?.files?.[0];
-    if (!file) return;
+    const files = fileRef.current?.files;
+    if (!files || files.length === 0) {
+      setAlertMsg({ type: "error", text: "Please choose at least one image file to upload." });
+      return;
+    }
 
     setUploading(true);
+    setAlertMsg(null);
 
-    const fd = new FormData();
-    fd.append("image", file);
+    try {
+      const fd = new FormData();
+      Array.from(files).forEach((f) => fd.append("images", f));
 
-    const res = await fetch("/admin/gallery", { method: "POST", body: fd });
-    const json = await res.json();
+      const res = await fetch("/admin/gallery", { method: "POST", body: fd });
+      const json = await res.json().catch(() => null);
 
-    if (res.ok) {
-      setImages((prev) => [{ filename: json.filename, url: `/gallery/${json.filename}` }, ...prev]);
-      if (fileRef.current) fileRef.current.value = "";
+      if (res.ok && json?.ok) {
+        const newFiles = json.files || [{ filename: json.filename, url: json.url || `/gallery/${json.filename}` }];
+        setImages((prev) => [...newFiles, ...prev]);
+        setSelectedNames([]);
+        if (fileRef.current) fileRef.current.value = "";
+        setAlertMsg({
+          type: "success",
+          text: `✅ Successfully uploaded ${newFiles.length} image${newFiles.length > 1 ? "s" : ""} to the gallery!`,
+        });
+      } else {
+        setAlertMsg({
+          type: "error",
+          text: json?.error || "Failed to upload image. Please ensure it is a valid image under 25MB.",
+        });
+      }
+    } catch (err: any) {
+      setAlertMsg({
+        type: "error",
+        text: err?.message || "Network error while uploading image.",
+      });
+    } finally {
+      setUploading(false);
     }
-    setUploading(false);
   }
 
   async function handleDelete(filename: string) {
+    if (!window.confirm(`Delete image "${filename}" from gallery?`)) return;
+
     setDeleting(filename);
-    const res = await fetch(`/admin/gallery?file=${encodeURIComponent(filename)}`, { method: "DELETE" });
-    if (res.ok) {
-      setImages((prev) => prev.filter((img) => img.filename !== filename));
+    try {
+      const res = await fetch(`/admin/gallery?file=${encodeURIComponent(filename)}`, { method: "DELETE" });
+      const json = await res.json().catch(() => null);
+      if (res.ok) {
+        setImages((prev) => prev.filter((img) => img.filename !== filename));
+        setAlertMsg({ type: "success", text: `Removed "${filename}" successfully.` });
+      } else {
+        setAlertMsg({ type: "error", text: json?.error || "Failed to delete image." });
+      }
+    } catch {
+      setAlertMsg({ type: "error", text: "Network error while deleting image." });
+    } finally {
+      setDeleting(null);
     }
-    setDeleting(null);
   }
 
   return (
@@ -950,38 +1016,94 @@ function ERPGalleryTab({ initialImages }: { initialImages: GalleryImage[] }) {
         </div>
       </div>
 
+      {alertMsg && (
+        <div
+          style={{
+            padding: "12px 16px",
+            borderRadius: "10px",
+            marginBottom: "18px",
+            fontSize: "13.5px",
+            fontWeight: 500,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            background: alertMsg.type === "success" ? "rgba(16, 185, 129, 0.12)" : "rgba(239, 68, 68, 0.12)",
+            color: alertMsg.type === "success" ? "#34d399" : "#f87171",
+            border: `1px solid ${alertMsg.type === "success" ? "rgba(16, 185, 129, 0.3)" : "rgba(239, 68, 68, 0.3)"}`,
+          }}
+        >
+          <span>{alertMsg.text}</span>
+          <button
+            onClick={() => setAlertMsg(null)}
+            style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", padding: "2px" }}
+          >
+            <X size={15} />
+          </button>
+        </div>
+      )}
+
       <div className="adm-upload-card">
         <div className="adm-upload-icon"><Upload size={22} /></div>
         <div style={{ flex: 1 }}>
           <h3 className="adm-upload-title">Upload New Media</h3>
-          <p className="adm-upload-desc">JPG, PNG, WebP, GIF or AVIF up to 10MB</p>
+          <p className="adm-upload-desc">
+            {selectedNames.length > 0
+              ? `Selected (${selectedNames.length}): ${selectedNames.join(", ")}`
+              : "Select one or multiple JPG, PNG, WebP, GIF, or AVIF files (up to 25MB each)"}
+          </p>
         </div>
-        <form onSubmit={handleUpload} className="adm-upload-form">
-          <input ref={fileRef} type="file" accept="image/*" className="adm-file-input" id="erp-gallery-file" />
-          <label htmlFor="erp-gallery-file" className="adm-btn adm-btn-outline adm-file-label">
-            <ImageIcon size={14} /> Choose File
+        <form onSubmit={handleUpload} className="adm-upload-form" style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.svg"
+            multiple
+            className="adm-file-input"
+            id="erp-gallery-file"
+            onChange={handleFileSelect}
+          />
+          <label
+            htmlFor="erp-gallery-file"
+            className="adm-btn adm-btn-outline adm-file-label"
+            style={{ cursor: "pointer", borderColor: selectedNames.length > 0 ? "var(--ciel-gold)" : undefined }}
+          >
+            <ImageIcon size={14} />
+            {selectedNames.length > 0 ? `${selectedNames.length} File${selectedNames.length > 1 ? "s" : ""} Chosen` : "Choose Images"}
           </label>
-          <button type="submit" className="adm-btn adm-btn-primary" disabled={uploading}>
+          <button type="submit" className="adm-btn adm-btn-primary" disabled={uploading || selectedNames.length === 0}>
             {uploading ? <RefreshCw size={14} className="adm-spin" /> : <Upload size={14} />}
-            {uploading ? "Uploading..." : "Upload Media"}
+            {uploading ? "Uploading..." : "Upload to Gallery"}
           </button>
         </form>
       </div>
 
-      <div className="adm-gallery-grid">
-        {images.map((img) => (
-          <div key={img.filename} className="adm-gallery-item">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={img.url} alt={img.filename} className="adm-gallery-img" />
-            <div className="adm-gallery-overlay">
-              <span className="adm-gallery-filename">{img.filename}</span>
-              <button className="adm-gallery-del" onClick={() => handleDelete(img.filename)} disabled={deleting === img.filename}>
-                <Trash2 size={15} />
-              </button>
+      {images.length === 0 ? (
+        <div className="adm-gallery-empty">
+          <ImageIcon size={38} style={{ opacity: 0.6 }} />
+          <h3 style={{ margin: "10px 0 4px", fontSize: "16px", color: "var(--ciel-gold)" }}>No Gallery Images Yet</h3>
+          <p>Click &quot;Choose Images&quot; above to upload event photographs to the public gallery.</p>
+        </div>
+      ) : (
+        <div className="adm-gallery-grid">
+          {images.map((img) => (
+            <div key={img.filename} className="adm-gallery-item">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={img.url} alt={img.filename} className="adm-gallery-img" />
+              <div className="adm-gallery-overlay">
+                <span className="adm-gallery-filename">{img.filename}</span>
+                <button
+                  className="adm-gallery-del"
+                  onClick={() => handleDelete(img.filename)}
+                  disabled={deleting === img.filename}
+                  title="Delete image"
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

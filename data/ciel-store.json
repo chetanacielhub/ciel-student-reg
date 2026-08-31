@@ -1,99 +1,19 @@
 {
   "mentors": [
     {
-      "id": "m-1",
-      "name": "Dr. Rajesh Kulkarni",
-      "designation": "Chief Innovation Advisor",
-      "organization": "Ex-Director, Tech Ventures",
+      "name": "abc",
+      "designation": "abc",
+      "organization": "dcfv",
+      "category": "industry",
       "expertise": [
-        "Venture Capital",
-        "IP Strategy",
-        "DeepTech"
+        "Incubation",
+        "Strategic Guidance"
       ],
-      "avatar": "RK",
-      "category": "industry"
-    },
-    {
-      "id": "m-2",
-      "name": "Sunita Nambiar",
-      "designation": "Managing Partner",
-      "organization": "Vanguard Seed Fund",
-      "expertise": [
-        "Early Stage Angel Funding",
-        "Go-To-Market",
-        "SaaS Scale"
-      ],
-      "avatar": "SN",
-      "category": "investor"
-    },
-    {
-      "id": "m-3",
-      "name": "Prof. Arvind Mehta",
-      "designation": "Head of Research & IPR",
-      "organization": "Chetana Institute",
-      "expertise": [
-        "Patent Drafting",
-        "Tech Transfer",
-        "Material Sciences"
-      ],
-      "avatar": "AM",
-      "category": "academic"
-    },
-    {
-      "id": "m-4",
-      "name": "Priya Nair",
-      "designation": "Founder & CEO",
-      "organization": "GreenGrid Energy (CIEL Alumnus)",
-      "expertise": [
-        "CleanTech",
-        "Hardware Prototyping",
-        "Supply Chain"
-      ],
-      "avatar": "PN",
-      "category": "alumni"
+      "avatar": "a",
+      "id": "m-1788179203560"
     }
   ],
   "studentCouncil": [
-    {
-      "id": "sc-1",
-      "name": "Aarav Sharma",
-      "role": "President, Student Innovation Council",
-      "branch": "Computer Engineering",
-      "year": "Final Year",
-      "avatar": "AS"
-    },
-    {
-      "id": "sc-2",
-      "name": "Neha Kadam",
-      "role": "Vice President, Hackathons & Competitions",
-      "branch": "Information Technology",
-      "year": "Final Year",
-      "avatar": "NK"
-    },
-    {
-      "id": "sc-3",
-      "name": "Rishi Verma",
-      "role": "Lead, Prototyping & Makerspace Labs",
-      "branch": "Mechanical Engineering",
-      "year": "Pre-Final Year",
-      "avatar": "RV"
-    },
-    {
-      "id": "sc-4",
-      "name": "Ananya Roy",
-      "role": "Lead, Women Entrepreneurship Cell",
-      "branch": "Electronics & Telecom",
-      "year": "Pre-Final Year",
-      "avatar": "AR"
-    },
-    {
-      "id": "sc-5",
-      "name": "Devansh Mehta",
-      "role": "Lead, Industry Outreach & Media",
-      "branch": "Management Studies",
-      "year": "Final Year",
-      "avatar": "DM"
-    },
     {
       "name": "fdc",
       "role": "df",
@@ -101,6 +21,14 @@
       "year": "dfg",
       "avatar": "/uploads/photo-1786172160069-zh65gtrwiqo.jfif",
       "id": "sc-1786172162526"
+    },
+    {
+      "name": "dfvg",
+      "role": "defrgvb",
+      "branch": "dfvgb",
+      "year": "dfg",
+      "avatar": "d",
+      "id": "sc-1788179230520"
     }
   ],
   "governance": [
@@ -110,20 +38,8 @@
       "description": "Apex institutional decision-making body establishing strategic governance policies, resource allocations, and venture acceleration mandates for CIEL.",
       "members": [
         {
-          "name": "Dr. B. R. Patil",
-          "role": "Chairman, Governing Board"
-        },
-        {
-          "name": "Prof. S. R. Joshi",
-          "role": "Director, Chetana Institute"
-        },
-        {
-          "name": "Dr. Rajesh Kulkarni",
-          "role": "CEO, CIEL Innovation Hub"
-        },
-        {
-          "name": "Mr. Anand Rathi",
-          "role": "Industry Representative (Managing Director, Rathi Tech)"
+          "name": "sdwef",
+          "role": "sd"
         }
       ]
     },
@@ -133,20 +49,8 @@
       "description": "Provides operational leadership, interdisciplinary academic integration, cross-faculty research synergy, and ecosystem partner alignment.",
       "members": [
         {
-          "name": "Prof. Arvind Mehta",
-          "role": "Chair, Joint-Steering & Research"
-        },
-        {
-          "name": "Dr. Smita Rao",
-          "role": "Director of Academic Partnerships"
-        },
-        {
-          "name": "Sunita Nambiar",
-          "role": "Venture Partner, Lead Investor"
-        },
-        {
-          "name": "Karan Johar",
-          "role": "Senior Partner, Angel Network"
+          "name": "decfv",
+          "role": "ef"
         }
       ]
     },
@@ -156,28 +60,8 @@
       "description": "Operational leadership bodies executing CIEL's 6 core innovation tracks, each spearheaded by a dedicated committee lead.",
       "members": [
         {
-          "name": "Dr. Arvind Mehta",
-          "role": "Lead — 1. Innovation and Research"
-        },
-        {
-          "name": "Dr. Rajesh Kulkarni",
-          "role": "Lead — 2. Incubation and Start-up Support"
-        },
-        {
-          "name": "Prof. Smita Rao",
-          "role": "Lead — 3. Skill Development and Training"
-        },
-        {
-          "name": "Mr. Anand Rathi",
-          "role": "Lead — 4. Industry and Investor"
-        },
-        {
-          "name": "Ms. Meera Fernandez",
-          "role": "Lead — 5. Events and Outreach"
-        },
-        {
-          "name": "Prof. S. R. Joshi",
-          "role": "Lead — 6. Monitoring and Evaluation"
+          "name": "frg",
+          "role": "Lead — 1: Innovation and Research"
         }
       ]
     }
@@ -258,6 +142,16 @@
   ],
   "news": [],
   "downloads": [
+    {
+      "title": "45tyh",
+      "category": "policy",
+      "fileSize": "0.1 MB",
+      "format": "PDF",
+      "updatedAt": "2026-08-31",
+      "description": "trhyjuk",
+      "fileUrl": "/uploads/photo-1788179308718-tta7ulc3wfj.pdf",
+      "id": "d-1788179314825"
+    },
     {
       "title": "dsf",
       "category": "policy",

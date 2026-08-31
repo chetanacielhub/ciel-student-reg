@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdminSession } from "@/lib/admin-auth";
+import { verifyAdminApiSession } from "@/lib/admin-auth";
 import { getGoogleForms, addGoogleForm, updateGoogleForm, deleteGoogleForm } from "@/lib/dynamic-store";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
-  await requireAdminSession();
+  const authErr = await verifyAdminApiSession();
+  if (authErr) return authErr;
+
   try {
     const forms = await getGoogleForms(false); // return all forms including inactive for admin
     return NextResponse.json({ forms });
@@ -16,7 +20,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  await requireAdminSession();
+  const authErr = await verifyAdminApiSession();
+  if (authErr) return authErr;
+
   try {
     const body = await req.json();
     const { title, description, category, formUrl, embedUrl, isActive } = body;
@@ -41,7 +47,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  await requireAdminSession();
+  const authErr = await verifyAdminApiSession();
+  if (authErr) return authErr;
+
   try {
     const body = await req.json();
     const { id, title, description, category, formUrl, embedUrl, isActive } = body;
@@ -70,7 +78,9 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  await requireAdminSession();
+  const authErr = await verifyAdminApiSession();
+  if (authErr) return authErr;
+
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

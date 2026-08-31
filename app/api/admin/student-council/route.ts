@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdminSession } from "@/lib/admin-auth";
+import { verifyAdminApiSession } from "@/lib/admin-auth";
 import { addStudentCouncilLead, deleteStudentCouncilLead, getStudentCouncilLeads } from "@/lib/dynamic-store";
 import { revalidatePath } from "next/cache";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const leads = await getStudentCouncilLeads();
@@ -9,7 +11,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  await requireAdminSession();
+  const authErr = await verifyAdminApiSession();
+  if (authErr) return authErr;
 
   try {
     const body = await req.json();
@@ -38,7 +41,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  await requireAdminSession();
+  const authErr = await verifyAdminApiSession();
+  if (authErr) return authErr;
 
   const id = req.nextUrl.searchParams.get("id");
   if (!id) {
