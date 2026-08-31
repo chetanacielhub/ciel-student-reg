@@ -229,3 +229,60 @@ CREATE POLICY "Public read access for student_council" ON public.student_council
 CREATE POLICY "Public read access for governance_committees" ON public.governance_committees FOR SELECT USING (true);
 CREATE POLICY "Public read access for governance_members" ON public.governance_members FOR SELECT USING (true);
 
+-- 9. EMPLOYEE PORTAL TABLES
+CREATE TABLE IF NOT EXISTS public.employee_attendance (
+  id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  employee_id     TEXT NOT NULL,
+  date            DATE NOT NULL,
+  status          TEXT NOT NULL DEFAULT 'Present',
+  check_in_time   TIMESTAMPTZ,
+  check_out_time  TIMESTAMPTZ,
+  location_lat    DOUBLE PRECISION,
+  location_lng    DOUBLE PRECISION,
+  distance_meters DOUBLE PRECISION,
+  is_within_geofence BOOLEAN,
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(employee_id, date)
+);
+
+CREATE TABLE IF NOT EXISTS public.employee_tasks (
+  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  employee_id TEXT NOT NULL,
+  date        DATE NOT NULL,
+  title       TEXT NOT NULL,
+  description TEXT DEFAULT '',
+  status      TEXT NOT NULL DEFAULT 'Pending',
+  priority    TEXT NOT NULL DEFAULT 'Medium',
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.employee_daily_updates (
+  id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  employee_id     TEXT NOT NULL,
+  date            DATE NOT NULL,
+  work_completed  TEXT NOT NULL,
+  blockers        TEXT DEFAULT '',
+  tomorrow_plan   TEXT DEFAULT '',
+  notes           TEXT DEFAULT '',
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(employee_id, date)
+);
+
+CREATE TABLE IF NOT EXISTS public.employee_monthly_reports (
+  id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  employee_id       TEXT NOT NULL,
+  month             TEXT NOT NULL, -- YYYY-MM
+  key_achievements  TEXT NOT NULL,
+  major_challenges  TEXT DEFAULT '',
+  next_month_goals  TEXT NOT NULL,
+  learnings_skills  TEXT DEFAULT '',
+  support_needed    TEXT DEFAULT '',
+  notes             TEXT DEFAULT '',
+  created_at        TIMESTAMPTZ DEFAULT NOW(),
+  updated_at        TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(employee_id, month)
+);
+
