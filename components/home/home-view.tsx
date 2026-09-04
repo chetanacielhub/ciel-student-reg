@@ -44,6 +44,10 @@ import {
   StaggerItem,
   GoldenParticleBackground,
   CounterAnimation,
+  FloatingOrbs,
+  ScrollProgressBar,
+  MorphingBlob,
+  TypewriterTitle,
 } from "@/components/ui/motion";
 import {
   CIEL_METRICS,
@@ -61,7 +65,7 @@ const ANGLED_PANELS = [
   { id: "img2", src: "/img2.png" },
   { id: "img3", src: "/img3.jpeg" },
   { id: "img4", src: "/img4.png" },
-  { id: "img5", src: "/img5.png"},
+  { id: "img5", src: "/img5.png" },
   { id: "img6", src: "/img6b.png" },
 ];
 
@@ -136,20 +140,24 @@ export function HomeView({ event }: HomeViewProps) {
 
   return (
     <div style={{ position: "relative" }}>
+      {/* Scroll progress — fixed positioned, zero layout impact */}
+      <ScrollProgressBar />
+
       {/* 1. REFERENCE DESIGN HERO SECTION WITH 6 ANGLED PANELS COLLAGE */}
       <section className="shell ref-hero-section">
         <GoldenParticleBackground />
+        {/* Ambient floating orbs — absolute positioned, zero layout impact */}
+        <FloatingOrbs />
+        {/* Morphing organic blobs — absolute positioned, zero layout impact */}
+        <MorphingBlob size={520} style={{ top: "-8%", right: "-6%" }} duration={13} />
+        <MorphingBlob size={320} color="rgba(212,175,55,0.035)" style={{ bottom: "5%", left: "5%" }} duration={9} />
 
         <div className="ref-hero-grid" style={{ position: "relative", zIndex: 1 }}>
           {/* Left Hero Copy */}
           <div>
             <FadeIn delay={0.1}>
               <h1 className="ref-hero-title">
-                Ideate.<br />
-                Innovate.<br />
-                <span className="text-gold" style={{ whiteSpace: "nowrap" }}>
-                  Create Impact.
-                </span>
+                <TypewriterTitle />
               </h1>
             </FadeIn>
 

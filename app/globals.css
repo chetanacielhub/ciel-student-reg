@@ -263,13 +263,12 @@ body.light-theme input[type="time"]::-webkit-calendar-picker-indicator {
   left: 0;
   right: 0;
   height: 2.5px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(212, 175, 55, 0.35) 15%, 
-    #FFF4B8 50%, 
-    rgba(212, 175, 55, 0.35) 85%, 
-    transparent 100%
-  );
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(212, 175, 55, 0.35) 15%,
+      #FFF4B8 50%,
+      rgba(212, 175, 55, 0.35) 85%,
+      transparent 100%);
   background-size: 200% 100%;
   opacity: 0;
   transform: scaleX(0.3);
@@ -292,13 +291,12 @@ body.light-theme input[type="time"]::-webkit-calendar-picker-indicator {
 
 body.light-theme .luxury-card::before,
 [data-theme="light"] .luxury-card::before {
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(184, 134, 11, 0.4) 15%, 
-    #D4AF37 50%, 
-    rgba(184, 134, 11, 0.4) 85%, 
-    transparent 100%
-  );
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(184, 134, 11, 0.4) 15%,
+      #D4AF37 50%,
+      rgba(184, 134, 11, 0.4) 85%,
+      transparent 100%);
   background-size: 200% 100%;
 }
 
@@ -394,13 +392,12 @@ body.light-theme .luxury-card:hover .card-icon-wrap,
   left: 0;
   right: 0;
   height: 2.5px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(212, 175, 55, 0.35) 15%, 
-    #FFF4B8 50%, 
-    rgba(212, 175, 55, 0.35) 85%, 
-    transparent 100%
-  );
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(212, 175, 55, 0.35) 15%,
+      #FFF4B8 50%,
+      rgba(212, 175, 55, 0.35) 85%,
+      transparent 100%);
   background-size: 200% 100%;
   opacity: 0;
   transform: scaleX(0.3);
@@ -794,17 +791,17 @@ a {
 }
 
 /* Remove extra space between page content and navbar */
-.site-main > :first-child,
-.site-main > .page-section:first-child,
-.site-main > .shell:first-child,
-.site-main > div:first-child,
-.site-main > section:first-child {
+.site-main> :first-child,
+.site-main>.page-section:first-child,
+.site-main>.shell:first-child,
+.site-main>div:first-child,
+.site-main>section:first-child {
   padding-top: 4px !important;
   margin-top: 0 !important;
 }
 
-.site-main > :first-child .section-heading:first-child,
-.site-main > .shell:first-child > .section-heading:first-child,
+.site-main> :first-child .section-heading:first-child,
+.site-main>.shell:first-child>.section-heading:first-child,
 .site-main .section-heading:first-child {
   margin-top: 0 !important;
   padding-top: 0 !important;
@@ -1188,13 +1185,12 @@ body.light-theme .event-meta-row,
   left: 2%;
   right: 2%;
   height: 3px;
-  background: linear-gradient(90deg, 
-    rgba(212, 175, 55, 0.15) 0%, 
-    rgba(212, 175, 55, 0.6) 20%, 
-    #FFF4B8 50%, 
-    rgba(212, 175, 55, 0.6) 80%, 
-    rgba(212, 175, 55, 0.15) 100%
-  );
+  background: linear-gradient(90deg,
+      rgba(212, 175, 55, 0.15) 0%,
+      rgba(212, 175, 55, 0.6) 20%,
+      #FFF4B8 50%,
+      rgba(212, 175, 55, 0.6) 80%,
+      rgba(212, 175, 55, 0.15) 100%);
   background-size: 200% 100%;
   animation: flowOfLineAnimation 3.5s linear infinite;
   transform: translateY(-50%);
@@ -1222,6 +1218,7 @@ body.light-theme .event-meta-row,
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
@@ -1233,14 +1230,17 @@ body.light-theme .event-meta-row,
     opacity: 0;
     transform: translateY(-50%) scale(0.6);
   }
+
   15% {
     opacity: 1;
     transform: translateY(-50%) scale(1);
   }
+
   85% {
     opacity: 1;
     transform: translateY(-50%) scale(1);
   }
+
   100% {
     left: calc(100% - 90px);
     opacity: 0;
@@ -4977,13 +4977,23 @@ video {
    ========================================================================== */
 
 @keyframes drawerFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideDrawerIn {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
 }
 
 .mobile-hamburger-btn {
@@ -5010,6 +5020,7 @@ video {
 }
 
 @media (max-width: 1080px) {
+
   .desktop-only-nav,
   .desktop-only-cta,
   .desktop-only-auth {
@@ -5167,12 +5178,15 @@ body.light-theme .mobile-drawer-close:hover {
 }
 
 /* Global Mobile Responsiveness Utilities */
-html, body {
+html,
+body {
   max-width: 100vw;
   overflow-x: hidden;
 }
 
-img, iframe, video {
+img,
+iframe,
+video {
   max-width: 100%;
 }
 
@@ -5594,8 +5608,8 @@ body[data-theme="light"] {
   backdrop-filter: blur(4px) !important;
 }
 
-.admin-portal[data-theme="light"] [style*="position: fixed"] > div,
-.adm-shell[data-theme="light"] [style*="position: fixed"] > div {
+.admin-portal[data-theme="light"] [style*="position: fixed"]>div,
+.adm-shell[data-theme="light"] [style*="position: fixed"]>div {
   background: #ffffff !important;
   border: 1px solid var(--ciel-gold-border) !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
@@ -5815,4 +5829,504 @@ body[data-theme="light"] {
 .admin-portal[data-theme="dark"] .admin-login-sub,
 .admin-login-page[data-theme="dark"] .admin-login-sub {
   color: var(--text-secondary) !important;
+}
+
+/* ============================================================
+   HOME PAGE — PURE CSS ANIMATION ENHANCEMENTS
+   All rules target existing class names. No layout changes.
+   ============================================================ */
+
+/* ── 1. Hero "Create Impact." animated gold gradient ────── */
+.ref-hero-title .text-gold {
+  background: linear-gradient(
+    120deg,
+    #d4af37 0%,
+    #ffe97a 30%,
+    #f5d56e 50%,
+    #ffe97a 70%,
+    #d4af37 100%
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: heroGoldShimmer 4s ease infinite;
+}
+@keyframes heroGoldShimmer {
+  0%   { background-position: 0%   50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0%   50%; }
+}
+
+/* ── 2. Primary button — shine sweep on hover ───────────── */
+.ref-btn-primary {
+  position: relative;
+  overflow: hidden;
+}
+.ref-btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.35),
+    transparent
+  );
+  transform: skewX(-20deg);
+  pointer-events: none;
+}
+.ref-btn-primary:hover::before {
+  animation: btnShine 0.65s ease forwards;
+}
+@keyframes btnShine {
+  0%   { left: -120%; }
+  100% { left: 160%;  }
+}
+
+/* ── 3. luxury-card — lift + gold border glow on hover ─── */
+.luxury-card {
+  transition: border-color 0.35s ease,
+              box-shadow   0.35s ease,
+              transform    0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.luxury-card:hover {
+  border-color: rgba(212, 175, 55, 0.45) !important;
+  box-shadow:   0 0 40px rgba(212, 175, 55, 0.1),
+                0 24px 64px rgba(0, 0, 0, 0.55) !important;
+  transform: translateY(-4px) !important;
+}
+
+/* ── 4. Feature icons — scale + glow on hover ───────────── */
+.ref-feature-icon {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              background  0.3s ease,
+              box-shadow  0.3s ease;
+  cursor: default;
+}
+.ref-feature-icon:hover {
+  transform:  scale(1.22);
+  background: rgba(212, 175, 55, 0.25) !important;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.45);
+}
+
+/* ── 5. Pillar icons — scale + rotate on hover ──────────── */
+.pillar-icon {
+  transition: transform   0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow  0.3s ease;
+}
+.pillar-icon:hover {
+  transform:  scale(1.18) rotate(10deg);
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.4);
+}
+
+/* ── 6. Timeline step icons — pop + glow on hover ──────── */
+.timeline-step-icon {
+  transition: transform   0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow  0.3s ease,
+              background  0.3s ease !important;
+  cursor: default;
+}
+.timeline-step-icon:hover {
+  transform:  scale(1.25) rotate(14deg) !important;
+  box-shadow: 0 0 28px rgba(212, 175, 55, 0.55) !important;
+  background: rgba(212, 175, 55, 0.22) !important;
+}
+
+/* ── 7. Timeline line — CSS draw animation on page load ─── */
+.timeline-line {
+  transform:        scaleX(0);
+  transform-origin: left center;
+  animation: drawTimeline 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards;
+}
+@keyframes drawTimeline {
+  to { transform: scaleX(1); }
+}
+
+/* ── 8. Timeline steps — staggered entrance on page load ── */
+.timeline-step {
+  animation: stepReveal 0.55s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+.timeline-step:nth-child(1) { animation-delay: 0.45s; }
+.timeline-step:nth-child(2) { animation-delay: 0.57s; }
+.timeline-step:nth-child(3) { animation-delay: 0.69s; }
+.timeline-step:nth-child(4) { animation-delay: 0.81s; }
+.timeline-step:nth-child(5) { animation-delay: 0.93s; }
+.timeline-step:nth-child(6) { animation-delay: 1.05s; }
+@keyframes stepReveal {
+  from {
+    opacity:   0;
+    transform: translateY(28px) scale(0.96);
+  }
+  to {
+    opacity:   1;
+    transform: translateY(0)    scale(1);
+  }
+}
+
+/* ── 9. CTA status-card — breathing gold glow ───────────── */
+.status-card {
+  animation: ctaBreath 5s ease-in-out infinite;
+}
+@keyframes ctaBreath {
+  0%,  100% { box-shadow: 0 0  0px rgba(212, 175, 55, 0.00),  0 20px 60px rgba(0,0,0,0.4); }
+  50%       { box-shadow: 0 0 50px rgba(212, 175, 55, 0.18),  0 24px 80px rgba(0,0,0,0.5); }
+}
+
+/* ── 10. KPI card — hover gold border + glow ────────────── */
+.ref-kpi-card {
+  transition: border-color 0.35s ease, box-shadow 0.35s ease;
+}
+.ref-kpi-card:hover {
+  border-color: rgba(212, 175, 55, 0.5) !important;
+  box-shadow:   0 0 40px rgba(212, 175, 55, 0.15),
+                0 10px 40px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* ── 11. KPI numbers — gold text-glow on parent hover ───── */
+.ref-kpi-card:hover .ref-kpi-num {
+  text-shadow: 0 0 20px rgba(212, 175, 55, 0.55);
+  transition: text-shadow 0.4s ease;
+}
+
+/* ── 12. Badge shimmer sweep ────────────────────────────── */
+.badge-brand {
+  position: relative;
+  overflow: hidden;
+}
+.badge-brand::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+  animation: badgeShimmer 4s ease 1.5s infinite;
+  pointer-events: none;
+}
+@keyframes badgeShimmer {
+  0%       { left: -120%; }
+  35%, 100% { left: 160%;  }
+}
+
+/* ── 13. Angled panel — gold sheen overlay on hover ─────── */
+/*      Pure ::after, does NOT touch .angled-panel-img       */
+.angled-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    130deg,
+    transparent 20%,
+    rgba(212, 175, 55, 0.14) 50%,
+    transparent 80%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 3;
+  transform: skewX(6deg);
+  border-radius: inherit;
+}
+.angled-panel:hover::after {
+  opacity: 1;
+}
+
+/* ── 14. Section headings — subtle underline grow ───────── */
+.section-heading h2 {
+  position: relative;
+  display: block;
+}
+.section-heading h2::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%) scaleX(0);
+  width: 50%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--ciel-gold), transparent);
+  border-radius: 1px;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.section-heading:hover h2::after {
+  transform: translateX(-50%) scaleX(1);
+}
+
+
+/* ── 15. card-icon-wrap — gentle floating loop ───────────── */
+.card-icon-wrap {
+  animation: iconFloat 5s ease-in-out infinite;
+}
+@keyframes iconFloat {
+  0%,  100% { transform: translateY(0px);  }
+  50%       { transform: translateY(-6px); }
+}
+
+/* ── 16. Eyebrow badge — subtle entrance pop ────────────── */
+.page-section .eyebrow,
+.ref-hero-section .eyebrow {
+  animation: eyebrowPop 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+@keyframes eyebrowPop {
+  from { opacity: 0; transform: scale(0.82) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);   }
+}
+
+/* ── 17. Secondary button — border shimmer on hover ─────── */
+.ref-btn-secondary {
+  position: relative;
+  overflow: hidden;
+}
+.ref-btn-secondary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 55%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(212,175,55,0.2), transparent);
+  transform: skewX(-20deg);
+  pointer-events: none;
+}
+.ref-btn-secondary:hover::before {
+  animation: btnShine 0.65s ease forwards;
+}
+
+/* ============================================================
+   HOME PAGE — DISTINCTIVE MOTION EFFECTS
+   (No shines or glows — morphs, depth, elastics, grids)
+   ============================================================ */
+
+/* ── A. ROTATING CONIC BEAM on luxury-card hover ─────────
+   A bright arc of light that orbits the card perimeter.     */
+@property --card-beam-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+.luxury-card {
+  isolation: isolate;
+}
+.luxury-card::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--card-beam-angle),
+    transparent    0deg,
+    transparent   55%,
+    rgba(212, 175, 55, 0.75) 68%,
+    rgba(255, 248, 160, 1)   75%,
+    rgba(212, 175, 55, 0.75) 82%,
+    transparent   92%,
+    transparent  360deg
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  z-index: 2;
+  pointer-events: none;
+  transition: opacity 0.45s ease;
+}
+.luxury-card:hover::after {
+  opacity: 1;
+  animation: cardBeamSpin 2.8s linear infinite;
+}
+@keyframes cardBeamSpin {
+  to { --card-beam-angle: 360deg; }
+}
+
+/* ── B. ANIMATED DOT GRID in pathway/roadmap section ─────
+   A diagonal drifting grid of gold dots — totally unique.  */
+.pathway-section {
+  position: relative;
+  overflow: hidden;
+}
+.pathway-section::before {
+  content: '';
+  position: absolute;
+  inset: -60px;
+  background-image: radial-gradient(circle, rgba(212, 175, 55, 0.1) 1.5px, transparent 1.5px);
+  background-size: 32px 32px;
+  animation: dotGridDrift 20s linear infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+@keyframes dotGridDrift {
+  from { transform: translate(0, 0); }
+  to   { transform: translate(32px, 32px); }
+}
+
+/* ── C. 3D PERSPECTIVE TILT on KPI card ─────────────────
+   The card tilts in 3D on hover for true depth.           */
+.ref-kpi-card {
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.35s ease;
+}
+.ref-kpi-card:hover {
+  transform: perspective(900px) rotateX(3deg) rotateY(-5deg) scale(1.01) !important;
+}
+
+/* ── D. STAGGERED FLOAT on KPI items ────────────────────
+   Each metric floats at a different phase.                */
+.ref-kpi-item {
+  position: relative;
+  animation: kpiItemFloat 5s ease-in-out infinite;
+}
+.ref-kpi-item:nth-child(1) { animation-delay: 0s; }
+.ref-kpi-item:nth-child(2) { animation-delay: 1.1s; }
+.ref-kpi-item:nth-child(3) { animation-delay: 2.2s; }
+.ref-kpi-item:nth-child(4) { animation-delay: 3.3s; }
+@keyframes kpiItemFloat {
+  0%, 100% { top: 0px; }
+  50%      { top: -8px; }
+}
+
+/* ── E. TYPEWRITER BLINKING CURSOR on hero subtitle ─────
+   A classic caret pulses after the subtitle text.         */
+.ref-hero-subtitle::after {
+  content: '|';
+  display: inline;
+  color: var(--ciel-gold, #d4af37);
+  font-weight: 200;
+  margin-left: 4px;
+  animation: caretBlink 1.1s step-end infinite;
+}
+@keyframes caretBlink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+
+/* ── F. ELASTIC SQUEEZE BOUNCE on badge hover ───────────
+   Squash-and-stretch physics — feels alive.               */
+.badge-brand {
+  cursor: default;
+  display: inline-flex;
+}
+.badge-brand:hover {
+  animation: elasticSqueeze 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+@keyframes elasticSqueeze {
+  0%   { transform: scale(1, 1);       }
+  20%  { transform: scale(1.28, 0.80); }
+  40%  { transform: scale(0.86, 1.14); }
+  60%  { transform: scale(1.10, 0.92); }
+  80%  { transform: scale(0.96, 1.04); }
+  100% { transform: scale(1, 1);       }
+}
+
+/* ── G. 3D FLIP on step number when timeline-step hovered  */
+.step-num {
+  display: inline-block;
+  perspective: 300px;
+  transition: none;
+}
+.timeline-step:hover .step-num {
+  animation: stepNumFlip 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes stepNumFlip {
+  0%   { transform: rotateX(0deg);    opacity: 1; }
+  45%  { transform: rotateX(90deg);   opacity: 0; }
+  55%  { transform: rotateX(-90deg);  opacity: 0; }
+  100% { transform: rotateX(0deg);    opacity: 1; }
+}
+
+/* ── H. LETTER-SPACING BREATHE on hero title ────────────
+   The heading very subtly expands and contracts.          */
+.ref-hero-title {
+  animation: titleBreathe 7s ease-in-out infinite;
+}
+@keyframes titleBreathe {
+  0%, 100% { letter-spacing: -0.03em; }
+  50%      { letter-spacing: -0.005em; }
+}
+
+/* ── I. STAGGERED SLIDE-IN on angled panels (page load) ─
+   Each panel enters from slightly below.                  */
+.ref-angled-grid .angled-panel {
+  animation: panelEnter 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+.ref-angled-grid .angled-panel:nth-child(1) { animation-delay: 0.15s; }
+.ref-angled-grid .angled-panel:nth-child(2) { animation-delay: 0.25s; }
+.ref-angled-grid .angled-panel:nth-child(3) { animation-delay: 0.35s; }
+.ref-angled-grid .angled-panel:nth-child(4) { animation-delay: 0.45s; }
+.ref-angled-grid .angled-panel:nth-child(5) { animation-delay: 0.55s; }
+.ref-angled-grid .angled-panel:nth-child(6) { animation-delay: 0.65s; }
+@keyframes panelEnter {
+  from {
+    opacity: 0;
+    transform: skewX(-6deg) translateY(22px) scale(0.93);
+  }
+  to {
+    opacity: 1;
+    transform: skewX(-6deg) translateY(0) scale(1);
+  }
+}
+
+/* ── J. BLUR-TO-FOCUS ENTRANCE on section headings ──────
+   Section h2 elements de-blur into sharp focus.          */
+.section-heading h2 {
+  animation: headingFocus 0.9s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+@keyframes headingFocus {
+  from {
+    filter: blur(8px);
+    letter-spacing: 0.06em;
+    opacity: 0;
+  }
+  to {
+    filter: blur(0px);
+    opacity: 1;
+  }
+}
+
+/* ── K. FILM GRAIN TEXTURE OVERLAY (whole page) ─────────
+   Subtle SVG noise adds premium texture to dark bg.      */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 99997;
+  opacity: 0.028;
+  mix-blend-mode: overlay;
+}
+
+/* ── L. MORPHING CLIP-PATH on pillar-item ───────────────
+   A geometric shape shifts on hover — very unique.       */
+.pillar-item {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  transition: clip-path 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.pillar-item:hover {
+  clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%);
+}
+
+/* ── M. COUNTER item — wipe-in stagger on page load ─────*/
+.ref-kpi-item {
+  animation: kpiWipeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards,
+             kpiItemFloat 5s ease-in-out infinite;
+}
+.ref-kpi-item:nth-child(1) { animation-delay: 0.3s,  0s;   }
+.ref-kpi-item:nth-child(2) { animation-delay: 0.45s, 1.1s; }
+.ref-kpi-item:nth-child(3) { animation-delay: 0.6s,  2.2s; }
+.ref-kpi-item:nth-child(4) { animation-delay: 0.75s, 3.3s; }
+@keyframes kpiWipeIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.94); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
 }
