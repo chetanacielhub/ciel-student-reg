@@ -398,7 +398,24 @@ export async function getVentureProjects(): Promise<VentureProjectItem[]> {
 
 export async function getVentureProjectById(idOrTeamId: string): Promise<VentureProjectItem | null> {
   const projects = await getVentureProjects();
-  return projects.find((p) => p.id === idOrTeamId || p.teamId === idOrTeamId) || projects[0] || null;
+  return projects.find((p) => p.id === idOrTeamId || p.teamId === idOrTeamId) || null;
+}
+
+export async function getVentureProjectForUser(email?: string | null, teamId?: string | null): Promise<VentureProjectItem | null> {
+  const projects = await getVentureProjects();
+  const cleanEmail = email?.toLowerCase().trim();
+
+  if (cleanEmail) {
+    const byEmail = projects.find((p) => p.leaderEmail?.toLowerCase().trim() === cleanEmail);
+    if (byEmail) return byEmail;
+  }
+
+  if (teamId && teamId !== "proj-1") {
+    const byTeam = projects.find((p) => p.teamId === teamId || p.id === teamId);
+    if (byTeam) return byTeam;
+  }
+
+  return null;
 }
 
 export async function updateVentureProject(
@@ -408,17 +425,18 @@ export async function updateVentureProject(
   const store = await ensureStore();
   if (!store.projects) store.projects = [];
 
+  const cleanLeaderEmail = updates.leaderEmail?.toLowerCase().trim();
+
   let idx = store.projects.findIndex(
     (p) =>
-      p.id === id ||
-      p.teamId === id ||
-      (updates.leaderEmail && p.leaderEmail?.toLowerCase() === updates.leaderEmail.toLowerCase()) ||
+      (cleanLeaderEmail && p.leaderEmail?.toLowerCase().trim() === cleanLeaderEmail) ||
+      (id && id !== "proj-1" && (p.id === id || p.teamId === id)) ||
       (updates.teamName && p.teamName?.toLowerCase() === updates.teamName.toLowerCase())
   );
 
   if (idx < 0) {
     const newProj: VentureProjectItem = {
-      id: id || `proj-${Date.now()}`,
+      id: id && id !== "proj-1" ? id : `proj-${Date.now()}`,
       teamName: updates.teamName || updates.name || "Innovator Venture",
       name: updates.name || "Innovator Venture",
       problemStatement: updates.problemStatement || "",
@@ -431,7 +449,7 @@ export async function updateVentureProject(
       journeyMilestones: updates.journeyMilestones || [],
       documents: updates.documents || [],
       traction: updates.traction,
-      leaderEmail: updates.leaderEmail,
+      leaderEmail: cleanLeaderEmail || updates.leaderEmail,
       leaderName: updates.leaderName,
       updatedAt: new Date().toISOString(),
     };
@@ -477,30 +495,28 @@ export async function addJourneyMilestone(
   const store = await ensureStore();
   if (!store.projects) store.projects = [];
 
+  const cleanEmail = userEmail?.toLowerCase().trim();
+
   let project = store.projects.find(
     (p) =>
-      p.id === projectId ||
-      p.teamId === projectId ||
-      (userEmail && p.leaderEmail?.toLowerCase() === userEmail.toLowerCase())
+      (cleanEmail && p.leaderEmail?.toLowerCase().trim() === cleanEmail) ||
+      (projectId && projectId !== "proj-1" && (p.id === projectId || p.teamId === projectId))
   );
 
   if (!project) {
-    if (store.projects.length > 0) {
-      project = store.projects[0];
-    } else {
-      project = {
-        id: projectId || `proj-${Date.now()}`,
-        teamName: "Innovator Venture",
-        name: "Innovator Venture",
-        problemStatement: "",
-        stage: milestone.stage || "idea",
-        progress: 25,
-        journeyMilestones: [],
-        documents: [],
-        updatedAt: new Date().toISOString(),
-      };
-      store.projects.push(project);
-    }
+    project = {
+      id: projectId && projectId !== "proj-1" ? projectId : `proj-${Date.now()}`,
+      teamName: "Innovator Venture",
+      name: "Innovator Venture",
+      problemStatement: "",
+      stage: milestone.stage || "idea",
+      progress: 25,
+      journeyMilestones: [],
+      documents: [],
+      leaderEmail: cleanEmail || undefined,
+      updatedAt: new Date().toISOString(),
+    };
+    store.projects.push(project);
   }
 
   const newMilestone: JourneyMilestone = {
@@ -525,9 +541,6 @@ export async function updateAdminProjectGrantStatus(
   if (!store.projects) store.projects = [];
 
   let project = store.projects.find((p) => p.id === projectId || p.teamId === projectId);
-  if (!project && store.projects.length > 0) {
-    project = store.projects[0];
-  }
 
   if (project) {
     if (data.grantStatus) project.grantStatus = data.grantStatus;

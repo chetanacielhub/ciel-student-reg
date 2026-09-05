@@ -116,6 +116,28 @@
         "iprStatus": "Not Filed",
         "mrr": "₹0 / mo"
       }
+    },
+    {
+      "id": "proj-1788608385713",
+      "teamName": "Innovator Venture",
+      "name": "Innovator Venture",
+      "problemStatement": "",
+      "stage": "prototype",
+      "progress": 25,
+      "journeyMilestones": [
+        {
+          "id": "jm-1788608385722",
+          "projectId": "proj-1788608385713",
+          "stage": "prototype",
+          "title": "Kali Prototype v1.0",
+          "description": "Autonomous robotics board",
+          "date": "2026-09-05",
+          "status": "completed"
+        }
+      ],
+      "documents": [],
+      "leaderEmail": "kalilinux16112004@gmail.com",
+      "updatedAt": "2026-09-05T11:39:45.722Z"
     }
   ],
   "userProfiles": [

@@ -104,7 +104,7 @@ export default async function DashboardPage() {
   const projects = await getVentureProjects();
   const matchedProject = projects.find(
     (p) => p.leaderEmail?.toLowerCase().trim() === activeProfile.email.toLowerCase().trim() || (registrationData && p.teamId === registrationData.team_id)
-  ) || projects[0];
+  ) || null;
 
   const registration = {
     id: registrationData?.id || matchedReg?.id || `reg-${Date.now()}`,
@@ -229,6 +229,7 @@ export default async function DashboardPage() {
         registration={registration}
         members={members}
         downloads={CIEL_DOWNLOADS}
+        initialProject={matchedProject}
       />
     </div>
   );

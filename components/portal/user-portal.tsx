@@ -87,6 +87,7 @@ type PortalProps = {
     classes: { name?: string } | null;
   }>;
   downloads: typeof CIEL_DOWNLOADS;
+  initialProject?: any;
 };
 
 type PortalTab =
@@ -124,7 +125,7 @@ function getInitials(name?: string | null) {
   );
 }
 
-export function UserPortal({ profile, registration, members, downloads }: PortalProps) {
+export function UserPortal({ profile, registration, members, downloads, initialProject }: PortalProps) {
   const [activeTab, setActiveTab] = useState<PortalTab>("profile");
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
@@ -182,17 +183,19 @@ export function UserPortal({ profile, registration, members, downloads }: Portal
     }
   }
 
-  // Live Venture Project State
+  // Live Venture Project State — strictly scoped to this person
   const [project, setProject] = useState({
-    id: team?.id || "proj-1",
-    name: team?.name || "My Venture Project",
-    problemStatement: team?.problem_statement || "No problem statement submitted yet. Click 'Edit Venture' to add details.",
-    stage: "idea" as "idea" | "prototype" | "validation" | "incubation" | "funding" | "market" | "scale",
-    progress: 10,
-    pitchDeck: "",
-    grantStatus: "under_review" as "under_review" | "approved" | "grant_awarded" | "needs_revision",
-    reviewerNotes: "",
-    journeyMilestones: [] as Array<{
+    id: initialProject?.id || team?.id || `proj-${Date.now()}`,
+    name: initialProject?.name || team?.name || "My Venture Project",
+    problemStatement: initialProject?.problemStatement || team?.problem_statement || "No problem statement submitted yet. Click 'Edit Venture' to add details.",
+    stage: (initialProject?.stage || "idea") as "idea" | "prototype" | "validation" | "incubation" | "funding" | "market" | "scale",
+    progress: initialProject?.progress ?? 10,
+    pitchDeck: initialProject?.pitchDeck || "",
+    grantStatus: (initialProject?.grantStatus || "under_review") as "under_review" | "approved" | "grant_awarded" | "needs_revision",
+    reviewerNotes: initialProject?.reviewerNotes || "",
+    journeyMilestones: (Array.isArray(initialProject?.journeyMilestones)
+      ? initialProject.journeyMilestones
+      : []) as Array<{
       id: string;
       stage: string;
       title: string;
@@ -218,9 +221,13 @@ export function UserPortal({ profile, registration, members, downloads }: Portal
     pitchDeck: project.pitchDeck,
   });
 
-  // Sync initial state from API
+  // Sync initial state from API for THIS user only
   useEffect(() => {
-    fetch("/api/portal/projects")
+    const userEmail = currentProfile?.email || profile?.email || "";
+    const teamId = team?.id || "";
+    if (!userEmail && !teamId) return;
+
+    fetch(`/api/portal/projects?email=${encodeURIComponent(userEmail)}&teamId=${encodeURIComponent(teamId)}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.project) {
@@ -228,7 +235,7 @@ export function UserPortal({ profile, registration, members, downloads }: Portal
           setProject((prev) => ({
             ...prev,
             ...p,
-            journeyMilestones: p.journeyMilestones || prev.journeyMilestones,
+            journeyMilestones: Array.isArray(p.journeyMilestones) ? p.journeyMilestones : [],
           }));
           if (p.documents && Array.isArray(p.documents)) {
             setUserDocuments(p.documents);
@@ -246,7 +253,7 @@ export function UserPortal({ profile, registration, members, downloads }: Portal
         }
       })
       .catch(() => {});
-  }, []);
+  }, [currentProfile?.email, profile?.email, team?.id]);
 
   async function handleUpdateProject(e: React.FormEvent) {
     e.preventDefault();
