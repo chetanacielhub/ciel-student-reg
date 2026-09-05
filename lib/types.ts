@@ -253,6 +253,7 @@ export type UserProfileItem = {
   email: string | null;
   phone: string | null;
   password?: string;
+  status?: "active" | "suspended" | "pending";
   created_at: string;
 };
 

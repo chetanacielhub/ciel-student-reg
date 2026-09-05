@@ -317,15 +317,55 @@ function ERPUsersTab({
     return !q || [p.full_name, p.email ?? "", p.phone ?? ""].some((v) => v.toLowerCase().includes(q));
   });
 
-  function toggleStatus(id: string, nextStatus: "active" | "suspended") {
+  async function toggleStatus(id: string, nextStatus: "active" | "suspended") {
+    const target = userList.find((u) => u.id === id);
     setUserList((prev) =>
       prev.map((u) => (u.id === id ? { ...u, status: nextStatus } : u))
     );
+
+    try {
+      await fetch("/api/admin/users", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: nextStatus, email: target?.email }),
+      });
+    } catch {
+      // Ignore network hiccup
+    }
   }
 
-  function deleteUser(id: string) {
-    if (confirm("Are you sure you want to delete this user record from ERP?")) {
-      setUserList((prev) => prev.filter((u) => u.id !== id));
+  async function deleteUser(id: string) {
+    const target = userList.find((u) => u.id === id);
+    const displayName = target?.full_name || target?.email || "this user";
+
+    if (
+      !confirm(
+        `Are you sure you want to permanently delete user "${displayName}" from CIEL ERP?\n\nThis will permanently remove their account credentials, registrations, and project records.`
+      )
+    ) {
+      return;
+    }
+
+    // Optimistically update list
+    const previousList = userList;
+    setUserList((prev) => prev.filter((u) => u.id !== id));
+    if (selectedUserForJourney?.id === id) {
+      setSelectedUserForJourney(null);
+    }
+
+    try {
+      const res = await fetch(
+        `/api/admin/users?id=${encodeURIComponent(id)}&email=${encodeURIComponent(target?.email || "")}`,
+        { method: "DELETE" }
+      );
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        setUserList(previousList);
+        alert(json.error || "Failed to delete user from server.");
+      }
+    } catch {
+      setUserList(previousList);
+      alert("Network error while attempting to delete user.");
     }
   }
 
@@ -398,9 +438,15 @@ function ERPUsersTab({
               filtered.map((p, i) => (
                 <tr key={p.id}>
                   <td className="adm-td-muted">{i + 1}</td>
-                  <td className="adm-td-primary">{p.full_name || "—"}</td>
-                  <td className="adm-td-secondary">{p.email || "—"}</td>
-                  <td className="adm-td-secondary">{p.phone || "—"}</td>
+                  <td>
+                    <span className="adm-td-primary">{p.full_name || "—"}</span>
+                  </td>
+                  <td>
+                    <span className="adm-td-secondary">{p.email || "—"}</span>
+                  </td>
+                  <td>
+                    <span className="adm-td-secondary">{p.phone || "—"}</span>
+                  </td>
                   <td>
                     <span
                       className={`badge ${p.status === "active" ? "badge-brand" : "badge-neutral"}`}
@@ -409,8 +455,10 @@ function ERPUsersTab({
                       {p.status}
                     </span>
                   </td>
-                  <td className="adm-td-secondary">
-                    {new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(new Date(p.created_at))}
+                  <td>
+                    <span className="adm-td-secondary">
+                      {new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(new Date(p.created_at))}
+                    </span>
                   </td>
                   <td>
                     <div style={{ display: "flex", gap: 8 }}>
@@ -443,6 +491,7 @@ function ERPUsersTab({
                         className="adm-btn adm-btn-outline"
                         style={{ padding: "4px 8px", fontSize: 11, color: "#FF8080" }}
                         onClick={() => deleteUser(p.id)}
+                        title="Delete user account from CIEL ERP"
                       >
                         <Trash2 size={13} />
                       </button>

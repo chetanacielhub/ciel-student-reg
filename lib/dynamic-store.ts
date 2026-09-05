@@ -699,6 +699,101 @@ export async function addStoreProfile(profile: UserProfileItem): Promise<void> {
   await saveStore(store);
 }
 
+export async function deleteStoreProfile(id: string, email?: string | null): Promise<boolean> {
+  const store = await ensureStore();
+  const cleanEmail = email ? email.toLowerCase().trim() : null;
+
+  // 1. Remove from local JSON store userProfiles
+  if (store.userProfiles) {
+    store.userProfiles = store.userProfiles.filter((p) => {
+      if (p.id === id) return false;
+      if (cleanEmail && p.email?.toLowerCase().trim() === cleanEmail) return false;
+      return true;
+    });
+  }
+
+  // 2. Remove from local JSON store registrations
+  if (store.registrations) {
+    store.registrations = store.registrations.filter((r) => {
+      if (r.userId === id) return false;
+      if (cleanEmail && r.email?.toLowerCase().trim() === cleanEmail) return false;
+      return true;
+    });
+  }
+
+  // 3. Remove from local JSON store venture projects if founder
+  if (store.projects && cleanEmail) {
+    store.projects = store.projects.filter((p) => {
+      return p.leaderEmail?.toLowerCase().trim() !== cleanEmail;
+    });
+  }
+
+  await saveStore(store);
+
+  // 4. Remove from Supabase tables
+  try {
+    const supabase = createAdminClient();
+
+    if (id) {
+      await supabase.from("profiles").delete().eq("id", id);
+      await supabase.from("user_profiles").delete().eq("id", id);
+      await supabase.from("event_registrations").delete().eq("user_id", id);
+    }
+    if (cleanEmail) {
+      await supabase.from("profiles").delete().eq("email", cleanEmail);
+      await supabase.from("user_profiles").delete().eq("email", cleanEmail);
+    }
+
+    // Delete from auth.users if id matches a UUID pattern
+    if (id && id.length > 20 && id.includes("-")) {
+      try {
+        await supabase.auth.admin.deleteUser(id);
+      } catch {
+        // Ignore if user not in auth.users
+      }
+    }
+  } catch {
+    // Ignore DB errors
+  }
+
+  return true;
+}
+
+export async function updateStoreProfileStatus(
+  id: string,
+  status: "active" | "suspended" | "pending",
+  email?: string | null
+): Promise<boolean> {
+  const store = await ensureStore();
+  const cleanEmail = email ? email.toLowerCase().trim() : null;
+
+  if (store.userProfiles) {
+    store.userProfiles = store.userProfiles.map((p) => {
+      if (p.id === id || (cleanEmail && p.email?.toLowerCase().trim() === cleanEmail)) {
+        return { ...p, status };
+      }
+      return p;
+    });
+    await saveStore(store);
+  }
+
+  try {
+    const supabase = createAdminClient();
+    if (id) {
+      await supabase.from("profiles").update({ status }).eq("id", id);
+      await supabase.from("user_profiles").update({ status }).eq("id", id);
+    }
+    if (cleanEmail) {
+      await supabase.from("profiles").update({ status }).eq("email", cleanEmail);
+      await supabase.from("user_profiles").update({ status }).eq("email", cleanEmail);
+    }
+  } catch {
+    // Ignore DB missing column/table
+  }
+
+  return true;
+}
+
 export async function getStoreRegistrations(): Promise<any[]> {
   const store = await ensureStore();
   return store.registrations || [];
