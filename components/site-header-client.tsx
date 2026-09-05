@@ -39,10 +39,6 @@ export function SiteHeaderClient({ signedIn }: { signedIn: boolean }) {
     setMounted(true);
   }, []);
 
-  if (pathname?.startsWith("/dashboard")) {
-    return null;
-  }
-
   // Lock body scroll when mobile menu is open
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -65,6 +61,11 @@ export function SiteHeaderClient({ signedIn }: { signedIn: boolean }) {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  // All hooks must be called before any early returns (Rules of Hooks)
+  if (pathname?.startsWith("/dashboard")) {
+    return null;
+  }
 
   const mobileDrawer = mobileMenuOpen && mounted ? (
     <div

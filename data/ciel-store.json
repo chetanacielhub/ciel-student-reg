@@ -83,6 +83,54 @@
       "phone": "+9112345678",
       "password": "abc123",
       "created_at": "2026-08-29T12:50:54.070Z"
+    },
+    {
+      "id": "usr-1788604093090",
+      "full_name": "Test User",
+      "email": "newtest2@example.com",
+      "phone": "+919876543210",
+      "password": "test123456",
+      "created_at": "2026-09-05T10:28:13.090Z"
+    },
+    {
+      "id": "usr-1788604155202",
+      "full_name": "Test User",
+      "email": "newtest3@example.com",
+      "phone": "+919876543210",
+      "password": "test123456",
+      "created_at": "2026-09-05T10:29:15.202Z"
+    },
+    {
+      "id": "usr-1788605157795",
+      "full_name": "Admin Test",
+      "email": "admintest@example.com",
+      "phone": "+919999999999",
+      "password": "password123",
+      "created_at": "2026-09-05T10:45:57.795Z"
+    },
+    {
+      "id": "usr-1788605355732",
+      "full_name": "Header Test",
+      "email": "headertest@example.com",
+      "phone": "+919123456789",
+      "password": "securepass123",
+      "created_at": "2026-09-05T10:49:15.732Z"
+    },
+    {
+      "id": "usr-1788605748742",
+      "full_name": "Cookie Test",
+      "email": "cookietest99@example.com",
+      "phone": "+919012345678",
+      "password": "test123456",
+      "created_at": "2026-09-05T10:55:48.742Z"
+    },
+    {
+      "id": "usr-1788605988502",
+      "full_name": "xyz",
+      "email": "xyz@gmail.com",
+      "phone": "+9112345678",
+      "password": "xyz123",
+      "created_at": "2026-09-05T10:59:48.502Z"
     }
   ],
   "registrations": [
