@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
+  AlertCircle,
   Award,
   Bell,
   Briefcase,
@@ -16,6 +17,7 @@ import {
   Download,
   ExternalLink,
   Eye,
+  EyeOff,
   FileCheck,
   FileSpreadsheet,
   FileText,
@@ -566,6 +568,8 @@ export function UserPortal({ profile, registration, members, downloads }: Portal
   >([]);
 
   const [passwordForm, setPasswordForm] = useState({ newPassword: "", confirmPassword: "" });
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordMsg, setPasswordMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -573,22 +577,30 @@ export function UserPortal({ profile, registration, members, downloads }: Portal
     e.preventDefault();
     setPasswordMsg(null);
 
-    if (!passwordForm.newPassword || passwordForm.newPassword.length < 8) {
+    const newPwd = passwordForm.newPassword.trim();
+    const confirmPwd = passwordForm.confirmPassword.trim();
+
+    if (!newPwd || newPwd.length < 8) {
       setPasswordMsg({ type: "error", text: "New password must be at least 8 characters long." });
       return;
     }
 
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+    if (newPwd !== confirmPwd) {
       setPasswordMsg({ type: "error", text: "New password and confirmation do not match." });
       return;
     }
 
     setPasswordLoading(true);
     try {
+      const userEmail = currentProfile?.email || profile?.email;
       const res = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(passwordForm),
+        body: JSON.stringify({
+          newPassword: newPwd,
+          confirmPassword: confirmPwd,
+          email: userEmail,
+        }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
@@ -938,11 +950,36 @@ export function UserPortal({ profile, registration, members, downloads }: Portal
                 <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Current Stage: <strong style={{ color: "var(--text-white)", textTransform: "capitalize" }}>{project.stage}</strong></span>
               </div>
               <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-                {STAGES.map((st) => {
+                {STAGES.map((st, idx) => {
                   const isActive = st.key === project.stage;
                   return (
-                    <div
+                    <button
                       key={st.key}
+                      type="button"
+                      onClick={async () => {
+                        const stageProgress = [10, 25, 40, 55, 70, 85, 100];
+                        const newProgress = stageProgress[idx] ?? 10;
+                        setProject((prev) => ({ ...prev, stage: st.key as typeof project.stage, progress: newProgress }));
+                        setEditForm((prev) => ({ ...prev, stage: st.key as typeof project.stage, progress: newProgress }));
+                        // Persist to API
+                        try {
+                          await fetch("/api/portal/projects", {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              id: project.id,
+                              name: project.name,
+                              problemStatement: project.problemStatement,
+                              stage: st.key,
+                              progress: newProgress,
+                              pitchDeck: project.pitchDeck,
+                              teamName: team?.name || project.name,
+                              leaderEmail: currentProfile?.email,
+                              leaderName: currentProfile?.full_name,
+                            }),
+                          });
+                        } catch { /* ignore — local state already updated */ }
+                      }}
                       style={{
                         flex: 1,
                         padding: "10px 4px",
@@ -950,10 +987,18 @@ export function UserPortal({ profile, registration, members, downloads }: Portal
                         borderRadius: 6,
                         background: isActive ? "linear-gradient(135deg, rgba(212,175,55,0.3), rgba(184,134,11,0.2))" : "rgba(255,255,255,0.03)",
                         border: isActive ? "1px solid var(--ciel-gold)" : "1px solid var(--line)",
+                        cursor: "pointer",
+                        transition: "background 0.18s, border-color 0.18s",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = "rgba(212,175,55,0.08)";
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.03)";
                       }}
                     >
                       <div style={{ fontSize: 11, fontWeight: 700, color: isActive ? "var(--ciel-gold-bright)" : "var(--text-muted)", textTransform: "uppercase" }}>{st.label}</div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
@@ -1544,8 +1589,8 @@ export function UserPortal({ profile, registration, members, downloads }: Portal
               </div>
 
               {passwordMsg && (
-                <div className={`alert alert-${passwordMsg.type === "success" ? "success" : "danger"}`} style={{ marginBottom: 18 }}>
-                  {passwordMsg.type === "success" ? <CheckCircle2 size={16} /> : <LockKeyhole size={16} />}
+                <div className={`alert ${passwordMsg.type === "success" ? "alert-success" : "alert-error"}`} style={{ marginBottom: 18 }}>
+                  {passwordMsg.type === "success" ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
                   <span>{passwordMsg.text}</span>
                 </div>
               )}
@@ -1555,35 +1600,79 @@ export function UserPortal({ profile, registration, members, downloads }: Portal
                   <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
                     New Password (Min 8 Characters)
                   </label>
-                  <input
-                    type="password"
-                    className="input"
-                    placeholder=""
-                    value={passwordForm.newPassword}
-                    onChange={(e) => setPasswordForm((prev) => ({ ...prev, newPassword: e.target.value }))}
-                    required
-                  />
+                  <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      className="input"
+                      placeholder="Enter new secure password"
+                      value={passwordForm.newPassword}
+                      onChange={(e) => setPasswordForm((prev) => ({ ...prev, newPassword: e.target.value }))}
+                      required
+                      style={{ paddingRight: 40 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword((prev) => !prev)}
+                      style={{
+                        position: "absolute",
+                        right: 12,
+                        background: "none",
+                        border: "none",
+                        color: "var(--text-secondary)",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        padding: 0,
+                      }}
+                      tabIndex={-1}
+                      aria-label={showNewPassword ? "Hide password" : "Show password"}
+                    >
+                      {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
                 </div>
 
                 <div>
                   <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
                     Confirm New Password
                   </label>
-                  <input
-                    type="password"
-                    className="input"
-                    placeholder=""
-                    value={passwordForm.confirmPassword}
-                    onChange={(e) => setPasswordForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
-                    required
-                  />
+                  <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      className="input"
+                      placeholder="Re-enter new password"
+                      value={passwordForm.confirmPassword}
+                      onChange={(e) => setPasswordForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+                      required
+                      style={{ paddingRight: 40 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((prev) => !prev)}
+                      style={{
+                        position: "absolute",
+                        right: 12,
+                        background: "none",
+                        border: "none",
+                        color: "var(--text-secondary)",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        padding: 0,
+                      }}
+                      tabIndex={-1}
+                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                    >
+                      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
                 </div>
 
                 <button
                   type="submit"
                   className="button button-primary"
                   disabled={passwordLoading}
-                  style={{ width: "fit-content", marginTop: 4 }}
+                  style={{ width: "fit-content", marginTop: 4, display: "flex", alignItems: "center", gap: 8 }}
                 >
                   <LockKeyhole size={16} /> {passwordLoading ? "Updating Password..." : "Update Password"}
                 </button>

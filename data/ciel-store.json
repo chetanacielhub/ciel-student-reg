@@ -66,14 +66,65 @@
       ]
     }
   ],
-  "projects": [],
+  "projects": [
+    {
+      "id": "team-1788606021307",
+      "name": "Innovation Venture",
+      "journeyMilestones": [
+        {
+          "id": "jm-1788606168304",
+          "projectId": "team-1788606021307",
+          "stage": "prototype",
+          "title": "bhnjmk",
+          "description": "gbhnj",
+          "date": "2026-09-05",
+          "status": "completed"
+        },
+        {
+          "id": "jm-1788606152693",
+          "projectId": "team-1788606021307",
+          "stage": "validation",
+          "title": "gbhnj",
+          "description": "bnm,",
+          "date": "2026-09-05",
+          "status": "completed"
+        }
+      ],
+      "documents": [
+        {
+          "id": "doc-1788606266676",
+          "title": "gbh",
+          "category": "Pitch Deck",
+          "filename": "disclosureSEOutcomeResults290526-.pdf",
+          "format": "PDF",
+          "size": "8.6 MB",
+          "date": "2026-09-05",
+          "url": "/uploads/Document_Attachment.pdf"
+        }
+      ],
+      "updatedAt": "2026-09-05T11:07:47.426Z",
+      "leaderEmail": "xyz@gmail.com",
+      "leaderName": "xyzz",
+      "teamName": "Innovation Venture",
+      "problemStatement": "defgvb",
+      "stage": "incubation",
+      "progress": 55,
+      "pitchDeck": "",
+      "traction": {
+        "funding": "Not Sanctioned Yet",
+        "activePilots": "0 Pilots Active",
+        "iprStatus": "Not Filed",
+        "mrr": "₹0 / mo"
+      }
+    }
+  ],
   "userProfiles": [
     {
       "id": "usr-1786178629315",
       "full_name": "Kali Linux",
       "email": "kalilinux16112004@gmail.com",
       "phone": "+918104378309",
-      "password": "Kk@123456",
+      "password": "FinalPassword2026!",
       "created_at": "2026-08-08T08:43:49.315Z"
     },
     {
@@ -125,12 +176,12 @@
       "created_at": "2026-09-05T10:55:48.742Z"
     },
     {
-      "id": "usr-1788605988502",
-      "full_name": "xyz",
+      "id": "f05f8fe5-ce8a-408a-aadc-c145d8a9dbdb",
+      "full_name": "xyzz",
       "email": "xyz@gmail.com",
       "phone": "+9112345678",
-      "password": "xyz123",
-      "created_at": "2026-09-05T10:59:48.502Z"
+      "password": "12345678",
+      "created_at": "2026-09-05T10:59:50.848752+00:00"
     }
   ],
   "registrations": [
