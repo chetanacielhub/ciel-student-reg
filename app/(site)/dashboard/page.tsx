@@ -109,10 +109,10 @@ export default async function DashboardPage() {
   const registration = {
     id: registrationData?.id || matchedReg?.id || `reg-${Date.now()}`,
     role: (registrationData?.role || matchedReg?.role || "team_leader") as "team_leader" | "team_member" | "solo",
-    roll_number: registrationData?.roll_number || matchedReg?.rollNumber || "1",
+    roll_number: registrationData?.roll_number || matchedReg?.rollNumber || "",
     created_at: registrationData?.created_at || matchedReg?.createdAt || new Date().toISOString(),
-    institutions: registrationData?.institutions || { name: matchedReg?.institution || "Chetana Institute of Management & Research" },
-    classes: registrationData?.classes || { name: matchedReg?.className || "MBA / PGDM - Final Year" },
+    institutions: registrationData?.institutions || (matchedReg?.institution ? { name: matchedReg.institution } : null),
+    classes: registrationData?.classes || (matchedReg?.className ? { name: matchedReg.className } : null),
     teams: registrationData?.teams || {
       id: matchedProject?.teamId || `team-${Date.now()}`,
       name: matchedProject?.teamName || matchedReg?.teamName || "Innovation Venture",
@@ -166,48 +166,22 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", padding: "16px 24px 40px", maxWidth: 1440, margin: "0 auto" }}>
+    <div className="portal-dashboard-shell">
       {/* Sleek Participant Portal Top Bar */}
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "12px 20px",
-          marginBottom: 20,
-          background: "rgba(255, 255, 255, 0.03)",
-          border: "1px solid var(--line)",
-          borderRadius: "var(--radius-md)",
-          backdropFilter: "blur(12px)",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+      <header className="portal-top-bar">
+        <div className="portal-top-bar-left">
           <Logo href="/dashboard" size="small" />
-          <div style={{ height: 20, width: 1, background: "var(--line)" }} />
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 800,
-              letterSpacing: "1px",
-              textTransform: "uppercase",
-              color: "var(--ciel-gold-bright)",
-              background: "rgba(212, 175, 55, 0.1)",
-              padding: "3px 10px",
-              borderRadius: 20,
-              border: "1px solid rgba(212, 175, 55, 0.25)",
-            }}
-          >
-            Innovator Portal
-          </span>
+          <div className="portal-top-bar-divider" />
+          <span className="portal-badge">Innovator Portal</span>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div className="portal-top-bar-right">
           <Link
             href="/"
             className="button button-ghost button-small"
             style={{ fontSize: 13, gap: 6 }}
           >
-            <Globe size={14} /> Public Website
+            <Globe size={14} /> <span className="portal-btn-label">Public Website</span>
           </Link>
 
           <ThemeToggle />
@@ -217,7 +191,7 @@ export default async function DashboardPage() {
               type="submit"
               className="btn-signout-red"
             >
-              <LogOut size={14} /> Sign Out
+              <LogOut size={14} /> <span className="portal-btn-label">Sign Out</span>
             </button>
           </form>
         </div>

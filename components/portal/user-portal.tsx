@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   AlertCircle,
@@ -33,6 +33,7 @@ import {
   LockKeyhole,
   LogOut,
   Mail,
+  Menu,
   Pencil,
   Plus,
   Rocket,
@@ -127,14 +128,78 @@ function getInitials(name?: string | null) {
 
 export function UserPortal({ profile, registration, members, downloads, initialProject }: PortalProps) {
   const [activeTab, setActiveTab] = useState<PortalTab>("profile");
-  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [teamMembers, setTeamMembers] = useState(members);
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
   const [showMilestoneModal, setShowMilestoneModal] = useState(false);
   const [showEditProjectModal, setShowEditProjectModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const [inviteEmail, setInviteEmail] = useState("");
+  // New Member Form State
+  const [newMemberForm, setNewMemberForm] = useState({
+    fullName: "",
+    rollNumber: "",
+    email: "",
+    phone: "",
+    role: "team_member" as string,
+  });
+  const [memberFeedback, setMemberFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
   const team = registration.teams;
+
+  // Load any locally cached added members
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem(`ciel_team_members_${registration.id}`);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setTeamMembers(parsed);
+          }
+        }
+      } catch {}
+    }
+  }, [registration.id]);
+
+  function handleAddMember(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newMemberForm.fullName.trim()) return;
+
+    const newEntry = {
+      id: `mem-${Date.now()}`,
+      role: (newMemberForm.role || "team_member") as "team_leader" | "team_member" | "solo",
+      roll_number: newMemberForm.rollNumber.trim() || "N/A",
+      profiles: {
+        full_name: newMemberForm.fullName.trim(),
+        email: newMemberForm.email.trim() || null,
+        phone: newMemberForm.phone.trim() || null,
+      },
+      classes: null,
+    };
+
+    const updated = [...teamMembers, newEntry];
+    setTeamMembers(updated);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(`ciel_team_members_${registration.id}`, JSON.stringify(updated));
+      } catch {}
+    }
+    setNewMemberForm({ fullName: "", rollNumber: "", email: "", phone: "", role: "team_member" });
+    setShowAddMemberModal(false);
+    setMemberFeedback({ type: "success", text: `${newEntry.profiles.full_name} was added to the team roster!` });
+  }
+
+  function handleRemoveMember(id: string) {
+    const updated = teamMembers.filter((m) => m.id !== id);
+    setTeamMembers(updated);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(`ciel_team_members_${registration.id}`, JSON.stringify(updated));
+      } catch {}
+    }
+  }
 
   // Editable Profile State
   const [currentProfile, setCurrentProfile] = useState(profile);
@@ -145,8 +210,6 @@ export function UserPortal({ profile, registration, members, downloads, initialP
   const [profileForm, setProfileForm] = useState({
     fullName: profile?.full_name || "",
     phone: profile?.phone || "",
-    rollNumber: registration.roll_number || "",
-    institutionName: registration.institutions?.name || "Chetana Institute of Management & Research",
   });
 
   async function handleSaveProfile(e: React.FormEvent) {
@@ -166,11 +229,6 @@ export function UserPortal({ profile, registration, members, downloads, initialP
           full_name: profileForm.fullName,
           phone: profileForm.phone,
         } : null));
-        setCurrentRegistration((prev) => ({
-          ...prev,
-          roll_number: profileForm.rollNumber,
-          institutions: { ...prev.institutions, name: profileForm.institutionName },
-        }));
         setProfileMsg({ type: "success", text: "Profile details updated successfully!" });
         setIsEditingProfile(false);
       } else {
@@ -220,6 +278,17 @@ export function UserPortal({ profile, registration, members, downloads, initialP
     progress: project.progress,
     pitchDeck: project.pitchDeck,
   });
+
+  const navContainerRef = useRef<HTMLElement | null>(null);
+
+  // Auto-scroll active tab into center view on mobile tab bar
+  useEffect(() => {
+    if (!navContainerRef.current) return;
+    const activeBtn = navContainerRef.current.querySelector<HTMLButtonElement>(".adm-nav-item.active");
+    if (activeBtn) {
+      activeBtn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    }
+  }, [activeTab]);
 
   // Sync initial state from API for THIS user only
   useEffect(() => {
@@ -623,37 +692,126 @@ export function UserPortal({ profile, registration, members, downloads, initialP
     }
   }
 
+  const NAV_ITEMS: Array<{
+    id: PortalTab;
+    label: string;
+    icon: React.ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }>;
+    badge?: number;
+  }> = [
+    { id: "profile", label: "Profile", icon: UserRound },
+    { id: "startup", label: "My Startup", icon: Rocket },
+    { id: "team", label: "My Team", icon: UsersRound, badge: teamMembers.length },
+    { id: "documents", label: "Documents", icon: FileText, badge: userDocuments.length },
+    { id: "applications", label: "Applications", icon: ShieldCheck, badge: applications.length },
+    { id: "mentorship", label: "Mentorship", icon: UserCheck },
+    { id: "events", label: "Events", icon: Zap },
+    { id: "certificates", label: "Certificates", icon: Award },
+    { id: "settings", label: "Settings", icon: Settings },
+  ];
+
+  const currentNav = NAV_ITEMS.find((n) => n.id === activeTab) || NAV_ITEMS[0];
+  const CurrentIcon = currentNav.icon;
+
   return (
-    <div style={{ display: "flex", minHeight: "80vh", gap: 24, marginTop: 12 }}>
-      {/* 1. NOTION / LINEAR STYLE SLEEK COMPACT SIDEBAR */}
-      <aside
-        className="portal-sidebar"
-        style={{
-          width: 240,
-          flexShrink: 0,
-          position: "sticky",
-          top: 20,
-          alignSelf: "flex-start",
-        }}
-      >
-        <div style={{ padding: "0 4px 12px", borderBottom: "1px solid var(--line)", marginBottom: 10 }}>
+    <div className="portal-layout-container">
+      {/* 1. MOBILE TOP BAR WITH HAMBURGER BUTTON (PHONE VIEW) */}
+      <div className="portal-mobile-nav-bar">
+        <button
+          type="button"
+          className="portal-hamburger-btn"
+          onClick={() => setIsMobileNavOpen(true)}
+          aria-label="Open portal navigation menu"
+        >
+          <Menu size={18} />
+          <span>Menu</span>
+        </button>
+
+        <div className="portal-mobile-active-tab" onClick={() => setIsMobileNavOpen(true)}>
+          <CurrentIcon size={15} style={{ color: "var(--ciel-gold-bright)" }} />
+          <span>{currentNav.label}</span>
+        </div>
+
+        <button
+          type="button"
+          className="portal-mobile-avatar-btn"
+          onClick={() => setIsMobileNavOpen(true)}
+          aria-label="Open portal navigation menu"
+        >
+          <div className="portal-user-avatar portal-user-avatar-sm">
+            {getInitials(currentProfile?.full_name)}
+          </div>
+        </button>
+      </div>
+
+      {/* 2. MOBILE NAVIGATION DRAWER (MATCHING USER SCREENSHOT CARD) */}
+      {isMobileNavOpen && (
+        <div className="portal-drawer-backdrop" onClick={() => setIsMobileNavOpen(false)}>
+          <div
+            className="portal-drawer-card"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Portal Navigation"
+          >
+            <div className="portal-drawer-header">
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div className="portal-user-avatar">
+                  {getInitials(currentProfile?.full_name)}
+                </div>
+                <div style={{ overflow: "hidden" }}>
+                  <strong className="portal-user-name" style={{ fontSize: 14.5 }}>
+                    {currentProfile?.full_name || "Innovator Account"}
+                  </strong>
+                  <span className="portal-user-role">
+                    {currentRegistration.role.replace("_", " ").toUpperCase()}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="portal-drawer-close-btn"
+                onClick={() => setIsMobileNavOpen(false)}
+                aria-label="Close navigation"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="portal-drawer-divider" />
+
+            <nav className="portal-drawer-nav">
+              {NAV_ITEMS.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={`adm-nav-item ${isActive ? "active" : ""}`}
+                    onClick={() => {
+                      setActiveTab(item.id);
+                      setIsMobileNavOpen(false);
+                    }}
+                  >
+                    <Icon size={16} />
+                    <span>{item.label}</span>
+                    {typeof item.badge === "number" && (
+                      <span className="adm-nav-badge">{item.badge}</span>
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+        </div>
+      )}
+
+      {/* 3. NOTION / LINEAR STYLE SLEEK DESKTOP SIDEBAR */}
+      <aside className="portal-sidebar portal-sidebar-desktop">
+        <div className="portal-sidebar-user">
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: "50%",
-                background: "linear-gradient(135deg, #F5D77F, #D4AF37)",
-                color: "#08090D",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: 800,
-                fontSize: 14,
-                boxShadow: "0 0 12px rgba(212, 175, 55, 0.25)",
-                flexShrink: 0,
-              }}
-            >
+            <div className="portal-user-avatar">
               {getInitials(currentProfile?.full_name)}
             </div>
             <div style={{ overflow: "hidden" }}>
@@ -667,44 +825,35 @@ export function UserPortal({ profile, registration, members, downloads, initialP
           </div>
         </div>
 
-        {/* Streamlined Compact Sidebar Nav Items */}
-        <nav style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <button className={`adm-nav-item ${activeTab === "profile" ? "active" : ""}`} onClick={() => setActiveTab("profile")} style={{ padding: "7px 10px", fontSize: 13 }}>
-            <UserRound size={15} /> Profile
-          </button>
-          <button className={`adm-nav-item ${activeTab === "startup" ? "active" : ""}`} onClick={() => setActiveTab("startup")} style={{ padding: "7px 10px", fontSize: 13 }}>
-            <Rocket size={15} /> My Startup
-          </button>
-          <button className={`adm-nav-item ${activeTab === "team" ? "active" : ""}`} onClick={() => setActiveTab("team")} style={{ padding: "7px 10px", fontSize: 13 }}>
-            <UsersRound size={15} /> My Team <span className="adm-nav-badge">{members.length}</span>
-          </button>
-          <button className={`adm-nav-item ${activeTab === "documents" ? "active" : ""}`} onClick={() => setActiveTab("documents")} style={{ padding: "7px 10px", fontSize: 13 }}>
-            <FileText size={15} /> Documents <span className="adm-nav-badge">{userDocuments.length}</span>
-          </button>
-          <button className={`adm-nav-item ${activeTab === "applications" ? "active" : ""}`} onClick={() => setActiveTab("applications")} style={{ padding: "7px 10px", fontSize: 13 }}>
-            <ShieldCheck size={15} /> Applications <span className="adm-nav-badge">{applications.length}</span>
-          </button>
-          <button className={`adm-nav-item ${activeTab === "mentorship" ? "active" : ""}`} onClick={() => setActiveTab("mentorship")} style={{ padding: "7px 10px", fontSize: 13 }}>
-            <UserCheck size={15} /> Mentorship
-          </button>
-          <button className={`adm-nav-item ${activeTab === "events" ? "active" : ""}`} onClick={() => setActiveTab("events")} style={{ padding: "7px 10px", fontSize: 13 }}>
-            <Zap size={15} /> Events
-          </button>
-          <button className={`adm-nav-item ${activeTab === "certificates" ? "active" : ""}`} onClick={() => setActiveTab("certificates")} style={{ padding: "7px 10px", fontSize: 13 }}>
-            <Award size={15} /> Certificates
-          </button>
-          <button className={`adm-nav-item ${activeTab === "settings" ? "active" : ""}`} onClick={() => setActiveTab("settings")} style={{ padding: "7px 10px", fontSize: 13 }}>
-            <Settings size={15} /> Settings
-          </button>
+        {/* Desktop Sidebar Nav Items */}
+        <nav className="portal-nav-list" style={{ display: "flex", flexDirection: "column", gap: 4, width: "100%" }}>
+          {NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                className={`adm-nav-item ${isActive ? "active" : ""}`}
+                onClick={() => setActiveTab(item.id)}
+              >
+                <Icon size={15} />
+                <span>{item.label}</span>
+                {typeof item.badge === "number" && (
+                  <span className="adm-nav-badge">{item.badge}</span>
+                )}
+              </button>
+            );
+          })}
         </nav>
       </aside>
 
       {/* 2. MAIN CONTENT VIEWPORT */}
-      <main style={{ flex: 1, minWidth: 0 }}>
+      <main className="portal-main-content">
         {/* TAB 1: PROFILE */}
         {activeTab === "profile" && (
-          <div className="luxury-card" style={{ padding: 32 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <div className="luxury-card portal-card">
+            <div className="portal-header-actions">
               <div>
                 <h2 style={{ fontSize: 22, color: "var(--text-white)", margin: 0 }}>Innovator Profile</h2>
                 <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>Manage your personal credentials &amp; institutional profile</span>
@@ -781,34 +930,6 @@ export function UserPortal({ profile, registration, members, downloads, initialP
                   />
                 </div>
 
-                <div>
-                  <label style={{ fontSize: 13.5, fontWeight: 700, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
-                    Campus / Institution
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={profileForm.institutionName}
-                    onChange={(e) => setProfileForm((prev) => ({ ...prev, institutionName: e.target.value }))}
-                    placeholder=""
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label style={{ fontSize: 13.5, fontWeight: 700, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
-                    Roll / Student ID
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={profileForm.rollNumber}
-                    onChange={(e) => setProfileForm((prev) => ({ ...prev, rollNumber: e.target.value }))}
-                    placeholder=""
-                    required
-                  />
-                </div>
-
                 <div className="detail-row" style={{ marginTop: 4 }}>
                   <span>Portal Role</span>
                   <strong style={{ color: "var(--ciel-gold-bright)" }}>
@@ -845,14 +966,6 @@ export function UserPortal({ profile, registration, members, downloads, initialP
                   <strong>{currentProfile?.phone || "Not provided"}</strong>
                 </div>
                 <div className="detail-row">
-                  <span>Campus / Institution</span>
-                  <strong>{currentRegistration.institutions?.name || "CIEL Campus"}</strong>
-                </div>
-                <div className="detail-row">
-                  <span>Roll / Student ID</span>
-                  <strong>{currentRegistration.roll_number || "—"}</strong>
-                </div>
-                <div className="detail-row">
                   <span>Portal Role</span>
                   <strong style={{ color: "var(--ciel-gold-bright)" }}>
                     {currentRegistration.role.replace("_", " ").toUpperCase()}
@@ -865,7 +978,7 @@ export function UserPortal({ profile, registration, members, downloads, initialP
 
         {/* TAB 2: MY STARTUP */}
         {activeTab === "startup" && (
-          <div className="luxury-card" style={{ padding: 32 }}>
+          <div className="luxury-card portal-card">
             {/* Admin Grant & Review Banner */}
             {project.grantStatus && (
               <div
@@ -891,13 +1004,13 @@ export function UserPortal({ profile, registration, members, downloads, initialP
               </div>
             )}
 
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
+            <div className="portal-header-actions">
               <div>
                 <span className="badge badge-brand" style={{ textTransform: "uppercase" }}>Stage: {project.stage}</span>
                 <h2 style={{ fontSize: 26, margin: "8px 0 4px", color: "var(--text-white)" }}>{project.name}</h2>
                 <span style={{ fontSize: 13.5, color: "var(--text-secondary)" }}>Team Roster: {members.length} Members</span>
               </div>
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <div className="portal-btn-group">
                 <button className="button button-secondary button-small" onClick={() => setShowTractionModal(true)}>
                   <TrendingUp size={15} /> Edit Traction
                 </button>
@@ -956,13 +1069,14 @@ export function UserPortal({ profile, registration, members, downloads, initialP
                 <span style={{ fontSize: 13, fontWeight: 700, color: "var(--ciel-gold-bright)" }}>INNOVATION JOURNEY PROGRESS ({project.progress}%)</span>
                 <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Current Stage: <strong style={{ color: "var(--text-white)", textTransform: "capitalize" }}>{project.stage}</strong></span>
               </div>
-              <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+              <div className="portal-stepper-wrap">
                 {STAGES.map((st, idx) => {
                   const isActive = st.key === project.stage;
                   return (
                     <button
                       key={st.key}
                       type="button"
+                      className="portal-stage-btn"
                       onClick={async () => {
                         const stageProgress = [10, 25, 40, 55, 70, 85, 100];
                         const newProgress = stageProgress[idx] ?? 10;
@@ -988,14 +1102,8 @@ export function UserPortal({ profile, registration, members, downloads, initialP
                         } catch { /* ignore — local state already updated */ }
                       }}
                       style={{
-                        flex: 1,
-                        padding: "10px 4px",
-                        textAlign: "center",
-                        borderRadius: 6,
                         background: isActive ? "linear-gradient(135deg, rgba(212,175,55,0.3), rgba(184,134,11,0.2))" : "rgba(255,255,255,0.03)",
                         border: isActive ? "1px solid var(--ciel-gold)" : "1px solid var(--line)",
-                        cursor: "pointer",
-                        transition: "background 0.18s, border-color 0.18s",
                       }}
                       onMouseEnter={(e) => {
                         if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = "rgba(212,175,55,0.08)";
@@ -1082,41 +1190,74 @@ export function UserPortal({ profile, registration, members, downloads, initialP
 
         {/* TAB 3: MY TEAM */}
         {activeTab === "team" && (
-          <div className="luxury-card" style={{ padding: 32 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+          <div className="luxury-card portal-card">
+            <div className="portal-header-actions">
               <div>
-                <h2 style={{ fontSize: 22, margin: 0 }}>Team Roster</h2>
-                <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>Team Code / Name: <strong>{team?.name || project.name}</strong></span>
+                <h2 style={{ fontSize: 22, margin: 0, color: "var(--text-white)" }}>Team Roster</h2>
+                <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+                  Team Code / Name: <strong>{team?.name || project.name}</strong> · ({teamMembers.length} Members)
+                </span>
               </div>
-              <button className="button button-primary button-small" onClick={() => setShowInviteModal(true)}>
-                <UserPlus size={15} /> Invite Member
+              <button className="button button-primary button-small" onClick={() => setShowAddMemberModal(true)}>
+                <UserPlus size={15} /> Add Team Member
               </button>
             </div>
 
+            {memberFeedback && (
+              <div className={`alert alert-${memberFeedback.type === "success" ? "success" : "danger"}`} style={{ marginBottom: 16 }}>
+                {memberFeedback.type === "success" ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+                <span>{memberFeedback.text}</span>
+              </div>
+            )}
+
             <div className="member-list">
-              {members.map((m) => (
-                <div className="member-item" key={m.id}>
-                  <div className="member-avatar">{getInitials(m.profiles?.full_name)}</div>
-                  <div style={{ flex: 1 }}>
-                    <strong>{m.profiles?.full_name || "Team Member"}</strong>
-                    <span>{m.role.replace("_", " ")} · Roll {m.roll_number}</span>
+              {teamMembers.map((m) => {
+                const isLeader = m.role === "team_leader";
+                return (
+                  <div className="member-item" key={m.id}>
+                    <div className="member-avatar">{getInitials(m.profiles?.full_name)}</div>
+                    <div style={{ flex: 1, minWidth: 160 }}>
+                      <strong style={{ fontSize: 15, color: "var(--text-white)", display: "block" }}>
+                        {m.profiles?.full_name || "Team Member"}
+                      </strong>
+                      <span style={{ fontSize: 13, color: "var(--text-secondary)", display: "block", marginTop: 2 }}>
+                        {m.role.replace("_", " ")} {m.roll_number ? `· Roll ${m.roll_number}` : ""}
+                        {m.profiles?.email ? ` · ${m.profiles.email}` : ""}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <span className={`badge ${isLeader ? "badge-brand" : "badge-neutral"}`} style={{ textTransform: "uppercase" }}>
+                        {m.role.replace("_", " ")}
+                      </span>
+                      {!isLeader && (
+                        <button
+                          type="button"
+                          className="button button-ghost button-small"
+                          style={{ color: "#FF8080", padding: "4px 8px" }}
+                          onClick={() => handleRemoveMember(m.id)}
+                          title="Remove member"
+                          aria-label="Remove member"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <span className="badge badge-neutral">{m.role}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
 
         {/* TAB 4: MY PROJECTS */}
         {activeTab === "projects" && (
-          <div className="luxury-card" style={{ padding: 32 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+          <div className="luxury-card portal-card">
+            <div className="portal-header-actions">
               <div>
-                <h2 style={{ fontSize: 22, margin: 0 }}>Venture Projects &amp; Innovation Stage</h2>
+                <h2 style={{ fontSize: 22, margin: 0, color: "var(--text-white)" }}>Venture Projects &amp; Innovation Stage</h2>
                 <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>Track journey from Idea to Scale</span>
               </div>
-              <div style={{ display: "flex", gap: 10 }}>
+              <div className="portal-btn-group">
                 <button className="button button-secondary button-small" onClick={() => setShowEditProjectModal(true)}>
                   <Settings size={15} /> Update Project
                 </button>
@@ -1126,8 +1267,8 @@ export function UserPortal({ profile, registration, members, downloads, initialP
               </div>
             </div>
 
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--ciel-gold-border)", borderRadius: 12, padding: 24, marginBottom: 24 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--ciel-gold-border)", borderRadius: 12, padding: "20px 16px", marginBottom: 24 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
                 <div>
                   <h3 style={{ fontSize: 20, color: "var(--text-white)", margin: 0 }}>{project.name}</h3>
                   <p style={{ fontSize: 13.5, color: "var(--text-secondary)", marginTop: 4 }}>{project.problemStatement}</p>
@@ -1136,12 +1277,13 @@ export function UserPortal({ profile, registration, members, downloads, initialP
               </div>
 
               {/* Stage Stepper */}
-              <div style={{ display: "flex", gap: 6, margin: "16px 0" }}>
+              <div className="portal-stepper-wrap" style={{ margin: "16px 0" }}>
                 {STAGES.map((st) => (
                   <div
                     key={st.key}
                     style={{
                       flex: 1,
+                      minWidth: 40,
                       height: 8,
                       borderRadius: 4,
                       background: st.key === project.stage ? "var(--ciel-gold-bright)" : "rgba(255,255,255,0.1)",
@@ -1153,7 +1295,7 @@ export function UserPortal({ profile, registration, members, downloads, initialP
 
               {project.pitchDeck && (
                 <div style={{ marginTop: 14 }}>
-                  <a href={project.pitchDeck} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: "#60A5FA", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <a href={project.pitchDeck} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: "#60A5FA", display: "inline-flex", alignItems: "center", gap: 6, wordBreak: "break-all" }}>
                     <FileText size={15} /> View Uploaded Pitch Deck PDF &rarr;
                   </a>
                 </div>
@@ -1169,14 +1311,14 @@ export function UserPortal({ profile, registration, members, downloads, initialP
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {project.journeyMilestones.map((m) => (
-                  <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(255,255,255,0.02)", padding: 14, borderRadius: 8, border: "1px solid var(--line)" }}>
+                  <div key={m.id} className="portal-item-card">
                     <div>
                       <strong style={{ color: "var(--text-white)", display: "block" }}>{m.title}</strong>
                       <span style={{ fontSize: 12.5, color: "var(--text-secondary)" }}>{m.description}</span>
                     </div>
                     <div style={{ textAlign: "right" }}>
-                      <span className="badge badge-neutral" style={{ fontSize: 10, textTransform: "uppercase", display: "block", marginBottom: 4 }}>{m.stage}</span>
-                      <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{m.date}</span>
+                      <span className="badge badge-neutral" style={{ fontSize: 10, textTransform: "uppercase", display: "inline-block", marginBottom: 4 }}>{m.stage}</span>
+                      <span style={{ fontSize: 11, color: "var(--text-muted)", display: "block" }}>{m.date}</span>
                     </div>
                   </div>
                 ))}
@@ -1187,8 +1329,8 @@ export function UserPortal({ profile, registration, members, downloads, initialP
 
         {/* TAB 5: DOCUMENTS & UPLOADER */}
         {activeTab === "documents" && (
-          <div className="luxury-card" style={{ padding: 32 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
+          <div className="luxury-card portal-card">
+            <div className="portal-header-actions">
               <div>
                 <h2 style={{ fontSize: 22, color: "var(--text-white)", margin: 0 }}>Venture Documents &amp; Repository</h2>
                 <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
@@ -1216,28 +1358,18 @@ export function UserPortal({ profile, registration, members, downloads, initialP
                 {userDocuments.map((doc) => (
                   <div
                     key={doc.id}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: 16,
-                      background: "rgba(255,255,255,0.025)",
-                      borderRadius: 10,
-                      border: "1px solid var(--line)",
-                      flexWrap: "wrap",
-                      gap: 12,
-                    }}
+                    className="portal-item-card"
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                      <div className="card-icon-wrap" style={{ width: 44, height: 44, margin: 0 }}>
+                      <div className="card-icon-wrap" style={{ width: 44, height: 44, margin: 0, flexShrink: 0 }}>
                         <FileText size={20} className="text-gold" />
                       </div>
                       <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2, flexWrap: "wrap" }}>
                           <strong style={{ color: "var(--text-white)", fontSize: 14.5 }}>{doc.title}</strong>
                           <span className="badge badge-brand" style={{ fontSize: 10 }}>{doc.category}</span>
                         </div>
-                        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                        <span style={{ fontSize: 12, color: "var(--text-muted)", wordBreak: "break-all" }}>
                           {doc.filename} · {doc.format} · {doc.size} · Uploaded on {doc.date}
                         </span>
                       </div>
@@ -1271,8 +1403,8 @@ export function UserPortal({ profile, registration, members, downloads, initialP
 
         {/* TAB 6: APPLICATIONS CENTER */}
         {activeTab === "applications" && (
-          <div className="luxury-card" style={{ padding: 32 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
+          <div className="luxury-card portal-card">
+            <div className="portal-header-actions">
               <div>
                 <h2 style={{ fontSize: 22, color: "var(--text-white)", margin: 0 }}>Incubation &amp; Grant Applications</h2>
                 <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
@@ -1335,8 +1467,8 @@ export function UserPortal({ profile, registration, members, downloads, initialP
 
         {/* TAB 7: MENTORSHIP SCHEDULER */}
         {activeTab === "mentorship" && (
-          <div className="luxury-card" style={{ padding: 32 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
+          <div className="luxury-card portal-card">
+            <div className="portal-header-actions">
               <div>
                 <h2 style={{ fontSize: 22, color: "var(--text-white)", margin: 0 }}>1-on-1 Mentorship Sessions</h2>
                 <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
@@ -1364,20 +1496,10 @@ export function UserPortal({ profile, registration, members, downloads, initialP
                 {mentorSessions.map((ms) => (
                   <div
                     key={ms.id}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: 18,
-                      background: "rgba(255,255,255,0.025)",
-                      borderRadius: 10,
-                      border: "1px solid var(--line)",
-                      flexWrap: "wrap",
-                      gap: 12,
-                    }}
+                    className="portal-item-card"
                   >
                     <div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
                         <strong style={{ fontSize: 15, color: "var(--text-white)" }}>{ms.mentorName}</strong>
                         <span className="badge badge-brand" style={{ fontSize: 10 }}>{ms.domain}</span>
                       </div>
@@ -1412,8 +1534,8 @@ export function UserPortal({ profile, registration, members, downloads, initialP
 
         {/* TAB 8: EVENTS & HACKATHONS */}
         {activeTab === "events" && (
-          <div className="luxury-card" style={{ padding: 32 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
+          <div className="luxury-card portal-card">
+            <div className="portal-header-actions">
               <div>
                 <h2 style={{ fontSize: 22, color: "var(--text-white)", margin: 0 }}>Ecosystem Events &amp; Demo Days</h2>
                 <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
@@ -1441,20 +1563,13 @@ export function UserPortal({ profile, registration, members, downloads, initialP
                 {eventsList.map((ev) => (
                   <div
                     key={ev.id}
+                    className="portal-item-card"
                     style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: 18,
-                      background: "rgba(255,255,255,0.025)",
-                      borderRadius: 10,
                       border: `1px solid ${ev.isRegistered ? "rgba(212, 175, 55, 0.4)" : "var(--line)"}`,
-                      flexWrap: "wrap",
-                      gap: 12,
                     }}
                   >
                     <div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
                         <strong style={{ fontSize: 15, color: "var(--text-white)" }}>{ev.title}</strong>
                         <span className="badge badge-brand" style={{ fontSize: 10 }}>{ev.category}</span>
                       </div>
@@ -1480,7 +1595,7 @@ export function UserPortal({ profile, registration, members, downloads, initialP
 
         {/* TAB 9: NOTIFICATIONS */}
         {activeTab === "notifications" && (
-          <div className="luxury-card" style={{ padding: 32 }}>
+          <div className="luxury-card portal-card">
             <h2 style={{ fontSize: 22, color: "var(--text-white)", marginBottom: 16 }}>System Notifications</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div className="alert alert-info"><Bell size={16} /> <span>Your team registration was verified by CIEL Incubation Board.</span></div>
@@ -1491,11 +1606,11 @@ export function UserPortal({ profile, registration, members, downloads, initialP
 
         {/* TAB 10: DOWNLOADS */}
         {activeTab === "downloads" && (
-          <div className="luxury-card" style={{ padding: 32 }}>
+          <div className="luxury-card portal-card">
             <h2 style={{ fontSize: 22, color: "var(--text-white)", marginBottom: 16 }}>Official Downloads &amp; Toolkits</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {downloads.map((doc) => (
-                <div key={doc.id} style={{ display: "flex", justifyContent: "space-between", padding: 14, background: "rgba(255,255,255,0.03)", borderRadius: 8, border: "1px solid var(--line)", alignItems: "center" }}>
+                <div key={doc.id} className="portal-item-card">
                   <div>
                     <strong style={{ color: "var(--text-white)", display: "block" }}>{doc.title}</strong>
                     <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{doc.format} · {doc.fileSize}</span>
@@ -1509,7 +1624,7 @@ export function UserPortal({ profile, registration, members, downloads, initialP
 
         {/* TAB 11: VERIFIED CERTIFICATES */}
         {activeTab === "certificates" && (
-          <div className="luxury-card" style={{ padding: 32 }}>
+          <div className="luxury-card portal-card">
             <h2 style={{ fontSize: 22, color: "var(--text-white)", marginBottom: 8 }}>Verified Credential Certificates</h2>
             <span style={{ fontSize: 13, color: "var(--text-secondary)", display: "block", marginBottom: 24 }}>
               Institutional verifiable credentials issued by Centre for Innovation &amp; Entrepreneurship Learning
@@ -1532,11 +1647,13 @@ export function UserPortal({ profile, registration, members, downloads, initialP
                       background: "linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(8, 9, 13, 0.95))",
                       border: "1px solid rgba(212, 175, 55, 0.4)",
                       borderRadius: 14,
-                      padding: 28,
-                      maxWidth: 640,
+                      padding: "24px 18px",
+                      maxWidth: "100%",
+                      width: "100%",
+                      boxSizing: "border-box",
                     }}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
                       <div>
                         <span className="badge badge-brand" style={{ marginBottom: 6 }}>OFFICIAL CREDENTIAL</span>
                         <h3 style={{ fontSize: 18, color: "var(--text-white)", margin: 0 }}>
@@ -1569,7 +1686,7 @@ export function UserPortal({ profile, registration, members, downloads, initialP
                       type="button"
                       className="button button-primary"
                       onClick={() => alert("Downloading official verified certificate PDF...")}
-                      style={{ gap: 8 }}
+                      style={{ gap: 8, width: "100%", justifyContent: "center" }}
                     >
                       <Download size={15} /> Download Signed Certificate PDF
                     </button>
@@ -1584,9 +1701,9 @@ export function UserPortal({ profile, registration, members, downloads, initialP
         {activeTab === "settings" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
             {/* Password Reset Card */}
-            <div className="luxury-card" style={{ padding: 32 }}>
+            <div className="luxury-card portal-card">
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                <div className="card-icon-wrap" style={{ margin: 0, width: 44, height: 44 }}>
+                <div className="card-icon-wrap" style={{ margin: 0, width: 44, height: 44, flexShrink: 0 }}>
                   <KeyRound size={22} />
                 </div>
                 <div>
@@ -1602,7 +1719,7 @@ export function UserPortal({ profile, registration, members, downloads, initialP
                 </div>
               )}
 
-              <form onSubmit={handlePasswordReset} style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 440 }}>
+              <form onSubmit={handlePasswordReset} style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 440, width: "100%" }}>
                 <div>
                   <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>
                     New Password (Min 8 Characters)
@@ -1615,7 +1732,7 @@ export function UserPortal({ profile, registration, members, downloads, initialP
                       value={passwordForm.newPassword}
                       onChange={(e) => setPasswordForm((prev) => ({ ...prev, newPassword: e.target.value }))}
                       required
-                      style={{ paddingRight: 40 }}
+                      style={{ paddingRight: 40, width: "100%" }}
                     />
                     <button
                       type="button"
@@ -1651,7 +1768,7 @@ export function UserPortal({ profile, registration, members, downloads, initialP
                       value={passwordForm.confirmPassword}
                       onChange={(e) => setPasswordForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
                       required
-                      style={{ paddingRight: 40 }}
+                      style={{ paddingRight: 40, width: "100%" }}
                     />
                     <button
                       type="button"
@@ -1687,9 +1804,9 @@ export function UserPortal({ profile, registration, members, downloads, initialP
             </div>
 
             {/* Profile Preferences */}
-            <div className="luxury-card" style={{ padding: 32 }}>
+            <div className="luxury-card portal-card">
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                <div className="card-icon-wrap" style={{ margin: 0, width: 44, height: 44 }}>
+                <div className="card-icon-wrap" style={{ margin: 0, width: 44, height: 44, flexShrink: 0 }}>
                   <Settings size={22} />
                 </div>
                 <div>
@@ -1698,10 +1815,10 @@ export function UserPortal({ profile, registration, members, downloads, initialP
                 </div>
               </div>
 
-              <form onSubmit={(e) => { e.preventDefault(); alert("Contact preferences saved!"); }} style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 440 }}>
+              <form onSubmit={(e) => { e.preventDefault(); alert("Contact preferences saved!"); }} style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 440, width: "100%" }}>
                 <div>
                   <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", display: "block", marginBottom: 6 }}>Contact Phone Number</label>
-                  <input type="text" className="input" defaultValue={currentProfile?.phone || ""} />
+                  <input type="text" className="input" defaultValue={currentProfile?.phone || ""} style={{ width: "100%" }} />
                 </div>
                 <button type="submit" className="button button-secondary" style={{ width: "fit-content" }}>Save Preferences</button>
               </form>
@@ -1711,8 +1828,8 @@ export function UserPortal({ profile, registration, members, downloads, initialP
 
         {/* MODAL: EDIT VENTURE */}
         {showEditProjectModal && (
-          <div className="modal-backdrop" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-            <form onSubmit={handleUpdateProject} className="luxury-card" style={{ maxWidth: 500, width: "100%", padding: 32 }}>
+          <div className="portal-modal-backdrop">
+            <form onSubmit={handleUpdateProject} className="luxury-card portal-modal-dialog">
               <h3 style={{ fontSize: 20, marginBottom: 16 }}>Update Venture Project</h3>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 20 }}>
@@ -1775,14 +1892,14 @@ export function UserPortal({ profile, registration, members, downloads, initialP
                     }}
                   />
                   {editForm.pitchDeck && (
-                    <span style={{ fontSize: 12, color: "#34D399", display: "block", marginTop: 4 }}>
+                    <span style={{ fontSize: 12, color: "#34D399", display: "block", marginTop: 4, wordBreak: "break-all" }}>
                       ✓ Pitch Deck attached: {editForm.pitchDeck}
                     </span>
                   )}
                 </div>
               </div>
 
-              <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+              <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", flexWrap: "wrap" }}>
                 <button type="button" className="button button-ghost" onClick={() => setShowEditProjectModal(false)}>Cancel</button>
                 <button type="submit" className="button button-primary" disabled={submitting}>
                   {submitting ? "Saving..." : "Save Venture Updates"}
@@ -1794,8 +1911,8 @@ export function UserPortal({ profile, registration, members, downloads, initialP
 
         {/* MODAL: EDIT TRACTION METRICS */}
         {showTractionModal && (
-          <div className="modal-backdrop" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-            <form onSubmit={handleSaveTraction} className="luxury-card" style={{ maxWidth: 480, width: "100%", padding: 32 }}>
+          <div className="portal-modal-backdrop">
+            <form onSubmit={handleSaveTraction} className="luxury-card portal-modal-dialog">
               <h3 style={{ fontSize: 20, marginBottom: 16 }}>Update Venture Traction Metrics</h3>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 20 }}>
@@ -1844,7 +1961,7 @@ export function UserPortal({ profile, registration, members, downloads, initialP
                 </div>
               </div>
 
-              <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+              <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", flexWrap: "wrap" }}>
                 <button type="button" className="button button-ghost" onClick={() => setShowTractionModal(false)}>Cancel</button>
                 <button type="submit" className="button button-primary">
                   Save Traction Metrics
@@ -1856,8 +1973,8 @@ export function UserPortal({ profile, registration, members, downloads, initialP
 
         {/* MODAL: ADD MILESTONE */}
         {showMilestoneModal && (
-          <div className="modal-backdrop" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-            <form onSubmit={handleAddMilestone} className="luxury-card" style={{ maxWidth: 480, width: "100%", padding: 32 }}>
+          <div className="portal-modal-backdrop">
+            <form onSubmit={handleAddMilestone} className="luxury-card portal-modal-dialog">
               <h3 style={{ fontSize: 20, marginBottom: 16 }}>Log Innovation Journey Milestone</h3>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 20 }}>
@@ -1908,7 +2025,7 @@ export function UserPortal({ profile, registration, members, downloads, initialP
                 </div>
               </div>
 
-              <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+              <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", flexWrap: "wrap" }}>
                 <button type="button" className="button button-ghost" onClick={() => setShowMilestoneModal(false)}>Cancel</button>
                 <button type="submit" className="button button-primary" disabled={submitting}>
                   {submitting ? "Logging..." : "Log Milestone"}
@@ -1920,8 +2037,8 @@ export function UserPortal({ profile, registration, members, downloads, initialP
 
         {/* MODAL: UPLOAD DOCUMENT */}
         {showUploadDocModal && (
-          <div className="modal-backdrop" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-            <form onSubmit={handleAddDocument} className="luxury-card" style={{ maxWidth: 480, width: "100%", padding: 32 }}>
+          <div className="portal-modal-backdrop">
+            <form onSubmit={handleAddDocument} className="luxury-card portal-modal-dialog">
               <h3 style={{ fontSize: 20, marginBottom: 16 }}>Upload Venture Document</h3>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 20 }}>
@@ -1967,7 +2084,7 @@ export function UserPortal({ profile, registration, members, downloads, initialP
                 </div>
               </div>
 
-              <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+              <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", flexWrap: "wrap" }}>
                 <button type="button" className="button button-ghost" onClick={() => setShowUploadDocModal(false)}>Cancel</button>
                 <button type="submit" className="button button-primary" disabled={docUploading}>
                   {docUploading ? "Uploading..." : "Save & Upload Document"}
@@ -1979,8 +2096,8 @@ export function UserPortal({ profile, registration, members, downloads, initialP
 
         {/* MODAL: APPLY FOR SCHEME */}
         {showApplyModal && (
-          <div className="modal-backdrop" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-            <form onSubmit={handleApplyScheme} className="luxury-card" style={{ maxWidth: 500, width: "100%", padding: 32 }}>
+          <div className="portal-modal-backdrop">
+            <form onSubmit={handleApplyScheme} className="luxury-card portal-modal-dialog">
               <h3 style={{ fontSize: 20, marginBottom: 16 }}>Apply for Incubation Scheme / Grant</h3>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 20 }}>
@@ -2020,7 +2137,7 @@ export function UserPortal({ profile, registration, members, downloads, initialP
                 </div>
               </div>
 
-              <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+              <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", flexWrap: "wrap" }}>
                 <button type="button" className="button button-ghost" onClick={() => setShowApplyModal(false)}>Cancel</button>
                 <button type="submit" className="button button-primary">Submit Application</button>
               </div>
@@ -2030,8 +2147,8 @@ export function UserPortal({ profile, registration, members, downloads, initialP
 
         {/* MODAL: BOOK MENTOR */}
         {showBookMentorModal && (
-          <div className="modal-backdrop" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-            <form onSubmit={handleBookMentor} className="luxury-card" style={{ maxWidth: 500, width: "100%", padding: 32 }}>
+          <div className="portal-modal-backdrop">
+            <form onSubmit={handleBookMentor} className="luxury-card portal-modal-dialog">
               <h3 style={{ fontSize: 20, marginBottom: 16 }}>Schedule 1-on-1 Mentorship Session</h3>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 20 }}>
@@ -2084,7 +2201,7 @@ export function UserPortal({ profile, registration, members, downloads, initialP
                 </div>
               </div>
 
-              <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+              <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", flexWrap: "wrap" }}>
                 <button type="button" className="button button-ghost" onClick={() => setShowBookMentorModal(false)}>Cancel</button>
                 <button type="submit" className="button button-primary">Confirm Booking</button>
               </div>
@@ -2092,35 +2209,98 @@ export function UserPortal({ profile, registration, members, downloads, initialP
           </div>
         )}
 
-        {/* MODAL: INVITE MEMBER */}
-        {showInviteModal && (
-          <div className="modal-backdrop" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-            <div className="luxury-card" style={{ maxWidth: 440, width: "100%", padding: 32 }}>
-              <h3 style={{ fontSize: 20, marginBottom: 12 }}>Invite Team Member</h3>
-              <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 20 }}>
-                Enter email address to send an official team invitation link.
-              </p>
-              <input
-                type="email"
-                className="input"
-                placeholder=""
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-                style={{ marginBottom: 16 }}
-              />
-              <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
-                <button className="button button-ghost" onClick={() => setShowInviteModal(false)}>Cancel</button>
+        {/* MODAL: ADD TEAM MEMBER */}
+        {showAddMemberModal && (
+          <div className="portal-modal-backdrop">
+            <form onSubmit={handleAddMember} className="luxury-card portal-modal-dialog">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <h3 style={{ fontSize: 20, margin: 0, color: "var(--text-white)" }}>Add Team Member</h3>
                 <button
-                  className="button button-primary"
-                  onClick={() => {
-                    alert(`Invitation sent to ${inviteEmail}`);
-                    setShowInviteModal(false);
-                  }}
+                  type="button"
+                  className="portal-drawer-close-btn"
+                  onClick={() => setShowAddMemberModal(false)}
+                  aria-label="Close dialog"
                 >
-                  Send Invite
+                  <X size={18} />
                 </button>
               </div>
-            </div>
+              <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 18, marginTop: 0 }}>
+                Enter student or co-founder details to add them directly to your innovation venture team roster.
+              </p>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 20 }}>
+                <div>
+                  <label className="field-label">Member Full Name *</label>
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="e.g. Rohan Mehta"
+                    value={newMemberForm.fullName}
+                    onChange={(e) => setNewMemberForm({ ...newMemberForm, fullName: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="grid-2" style={{ gap: 12 }}>
+                  <div>
+                    <label className="field-label">Roll Number / Student ID *</label>
+                    <input
+                      type="text"
+                      className="input"
+                      placeholder="e.g. 24MBA018"
+                      value={newMemberForm.rollNumber}
+                      onChange={(e) => setNewMemberForm({ ...newMemberForm, rollNumber: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="field-label">Team Role</label>
+                    <select
+                      className="select"
+                      value={newMemberForm.role}
+                      onChange={(e) => setNewMemberForm({ ...newMemberForm, role: e.target.value })}
+                    >
+                      <option value="team_member">Team Member</option>
+                      <option value="co_founder">Co-Founder</option>
+                      <option value="tech_lead">Technical Lead</option>
+                      <option value="operations">Operations / Marketing</option>
+                      <option value="researcher">Research Associate</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="field-label">Email Address (Optional)</label>
+                  <input
+                    type="email"
+                    className="input"
+                    placeholder="e.g. rohan.mehta@chetana.edu.in"
+                    value={newMemberForm.email}
+                    onChange={(e) => setNewMemberForm({ ...newMemberForm, email: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="field-label">Phone Number (Optional)</label>
+                  <input
+                    type="tel"
+                    className="input"
+                    placeholder="e.g. +91 98765 43210"
+                    value={newMemberForm.phone}
+                    onChange={(e) => setNewMemberForm({ ...newMemberForm, phone: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", flexWrap: "wrap" }}>
+                <button type="button" className="button button-ghost" onClick={() => setShowAddMemberModal(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="button button-primary" style={{ gap: 6 }}>
+                  <UserPlus size={15} /> Add to Team
+                </button>
+              </div>
+            </form>
           </div>
         )}
       </main>

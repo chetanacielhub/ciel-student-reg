@@ -211,14 +211,6 @@ export function DashboardView({
                 <strong>{profile?.phone || "Not provided"}</strong>
               </div>
               <div className="detail-row">
-                <span>Campus / Institution</span>
-                <strong>{registration.institutions?.name ?? "—"}</strong>
-              </div>
-              <div className="detail-row">
-                <span>Academic Department</span>
-                <strong>{registration.classes?.name ?? "—"}</strong>
-              </div>
-              <div className="detail-row">
                 <span>Registration Date</span>
                 <strong>
                   {new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(

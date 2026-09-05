@@ -528,8 +528,8 @@ function ERPUsersTab({
               const teamName = userProject?.name || userProject?.teamName || userReg?.teamName || "Venture Project";
               const problemStatement = userProject?.problemStatement || userReg?.problemStatement || "Problem statement pending submission by founder.";
               const role = userReg?.role ? userReg.role.replace("_", " ").toUpperCase() : "INNOVATOR";
-              const institution = userReg?.institution || "Chetana Institute of Management & Research";
-              const rollNumber = userReg?.rollNumber || "STU-2026";
+              const institution = userReg?.institution || "—";
+              const rollNumber = userReg?.rollNumber || "—";
               const stage = userProject?.stage || "idea";
               const progress = userProject?.progress ?? 25;
               const milestones = userProject?.journeyMilestones || [];
