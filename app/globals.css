@@ -7047,3 +7047,529 @@ body::after {
   from { opacity: 0; transform: translateY(16px) scale(0.94); }
   to   { opacity: 1; transform: translateY(0)    scale(1);    }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ELEVATOR PITCH SECTION — Home Page + Modal
+═══════════════════════════════════════════════════════════════════════ */
+
+/* ─ Grid ─────────────────────────────────────────────────────────────── */
+.pitches-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+/* ─ Card ─────────────────────────────────────────────────────────────── */
+.pitch-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.28s ease,
+              box-shadow 0.28s ease;
+  display: flex;
+  flex-direction: column;
+}
+.pitch-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(212, 175, 55, 0.55);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(212, 175, 55, 0.2);
+}
+
+/* ─ Thumbnail ─────────────────────────────────────────────────────────── */
+.pitch-thumb-wrap {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #0a0a0f;
+  flex-shrink: 0;
+}
+
+.pitch-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+.pitch-card:hover .pitch-thumb {
+  transform: scale(1.05);
+}
+
+.pitch-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0a0a0f 0%, #12121a 100%);
+}
+
+/* ─ Play overlay ──────────────────────────────────────────────────────── */
+.pitch-play-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.pitch-card:hover .pitch-play-overlay {
+  opacity: 1;
+}
+
+.pitch-play-btn {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(212, 175, 55, 0.92);
+  color: #0a0a0f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: scale(0.85);
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 4px 24px rgba(212, 175, 55, 0.5);
+}
+.pitch-card:hover .pitch-play-btn {
+  transform: scale(1);
+}
+
+/* ─ Info ──────────────────────────────────────────────────────────────── */
+.pitch-info {
+  padding: 18px 20px 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pitch-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-white);
+  line-height: 1.35;
+  margin: 0;
+}
+
+.pitch-meta {
+  font-size: 13px;
+  color: var(--ciel-gold-bright);
+  margin: 0;
+}
+.pitch-meta strong {
+  color: var(--ciel-gold);
+}
+
+.pitch-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 4px 0 0;
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ─ Modal Overlay ────────────────────────────────────────────────────── */
+.pitch-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: pitchOverlayIn 0.22s ease;
+}
+
+@keyframes pitchOverlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ─ Modal Box ────────────────────────────────────────────────────────── */
+.pitch-modal-box {
+  background: #101018;
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 20px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 860px;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(212, 175, 55, 0.12);
+  animation: pitchModalIn 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes pitchModalIn {
+  from { opacity: 0; transform: scale(0.92) translateY(20px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);    }
+}
+
+/* ─ Modal Header ─────────────────────────────────────────────────────── */
+.pitch-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.12);
+}
+
+.pitch-modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-white);
+  margin: 0 0 4px;
+  line-height: 1.3;
+}
+
+.pitch-modal-meta {
+  font-size: 13px;
+  color: var(--ciel-gold-bright);
+  margin: 0;
+}
+
+.pitch-modal-close {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.pitch-modal-close:hover {
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--ciel-gold);
+}
+
+/* ─ Modal Player ────────────────────────────────────────────────────── */
+.pitch-modal-player {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  background: #000;
+}
+
+/* ─ Light theme overrides ────────────────────────────────────────────── */
+body.light-theme .pitch-card,
+[data-theme="light"] .pitch-card {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(180, 140, 30, 0.2);
+}
+
+body.light-theme .pitch-card:hover,
+[data-theme="light"] .pitch-card:hover {
+  border-color: rgba(180, 140, 30, 0.5);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(180, 140, 30, 0.25);
+}
+
+body.light-theme .pitch-modal-box,
+[data-theme="light"] .pitch-modal-box {
+  background: #fff;
+  border-color: rgba(180, 140, 30, 0.3);
+}
+
+body.light-theme .pitch-modal-title,
+[data-theme="light"] .pitch-modal-title {
+  color: #0a0a14;
+}
+
+body.light-theme .pitch-thumb-placeholder,
+[data-theme="light"] .pitch-thumb-placeholder {
+  background: linear-gradient(135deg, #f0f0f5 0%, #e8e8f0 100%);
+}
+
+/* ─ Responsive ───────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .pitches-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .pitch-modal-box {
+    border-radius: 14px;
+  }
+  .pitch-modal-header {
+    padding: 16px 18px 14px;
+  }
+  .pitch-modal-title {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pitches-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ADMIN PITCHES TAB
+═══════════════════════════════════════════════════════════════════════ */
+
+.pitch-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.pitch-admin-card {
+  background: var(--adm-card-bg, rgba(255,255,255,0.03));
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+.pitch-admin-card:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+}
+
+.pitch-admin-thumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+  background: #0a0a0f;
+}
+
+.pitch-admin-thumb-placeholder {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0d0d16;
+}
+
+.pitch-admin-info {
+  padding: 14px 16px;
+}
+
+.pitch-admin-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-white);
+  margin: 0 0 4px;
+}
+
+.pitch-admin-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0 0 12px;
+}
+
+.pitch-preview-thumb {
+  width: 100%;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  margin-top: 8px;
+}
+
+/* ─── VIDEO SOURCE SWITCHER & DEVICE UPLOAD ─── */
+.pitch-source-selector {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.pitch-source-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pitch-source-btn:hover {
+  color: var(--text-white);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.pitch-source-btn.active {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.22), rgba(212, 175, 55, 0.08));
+  color: var(--ciel-gold);
+  border-color: rgba(212, 175, 55, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.pitch-upload-zone {
+  border: 2px dashed rgba(212, 175, 55, 0.35);
+  border-radius: 12px;
+  padding: 24px 20px;
+  text-align: center;
+  background: rgba(212, 175, 55, 0.02);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+}
+
+.pitch-upload-zone:hover,
+.pitch-upload-zone.dragover {
+  border-color: var(--ciel-gold);
+  background: rgba(212, 175, 55, 0.06);
+  transform: translateY(-1px);
+}
+
+.pitch-upload-zone-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.pitch-upload-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(212, 175, 55, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ciel-gold);
+  margin-bottom: 4px;
+}
+
+.pitch-upload-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-white);
+  margin: 0;
+}
+
+.pitch-upload-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.pitch-video-preview-wrap {
+  margin-top: 12px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: #050508;
+  position: relative;
+}
+
+.pitch-video-preview {
+  width: 100%;
+  max-height: 240px;
+  display: block;
+  object-fit: contain;
+}
+
+.pitch-file-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 8px;
+}
+
+.pitch-badge-source {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--ciel-gold);
+  font-weight: 700;
+}
+
+/* Compact no-scroll form */
+.pitch-compact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.35fr auto;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.pitch-compact-dropzone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 14px;
+  height: 38px;
+  background: rgba(212, 175, 55, 0.04);
+  border: 1px dashed rgba(212, 175, 55, 0.4);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  user-select: none;
+}
+
+.pitch-compact-dropzone:hover,
+.pitch-compact-dropzone.dragover {
+  border-color: var(--ciel-gold);
+  background: rgba(212, 175, 55, 0.1);
+  color: var(--text-white);
+}
+
+.pitch-compact-file {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  height: 38px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--text-white);
+}
+
+.pitch-compact-name {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+@media (max-width: 960px) {
+  .pitch-compact-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 580px) {
+  .pitch-compact-grid {
+    grid-template-columns: 1fr;
+  }
+}

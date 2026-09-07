@@ -268,3 +268,14 @@ export type GoogleFormItem = {
   createdAt: string;
 };
 
+export type ElevatorPitchItem = {
+  id: string;
+  title: string;
+  founder: string;
+  startup: string;
+  videoUrl: string;
+  thumbnailUrl?: string;
+  description?: string;
+  createdAt: string;
+};
+

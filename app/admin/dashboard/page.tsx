@@ -107,8 +107,8 @@ export default async function AdminDashboardPage() {
   const images = await getGalleryImages();
 
   // ── Fetch dynamic store items ─────────────────────────────────────────────
-  const { getCielEvents, getDownloadDocs, getGoogleForms, getVentureProjects } = await import("@/lib/dynamic-store");
-  const [initialMentors, initialCouncil, initialGovernance, initialEvents, initialDownloads, initialGoogleForms, initialProjects] = await Promise.all([
+  const { getCielEvents, getDownloadDocs, getGoogleForms, getVentureProjects, getElevatorPitches } = await import("@/lib/dynamic-store");
+  const [initialMentors, initialCouncil, initialGovernance, initialEvents, initialDownloads, initialGoogleForms, initialProjects, initialPitches] = await Promise.all([
     getMentors(),
     getStudentCouncilLeads(),
     getGovernanceCommittees(),
@@ -116,6 +116,7 @@ export default async function AdminDashboardPage() {
     getDownloadDocs(),
     getGoogleForms(false),
     getVentureProjects(),
+    getElevatorPitches(),
   ]);
 
   // ── Stats ─────────────────────────────────────────────────────────────────
@@ -135,6 +136,7 @@ export default async function AdminDashboardPage() {
     downloadsCount: initialDownloads.length,
     formsCount: initialGoogleForms.length,
     projectsCount: initialProjects.length,
+    pitchesCount: initialPitches.length,
   };
 
   return (
@@ -149,6 +151,7 @@ export default async function AdminDashboardPage() {
       initialDownloads={initialDownloads}
       initialGoogleForms={initialGoogleForms}
       initialProjects={initialProjects}
+      initialPitches={initialPitches}
       stats={stats}
       eventTitle={event?.title ?? "CIEL Incubation Program"}
     />

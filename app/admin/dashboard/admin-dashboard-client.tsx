@@ -26,6 +26,7 @@ import {
   LogOut,
   Mail,
   MoreHorizontal,
+  Play,
   Plus,
   RefreshCw,
   Rocket,
@@ -45,6 +46,7 @@ import {
   Users,
   UserStar,
   UserX,
+  Video,
   X,
   Zap,
   Eye,
@@ -55,7 +57,7 @@ import {
   Moon,
 } from "lucide-react";
 import { CIEL_DOWNLOADS } from "@/lib/ciel-data";
-import type { GovernanceCommitteeItem, MentorItem, StudentCouncilLeadItem, VentureProjectItem, CielEventItem, DownloadItem, GoogleFormItem } from "@/lib/types";
+import type { GovernanceCommitteeItem, MentorItem, StudentCouncilLeadItem, VentureProjectItem, CielEventItem, DownloadItem, GoogleFormItem, ElevatorPitchItem } from "@/lib/types";
 import { LinkedInIcon } from "@/components/ui/linkedin-icon";
 import { Logo } from "@/components/ui/logo";
 
@@ -100,6 +102,7 @@ type AdminStats = {
   councilCount?: number;
   governanceCount?: number;
   formsCount?: number;
+  pitchesCount?: number;
 };
 
 type Props = {
@@ -113,6 +116,7 @@ type Props = {
   initialDownloads?: DownloadItem[];
   initialGoogleForms?: GoogleFormItem[];
   initialProjects?: VentureProjectItem[];
+  initialPitches?: ElevatorPitchItem[];
   stats: AdminStats;
   eventTitle: string;
 };
@@ -129,6 +133,7 @@ type AdminTab =
   | "events"
   | "downloads"
   | "google-forms"
+  | "pitches"
   | "partners"
   | "analytics"
   | "settings";
@@ -3160,6 +3165,451 @@ function ERPGoogleFormsTab({ initialForms }: { initialForms: GoogleFormItem[] })
   );
 }
 
+// ─── ELEVATOR PITCHES ERP TAB ───────────────────────────────────────────────
+
+function ERPPitchesTab({ initialPitches = [] }: { initialPitches?: ElevatorPitchItem[] }) {
+  const [pitches, setPitches] = useState<ElevatorPitchItem[]>(initialPitches);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+
+  // Video source switch: "device" (upload from computer) vs "url" (YouTube, Vimeo, etc.)
+  const [videoSource, setVideoSource] = useState<"device" | "url">("device");
+
+  // Form fields
+  const [title, setTitle] = useState("");
+  const [founder, setFounder] = useState("");
+  const [startup, setStartup] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [description, setDescription] = useState("");
+
+  // Device upload states
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [videoFileName, setVideoFileName] = useState("");
+  const [videoFileSize, setVideoFileSize] = useState("");
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState("");
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  // Admin watch modal preview
+  const [previewPitch, setPreviewPitch] = useState<ElevatorPitchItem | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function extractYTId(url: string): string | null {
+    const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
+    return m ? m[1] : null;
+  }
+
+  function isDirectVideo(url: string): boolean {
+    if (!url) return false;
+    if (url.startsWith("/uploads/") || url.startsWith("data:video/") || url.startsWith("blob:")) return true;
+    return /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(url);
+  }
+
+  function formatBytes(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  function handleVideoUrlChange(v: string) {
+    setVideoUrl(v);
+    const ytId = extractYTId(v);
+    if (ytId && !thumbnailUrl) {
+      setThumbnailUrl(`https://img.youtube.com/vi/${ytId}/hqdefault.jpg`);
+    }
+  }
+
+  async function handleVideoFileSelect(file: File) {
+    if (!file) return;
+    if (file.size > 100 * 1024 * 1024) {
+      setMsg({ type: "err", text: "Video file exceeds 100 MB limit." });
+      return;
+    }
+
+    setVideoFileName(file.name);
+    setVideoFileSize(formatBytes(file.size));
+    const localUrl = URL.createObjectURL(file);
+    setVideoPreviewUrl(localUrl);
+    setUploadingVideo(true);
+    setMsg(null);
+
+    try {
+      // Direct binary stream bypasses undici multipart 10MB limit
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        headers: {
+          "Content-Type": file.type || "video/mp4",
+          "x-filename": encodeURIComponent(file.name),
+        },
+        body: file,
+      });
+      const json = await res.json();
+      if (res.ok && json.url) {
+        setVideoUrl(json.url);
+        setMsg({ type: "ok", text: `Video "${file.name}" uploaded successfully!` });
+      } else {
+        setMsg({ type: "err", text: json.error || "Failed to upload video from device." });
+      }
+    } catch {
+      setMsg({ type: "err", text: "Network error while uploading video." });
+    } finally {
+      setUploadingVideo(false);
+    }
+  }
+
+  function resetForm() {
+    setTitle("");
+    setFounder("");
+    setStartup("");
+    setVideoUrl("");
+    setThumbnailUrl("");
+    setDescription("");
+    setVideoFileName("");
+    setVideoFileSize("");
+    setVideoPreviewUrl("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  async function handleAdd(e: React.FormEvent) {
+    e.preventDefault();
+    const sTitle = (startup || title).trim();
+    const fName = founder.trim();
+
+    if (!sTitle || !fName) {
+      setMsg({ type: "err", text: "Please enter the startup title and founder's name." });
+      return;
+    }
+    if (!videoUrl.trim()) {
+      setMsg({
+        type: "err",
+        text:
+          videoSource === "device"
+            ? "Please select and wait for your video to upload from device."
+            : "Please provide a valid video URL.",
+      });
+      return;
+    }
+    setSaving(true);
+    setMsg(null);
+    try {
+      const res = await fetch("/api/admin/pitches", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: sTitle,
+          founder: fName,
+          startup: sTitle,
+          videoUrl,
+          thumbnailUrl: thumbnailUrl || undefined,
+          description: "",
+        }),
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        setPitches((prev) => [json.pitch, ...prev]);
+        resetForm();
+        setMsg({ type: "ok", text: "Elevator pitch published successfully and is now live on the home page!" });
+      } else {
+        setMsg({ type: "err", text: json.error || "Failed to add pitch." });
+      }
+    } catch {
+      setMsg({ type: "err", text: "Network error. Please try again." });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete(id: string, pitchTitle: string) {
+    if (!confirm(`Delete the pitch "${pitchTitle}" from the home page?`)) return;
+    const prev = pitches;
+    setPitches((p) => p.filter((x) => x.id !== id));
+    try {
+      const res = await fetch(`/api/admin/pitches?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (!res.ok) {
+        setPitches(prev);
+        alert("Failed to delete pitch.");
+      }
+    } catch {
+      setPitches(prev);
+      alert("Network error.");
+    }
+  }
+
+  return (
+    <div className="adm-tab-content">
+      <div className="adm-section-head">
+        <div>
+          <h2>Elevator Pitch Videos</h2>
+          <p>Add short startup pitch videos shown on the public home page · {pitches.length} published</p>
+        </div>
+      </div>
+
+      {/* Compact Add Form */}
+      <div className="adm-table-wrap" style={{ padding: "16px 20px", marginBottom: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
+          <h3 style={{ fontSize: 15, color: "var(--text-white)", margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
+            <Video size={16} style={{ color: "var(--ciel-gold)" }} /> Add Elevator Pitch
+          </h3>
+          <div className="pitch-source-selector" style={{ margin: 0 }}>
+            <button
+              type="button"
+              className={`pitch-source-btn ${videoSource === "device" ? "active" : ""}`}
+              style={{ padding: "4px 12px", fontSize: 12 }}
+              onClick={() => { setVideoSource("device"); setMsg(null); }}
+            >
+              <Upload size={13} /> Device Video
+            </button>
+            <button
+              type="button"
+              className={`pitch-source-btn ${videoSource === "url" ? "active" : ""}`}
+              style={{ padding: "4px 12px", fontSize: 12 }}
+              onClick={() => { setVideoSource("url"); setMsg(null); }}
+            >
+              <Globe size={13} /> Web URL
+            </button>
+          </div>
+        </div>
+
+        <form onSubmit={handleAdd}>
+          <div className="pitch-compact-grid">
+            <div className="field" style={{ margin: 0 }}>
+              <label className="field-label" style={{ fontSize: 12, marginBottom: 4 }}>Startup Title *</label>
+              <input
+                className="input"
+                style={{ padding: "8px 12px", fontSize: 13, height: 38 }}
+                placeholder="e.g. AgriTech Dynamics"
+                value={startup}
+                onChange={(e) => {
+                  setStartup(e.target.value);
+                  setTitle(e.target.value);
+                }}
+                required
+              />
+            </div>
+
+            <div className="field" style={{ margin: 0 }}>
+              <label className="field-label" style={{ fontSize: 12, marginBottom: 4 }}>Founder's Name *</label>
+              <input
+                className="input"
+                style={{ padding: "8px 12px", fontSize: 13, height: 38 }}
+                placeholder="e.g. Rohan Deshmukh"
+                value={founder}
+                onChange={(e) => setFounder(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="field" style={{ margin: 0 }}>
+              <label className="field-label" style={{ fontSize: 12, marginBottom: 4 }}>
+                {videoSource === "device" ? "Video File (MP4, WebM, MOV) *" : "Video URL (YouTube/Vimeo) *"}
+              </label>
+              {videoSource === "device" ? (
+                <div>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="video/mp4,video/webm,video/ogg,video/quicktime,video/*"
+                    style={{ display: "none" }}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleVideoFileSelect(f);
+                    }}
+                  />
+                  {!videoUrl && !uploadingVideo ? (
+                    <div
+                      className={`pitch-compact-dropzone ${isDragOver ? "dragover" : ""}`}
+                      onClick={() => fileInputRef.current?.click()}
+                      onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                      onDragLeave={() => setIsDragOver(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setIsDragOver(false);
+                        const f = e.dataTransfer.files?.[0];
+                        if (f) handleVideoFileSelect(f);
+                      }}
+                    >
+                      <Upload size={14} style={{ color: "var(--ciel-gold)" }} />
+                      <span>Choose or drop video file</span>
+                    </div>
+                  ) : uploadingVideo ? (
+                    <div className="pitch-compact-dropzone" style={{ cursor: "default" }}>
+                      <RefreshCw size={14} className="spin text-gold" />
+                      <span>Uploading {videoFileName}…</span>
+                    </div>
+                  ) : (
+                    <div className="pitch-compact-file">
+                      <CheckCircle2 size={15} style={{ color: "#10b981", flexShrink: 0 }} />
+                      <span className="pitch-compact-name" title={videoFileName}>{videoFileName || "Uploaded Video"}</span>
+                      {videoFileSize && <span style={{ opacity: 0.6, fontSize: 11 }}>({videoFileSize})</span>}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setVideoUrl("");
+                          setVideoPreviewUrl("");
+                          setVideoFileName("");
+                          setVideoFileSize("");
+                          if (fileInputRef.current) fileInputRef.current.value = "";
+                        }}
+                        style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", padding: 2, marginLeft: "auto", display: "flex", alignItems: "center" }}
+                        title="Change video"
+                      >
+                        <X size={13} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <input
+                  className="input"
+                  style={{ padding: "8px 12px", fontSize: 13, height: 38 }}
+                  placeholder="https://youtu.be/... or https://vimeo.com/..."
+                  value={videoUrl}
+                  onChange={(e) => handleVideoUrlChange(e.target.value)}
+                  required={videoSource === "url"}
+                />
+              )}
+            </div>
+
+            <div>
+              <button
+                className="adm-btn adm-btn-primary"
+                type="submit"
+                disabled={saving || uploadingVideo}
+                style={{ padding: "8px 18px", fontSize: 13, height: 38, whiteSpace: "nowrap" }}
+              >
+                {saving ? <RefreshCw size={14} className="spin" /> : <Plus size={14} />}
+                {saving ? "Publishing…" : "Publish Pitch"}
+              </button>
+            </div>
+          </div>
+
+          {msg && (
+            <div className={`alert ${msg.type === "ok" ? "alert-success" : "alert-error"}`} style={{ padding: "8px 12px", marginTop: 10, fontSize: 13 }}>
+              {msg.text}
+            </div>
+          )}
+        </form>
+      </div>
+
+      {/* Pitch Cards */}
+      {pitches.length === 0 ? (
+        <div className="adm-table-wrap" style={{ padding: 32, textAlign: "center" }}>
+          <Video size={40} style={{ color: "var(--ciel-gold)", opacity: 0.4, margin: "0 auto 12px" }} />
+          <p style={{ color: "var(--text-secondary)" }}>No elevator pitches yet. Add your first video above.</p>
+        </div>
+      ) : (
+        <div className="pitch-admin-grid">
+          {pitches.map((pitch) => {
+            const ytId = extractYTId(pitch.videoUrl);
+            const thumb = pitch.thumbnailUrl || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : "");
+            const direct = isDirectVideo(pitch.videoUrl);
+            return (
+              <div key={pitch.id} className="pitch-admin-card">
+                <div style={{ position: "relative" }}>
+                  {thumb ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={thumb} alt={pitch.title} className="pitch-admin-thumb" />
+                  ) : direct ? (
+                    <video
+                      src={`${pitch.videoUrl}#t=0.5`}
+                      className="pitch-admin-thumb"
+                      preload="metadata"
+                      muted
+                      playsInline
+                    />
+                  ) : (
+                    <div className="pitch-admin-thumb-placeholder">
+                      <Video size={28} style={{ color: "var(--ciel-gold)", opacity: 0.4 }} />
+                    </div>
+                  )}
+                  <span
+                    className="pitch-badge-source"
+                    style={{ position: "absolute", top: 8, right: 8, background: "rgba(0,0,0,0.8)" }}
+                  >
+                    {direct ? "Device Video" : ytId ? "YouTube" : "Web URL"}
+                  </span>
+                </div>
+                <div className="pitch-admin-info">
+                  <p className="pitch-admin-title">{pitch.startup || pitch.title}</p>
+                  <p className="pitch-admin-meta">Founder: <strong>{pitch.founder}</strong></p>
+                  <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                    <button
+                      type="button"
+                      className="adm-btn adm-btn-secondary"
+                      style={{ fontSize: 12, padding: "5px 10px", flex: 1, justifyContent: "center" }}
+                      onClick={() => setPreviewPitch(pitch)}
+                    >
+                      <Play size={12} fill="currentColor" /> Watch
+                    </button>
+                    <button
+                      type="button"
+                      className="adm-btn adm-btn-danger"
+                      style={{ fontSize: 12, padding: "5px 10px" }}
+                      onClick={() => handleDelete(pitch.id, pitch.startup || pitch.title)}
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Admin Watch Modal */}
+      {previewPitch && (
+        <div
+          className="pitch-modal-overlay"
+          onClick={() => setPreviewPitch(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="pitch-modal-box" onClick={(e) => e.stopPropagation()}>
+            <div className="pitch-modal-header">
+              <div>
+                <h3 className="pitch-modal-title">{previewPitch.startup || previewPitch.title}</h3>
+                <p className="pitch-modal-meta">Founder: <strong>{previewPitch.founder}</strong></p>
+              </div>
+              <button
+                className="pitch-modal-close"
+                onClick={() => setPreviewPitch(null)}
+                aria-label="Close"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="pitch-modal-player">
+              {isDirectVideo(previewPitch.videoUrl) ? (
+                <video
+                  src={previewPitch.videoUrl}
+                  controls
+                  autoPlay
+                  playsInline
+                  style={{ width: "100%", height: "100%", objectFit: "contain", background: "#000" }}
+                />
+              ) : (
+                <iframe
+                  src={
+                    extractYTId(previewPitch.videoUrl)
+                      ? `https://www.youtube.com/embed/${extractYTId(previewPitch.videoUrl)}?autoplay=1`
+                      : previewPitch.videoUrl
+                  }
+                  title={previewPitch.title}
+                  allow="autoplay; encrypted-media; picture-in-picture"
+                  allowFullScreen
+                  style={{ width: "100%", height: "100%", border: "none" }}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── MAIN ADMIN ERP COMPONENT ───────────────────────────────────────────────
 
 export function AdminDashboardClient({
@@ -3173,6 +3623,7 @@ export function AdminDashboardClient({
   initialDownloads = [],
   initialGoogleForms = [],
   initialProjects = [],
+  initialPitches = [],
   stats,
   eventTitle,
 }: Props) {
@@ -3225,10 +3676,6 @@ export function AdminDashboardClient({
             <UserCheck size={16} /> Users <span className="adm-nav-badge">{stats.totalUsers}</span>
           </button>
 
-          <button className={`adm-nav-item ${activeTab === "registrations" ? "active" : ""}`} onClick={() => setActiveTab("registrations")}>
-            <Users size={16} /> Registrations <span className="adm-nav-badge">{stats.totalRegistrations}</span>
-          </button>
-
           <button className={`adm-nav-item ${activeTab === "projects" ? "active" : ""}`} onClick={() => setActiveTab("projects")}>
             <FolderGit2 size={16} /> Projects <span className="adm-nav-badge">{stats.teamCount}</span>
           </button>
@@ -3259,6 +3706,10 @@ export function AdminDashboardClient({
 
           <button className={`adm-nav-item ${activeTab === "google-forms" ? "active" : ""}`} onClick={() => setActiveTab("google-forms")}>
             <FileSpreadsheet size={16} /> Google Forms
+          </button>
+
+          <button className={`adm-nav-item ${activeTab === "pitches" ? "active" : ""}`} onClick={() => setActiveTab("pitches")}>
+            <Video size={16} /> Elevator Pitches {stats.pitchesCount !== undefined && stats.pitchesCount > 0 && <span className="adm-nav-badge">{stats.pitchesCount}</span>}
           </button>
 
           <button className={`adm-nav-item ${activeTab === "analytics" ? "active" : ""}`} onClick={() => setActiveTab("analytics")}>
@@ -3332,6 +3783,7 @@ export function AdminDashboardClient({
         {activeTab === "events" && <ERPEventsTab initialEvents={initialEvents} />}
         {activeTab === "downloads" && <ERPDownloadsTab initialDownloads={initialDownloads} />}
         {activeTab === "google-forms" && <ERPGoogleFormsTab initialForms={initialGoogleForms} />}
+        {activeTab === "pitches" && <ERPPitchesTab initialPitches={initialPitches} />}
         {activeTab === "partners" && (
           <div className="adm-tab-content">
             <div className="adm-section-head"><h2>Corporate MoUs &amp; Partners</h2><p>Manage industry alliances and seed syndicates</p></div>

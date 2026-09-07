@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import { CIEL_MENTORS, GOVERNANCE_COMMITTEES, STUDENT_COUNCIL_LEADS, CIEL_DOWNLOADS, DEFAULT_GOOGLE_FORMS } from "./ciel-data";
-import type { GovernanceCommitteeItem, JourneyMilestone, MentorItem, StudentCouncilLeadItem, VentureProjectItem, UserProfileItem, CielEventItem, NewsItem, DownloadItem, GoogleFormItem } from "./types";
+import type { GovernanceCommitteeItem, JourneyMilestone, MentorItem, StudentCouncilLeadItem, VentureProjectItem, UserProfileItem, CielEventItem, NewsItem, DownloadItem, GoogleFormItem, ElevatorPitchItem } from "./types";
 import { createAdminClient } from "./supabase/admin";
 
 type StoreData = {
@@ -16,6 +16,7 @@ type StoreData = {
   downloads?: DownloadItem[];
   googleForms?: GoogleFormItem[];
   gallery?: GalleryImageItem[];
+  pitches?: ElevatorPitchItem[];
 };
 
 export type GalleryImageItem = {
@@ -71,6 +72,7 @@ async function ensureStore(): Promise<StoreData> {
       downloads: Array.isArray(parsed.downloads) ? parsed.downloads : CIEL_DOWNLOADS,
       googleForms: Array.isArray(parsed.googleForms) && parsed.googleForms.length > 0 ? parsed.googleForms : DEFAULT_GOOGLE_FORMS,
       gallery: Array.isArray(parsed.gallery) ? parsed.gallery : [],
+      pitches: Array.isArray(parsed.pitches) ? parsed.pitches : [],
     };
   } catch {
     const initial = getInitialData();
@@ -1259,4 +1261,32 @@ export async function deleteGalleryImage(filename: string): Promise<boolean> {
   return true;
 }
 
+// ─── ELEVATOR PITCHES ─────────────────────────────────────────────────────
 
+export async function getElevatorPitches(): Promise<ElevatorPitchItem[]> {
+  const store = await ensureStore();
+  return store.pitches || [];
+}
+
+export async function addElevatorPitch(pitch: Omit<ElevatorPitchItem, "id" | "createdAt">): Promise<ElevatorPitchItem> {
+  const newPitch: ElevatorPitchItem = {
+    ...pitch,
+    id: `pitch-${Date.now()}`,
+    createdAt: new Date().toISOString(),
+  };
+
+  const store = await ensureStore();
+  if (!store.pitches) store.pitches = [];
+  store.pitches.unshift(newPitch);
+  await saveStore(store);
+  return newPitch;
+}
+
+export async function deleteElevatorPitch(id: string): Promise<boolean> {
+  const store = await ensureStore();
+  if (store.pitches) {
+    store.pitches = store.pitches.filter((p) => p.id !== id);
+    await saveStore(store);
+  }
+  return true;
+}

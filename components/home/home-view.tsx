@@ -23,8 +23,8 @@ import {
   LineChart,
   MapPin,
   Microscope,
+  Play,
   Presentation,
-  Quote,
   Rocket,
   ShieldCheck,
   Sparkles,
@@ -35,6 +35,8 @@ import {
   UserCheck,
   Users,
   UsersRound,
+  Video,
+  X,
   Zap,
 } from "lucide-react";
 import {
@@ -54,11 +56,48 @@ import {
   FEATURED_STARTUPS,
   CIEL_MENTORS,
 } from "@/lib/ciel-data";
-import type { EventRecord } from "@/lib/types";
+import type { EventRecord, ElevatorPitchItem } from "@/lib/types";
 
 type HomeViewProps = {
   event: EventRecord | null;
+  pitches?: ElevatorPitchItem[];
 };
+
+// ─── YouTube/Vimeo helpers ───────────────────────────────────────────────────
+
+function extractYouTubeId(url: string): string | null {
+  const patterns = [
+    /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/,
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+function isDirectVideo(url: string): boolean {
+  if (!url) return false;
+  if (url.startsWith("/uploads/") || url.startsWith("data:video/") || url.startsWith("blob:")) return true;
+  return /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(url);
+}
+
+function getEmbedUrl(videoUrl: string): string {
+  // YouTube
+  const ytId = extractYouTubeId(videoUrl);
+  if (ytId) return `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`;
+  // Vimeo
+  const vimeoMatch = videoUrl.match(/vimeo\.com\/(?:video\/)?([0-9]+)/);
+  if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`;
+  return videoUrl;
+}
+
+function getThumbnailUrl(pitch: ElevatorPitchItem): string {
+  if (pitch.thumbnailUrl) return pitch.thumbnailUrl;
+  const ytId = extractYouTubeId(pitch.videoUrl);
+  if (ytId) return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+  return "";
+}
 
 const ANGLED_PANELS = [
   { id: "img1", src: "/img1.png" },
@@ -69,29 +108,7 @@ const ANGLED_PANELS = [
   { id: "img6", src: "/img6b.png" },
 ];
 
-const TESTIMONIALS = [
-  {
-    quote:
-      "CIEL provided our startup with constant business upscaling seminars, tech lab access, conference room pitching sessions, and a wide mentor network that guided our venture from scratch to execution.",
-    author: "Rohan Deshmukh",
-    role: "Founder, AgriTech Dynamics",
-    badge: "CIEL Incubated Founder",
-  },
-  {
-    quote:
-      "The rigorous governance structure and 1-on-1 mentorship at CIEL allowed our medical diagnostic device to achieve clinical validation and patent disclosure within 8 months.",
-    author: "Dr. Ananya Sharma",
-    role: "Co-Founder, MedPulse Systems",
-    badge: "Faculty Innovator",
-  },
-  {
-    quote:
-      "CIEL's Student Innovation Council gave us the platform to run institution-wide hackathons. It bridges campus talent with serious venture capital opportunities.",
-    author: "Aarav Sharma",
-    role: "President, Student Innovation Council",
-    badge: "Student Leader",
-  },
-];
+
 
 function AngledImagePanel({ id, src }: { id: string; src?: string }) {
   const [imgSrc, setImgSrc] = useState<string | null>(src ?? `/${id}.png`);
@@ -134,9 +151,9 @@ function AngledImagePanel({ id, src }: { id: string; src?: string }) {
   );
 }
 
-export function HomeView({ event }: HomeViewProps) {
+export function HomeView({ event, pitches = [] }: HomeViewProps) {
   const [activeWing, setActiveWing] = useState<"incubation" | "accelerator" | "impact">("incubation");
-  const [testimonialIdx, setTestimonialIdx] = useState(0);
+  const [activePitch, setActivePitch] = useState<ElevatorPitchItem | null>(null);
 
   return (
     <div style={{ position: "relative" }}>
@@ -627,55 +644,130 @@ export function HomeView({ event }: HomeViewProps) {
         </div>
       </section>
 
-      {/* 7. TESTIMONIALS CAROUSEL SECTION */}
-      <section className="shell page-section">
-        <FadeIn>
-          <div className="section-heading">
-            <span className="eyebrow">
-              <Quote size={14} className="text-gold" />
-              Founder Voices
-            </span>
-            <h2>What Our Innovators Say</h2>
-            <p>Endorsements from student founders, faculty researchers, and council leads.</p>
+
+
+      {/* 7.5 — ELEVATOR PITCHES SECTION */}
+      {pitches.length > 0 && (
+        <section className="shell page-section">
+          <FadeIn>
+            <div className="section-heading">
+              <span className="eyebrow">
+                <Video size={14} className="text-gold" />
+                Startup Elevator Pitches
+              </span>
+              <h2>Hear It from the Founders</h2>
+              <p>Short, punchy elevator pitches from startups incubated at CIEL — in their own words.</p>
+            </div>
+          </FadeIn>
+
+          <StaggerContainer className="pitches-grid">
+            {pitches.map((pitch) => {
+              const thumb = getThumbnailUrl(pitch);
+              const directVideo = isDirectVideo(pitch.videoUrl);
+              return (
+                <StaggerItem key={pitch.id}>
+                  <article
+                    className="pitch-card"
+                    onClick={() => setActivePitch(pitch)}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Watch pitch for ${pitch.startup}`}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setActivePitch(pitch);
+                      }
+                    }}
+                  >
+                    {/* Thumbnail */}
+                    <div className="pitch-thumb-wrap">
+                      {thumb ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={thumb} alt={pitch.title} className="pitch-thumb" />
+                      ) : directVideo ? (
+                        <video
+                          src={`${pitch.videoUrl}#t=0.5`}
+                          className="pitch-thumb"
+                          preload="metadata"
+                          muted
+                          playsInline
+                        />
+                      ) : (
+                        <div className="pitch-thumb pitch-thumb-placeholder">
+                          <Video size={36} style={{ opacity: 0.4, color: "var(--ciel-gold)" }} />
+                        </div>
+                      )}
+                      <div className="pitch-play-overlay">
+                        <div className="pitch-play-btn">
+                          <Play size={22} fill="currentColor" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Info */}
+                    <div className="pitch-info">
+                      <h3 className="pitch-title">{pitch.startup || pitch.title}</h3>
+                      <p className="pitch-meta">
+                        Founder: <strong>{pitch.founder}</strong>
+                      </p>
+                    </div>
+                  </article>
+                </StaggerItem>
+              );
+            })}
+          </StaggerContainer>
+        </section>
+      )}
+
+      {/* VIDEO MODAL */}
+      {activePitch && (
+        <div
+          className="pitch-modal-overlay"
+          onClick={() => setActivePitch(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Playing: ${activePitch.startup || activePitch.title}`}
+        >
+          <div className="pitch-modal-box" onClick={(e) => e.stopPropagation()}>
+            <div className="pitch-modal-header">
+              <div>
+                <h3 className="pitch-modal-title">{activePitch.startup || activePitch.title}</h3>
+                <p className="pitch-modal-meta">
+                  Founder: <strong>{activePitch.founder}</strong>
+                </p>
+              </div>
+              <button
+                className="pitch-modal-close"
+                onClick={() => setActivePitch(null)}
+                aria-label="Close video"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="pitch-modal-player">
+              {isDirectVideo(activePitch.videoUrl) ? (
+                <video
+                  src={activePitch.videoUrl}
+                  controls
+                  autoPlay
+                  playsInline
+                  controlsList="nodownload"
+                  style={{ width: "100%", height: "100%", objectFit: "contain", background: "#000" }}
+                />
+              ) : (
+                <iframe
+                  src={getEmbedUrl(activePitch.videoUrl)}
+                  title={activePitch.title}
+                  allow="autoplay; encrypted-media; picture-in-picture"
+                  allowFullScreen
+                  style={{ width: "100%", height: "100%", border: "none" }}
+                />
+              )}
+            </div>
           </div>
-        </FadeIn>
-
-        <ScaleIn key={testimonialIdx} style={{ maxWidth: 840, margin: "0 auto 36px" }}>
-          <article className="luxury-card" style={{ padding: 48, textAlign: "center", position: "relative" }}>
-            <Quote size={40} style={{ color: "var(--ciel-gold)", opacity: 0.3, margin: "0 auto 16px" }} />
-            <p style={{ fontSize: 17, color: "var(--text-white)", lineHeight: 1.7, fontStyle: "italic", marginBottom: 24 }}>
-              &ldquo;{TESTIMONIALS[testimonialIdx].quote}&rdquo;
-            </p>
-            <strong style={{ display: "block", fontSize: 18, color: "var(--ciel-gold-bright)" }}>
-              {TESTIMONIALS[testimonialIdx].author}
-            </strong>
-            <span style={{ fontSize: 13.5, color: "var(--text-secondary)" }}>
-              {TESTIMONIALS[testimonialIdx].role}
-            </span>
-          </article>
-        </ScaleIn>
-
-        <div style={{ display: "flex", justifyContent: "center", gap: 10 }}>
-          {TESTIMONIALS.map((t, idx) => (
-            <button
-              key={t.author}
-              onClick={() => setTestimonialIdx(idx)}
-              style={{
-                width: idx === testimonialIdx ? 32 : 12,
-                height: 12,
-                borderRadius: 6,
-                background: idx === testimonialIdx ? "var(--ciel-gold)" : "var(--line)",
-                border: "none",
-                cursor: "pointer",
-                transition: "all 0.3s ease",
-              }}
-              aria-label={`Testimonial slide ${idx + 1}`}
-            />
-          ))}
         </div>
-      </section>
+      )}
 
-      {/* 8. CALL TO ACTION SECTION */}
       <section className="shell page-section">
         <FadeIn>
           <div className="status-card" style={{ maxWidth: "100%", padding: "64px 40px", textAlign: "center" }}>
