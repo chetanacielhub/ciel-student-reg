@@ -152,30 +152,9 @@
       "createdAt": "2026-08-08T07:58:57.680Z"
     }
   ],
-  "events": [
-    {
-      "title": "abc",
-      "category": "Hackathon",
-      "date": "2026-06-20",
-      "time": "20:24 - 21:23",
-      "venue": "CIEL Innovation Hub",
-      "desc": "",
-      "posterUrl": "",
-      "id": "ev-1788011647447"
-    }
-  ],
+  "events": [],
   "news": [],
   "downloads": [
-    {
-      "title": "45tyh",
-      "category": "policy",
-      "fileSize": "0.1 MB",
-      "format": "PDF",
-      "updatedAt": "2026-08-31",
-      "description": "trhyjuk",
-      "fileUrl": "/uploads/photo-1788179308718-tta7ulc3wfj.pdf",
-      "id": "d-1788179314825"
-    },
     {
       "title": "dsf",
       "category": "policy",
