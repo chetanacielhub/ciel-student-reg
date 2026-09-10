@@ -13,7 +13,15 @@ export const metadata: Metadata = {
 };
 
 export default async function GovernancePage() {
-  const committees = await getGovernanceCommittees();
+  const rawCommittees = await getGovernanceCommittees();
+  const getPriority = (name: string) => {
+    const n = (name || "").toLowerCase().trim();
+    if (n.includes("governing")) return 1;
+    if (n.includes("joint") || n.includes("steering")) return 2;
+    if (n.includes("functional")) return 3;
+    return 99;
+  };
+  const committees = [...rawCommittees].sort((a, b) => getPriority(a.name) - getPriority(b.name));
 
   return (
     <div className="shell page-section">
@@ -47,69 +55,47 @@ export default async function GovernancePage() {
 
             <p className="event-card-description">{comm.description}</p>
 
-            <div className="grid-3" style={{ marginTop: 24 }}>
+            <div className="team-portrait-grid" style={{ marginTop: 28 }}>
               {comm.members.map((m, idx) => {
                 const isFunctional = comm.id === "functional-committee" || comm.name.toLowerCase().includes("functional");
-                // Extract section name if role starts with "Lead — "
                 const sectionTitle = isFunctional && m.role.includes("—") 
                   ? m.role.split("—")[1].trim()
                   : null;
 
                 const memberCard = (
-                  <div
-                    key={m.name + idx}
-                    style={{
-                      background: "rgba(255, 255, 255, 0.03)",
-                      border: "1px solid var(--ciel-gold-border)",
-                      borderRadius: "var(--radius-sm)",
-                      padding: 18,
-                      height: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <div>
-                      {sectionTitle && (
-                        <div style={{ marginBottom: 12, paddingBottom: 10, borderBottom: "1px solid rgba(212, 160, 23, 0.15)" }}>
-                          <span className="badge badge-brand" style={{ fontSize: 11, marginBottom: 4, display: "inline-block" }}>
-                            Section {sectionTitle.match(/^(\d+)[:.]/)?.[1] || idx + 1}
-                          </span>
-                          <h3 style={{ fontSize: 16, margin: "4px 0 0", color: "var(--ciel-gold-bright)", fontWeight: 700 }}>
-                            {sectionTitle.replace(/^\d+[:.]\s*/, "")}
-                          </h3>
-                        </div>
-                      )}
+                  <div key={m.name + idx} className="portrait-member-card">
+                    {sectionTitle && (
+                      <span className="badge badge-brand" style={{ fontSize: 11, marginBottom: 12 }}>
+                        Section {sectionTitle.match(/^(\d+)[:.]/)?.[1] || idx + 1}: {sectionTitle.replace(/^\d+[:.]\s*/, "")}
+                      </span>
+                    )}
 
-                      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-                        {m.avatar && (m.avatar.startsWith("/") || m.avatar.startsWith("http")) ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={m.avatar}
-                            alt={m.name}
-                            style={{ width: 42, height: 42, borderRadius: "50%", objectFit: "cover", border: "1px solid var(--ciel-gold-border)", flexShrink: 0 }}
-                          />
-                        ) : (
-                          <div className="member-avatar" style={{ margin: 0, width: 36, height: 36, fontSize: 13, flexShrink: 0 }}>
-                            {m.avatar || m.name.split(" ").map((n) => n[0]).join("")}
-                          </div>
-                        )}
-                        <div style={{ flex: 1 }}>
-                          <strong style={{ display: "flex", alignItems: "center", justifyContent: "space-between", color: "var(--text-white)", fontSize: 15 }}>
-                            <span>{m.name}</span>
-                            {m.linkedinUrl && <LinkedInIcon size={15} color="#60A5FA" />}
-                          </strong>
-                          <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
-                            {sectionTitle ? "Committee Lead" : m.role}
-                          </span>
-                        </div>
+                    {m.avatar && (m.avatar.startsWith("/") || m.avatar.startsWith("http")) ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={m.avatar}
+                        alt={m.name}
+                        className="portrait-photo"
+                      />
+                    ) : (
+                      <div className="portrait-avatar-placeholder">
+                        {m.avatar || m.name.split(" ").map((n) => n[0]).join("")}
                       </div>
-                    </div>
+                    )}
+
+                    <h3 className="portrait-name">
+                      <span>{m.name}</span>
+                      {m.linkedinUrl && <LinkedInIcon size={14} color="#60A5FA" />}
+                    </h3>
+
+                    <p className="portrait-role">
+                      {sectionTitle ? "Committee Lead" : m.role}
+                    </p>
 
                     {m.linkedinUrl && (
-                      <div style={{ marginTop: 12, fontSize: 11.5, color: "#60A5FA", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                      <span className="portrait-linkedin-btn">
                         LinkedIn Profile &rarr;
-                      </div>
+                      </span>
                     )}
                   </div>
                 );
@@ -120,7 +106,7 @@ export default async function GovernancePage() {
                     target="_blank"
                     rel="noopener noreferrer"
                     key={m.name + idx}
-                    style={{ textDecoration: "none", color: "inherit", display: "block" }}
+                    style={{ textDecoration: "none", color: "inherit", display: "block", height: "100%" }}
                   >
                     {memberCard}
                   </a>

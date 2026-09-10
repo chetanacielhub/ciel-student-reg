@@ -1434,8 +1434,10 @@ function ERPMentorsTab({ initialMentors }: { initialMentors: MentorItem[] }) {
 /** 6. STUDENT COUNCIL MANAGEMENT ERP TAB */
 function ERPCouncilTab({ initialCouncil }: { initialCouncil: StudentCouncilLeadItem[] }) {
   const [council, setCouncil] = useState<StudentCouncilLeadItem[]>(initialCouncil);
-  const [query, setQuery] = useState("");
+  const [councilQuery, setCouncilQuery] = useState("");
+  const [functionalQuery, setFunctionalQuery] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [modalCategory, setModalCategory] = useState<"council" | "functional">("council");
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -1444,12 +1446,35 @@ function ERPCouncilTab({ initialCouncil }: { initialCouncil: StudentCouncilLeadI
     year: "",
     avatar: "",
     linkedinUrl: "",
+    category: "council" as "council" | "functional",
   });
 
-  const filtered = council.filter((sc) => {
-    const q = query.trim().toLowerCase();
-    return !q || [sc.name, sc.role, sc.branch, sc.year].some((v) => v.toLowerCase().includes(q));
+  const councilLeads = council.filter((sc) => sc.category !== "functional");
+  const functionalLeads = council.filter((sc) => sc.category === "functional");
+
+  const filteredCouncil = councilLeads.filter((sc) => {
+    const q = councilQuery.trim().toLowerCase();
+    return !q || [sc.name, sc.role, sc.branch, sc.year].some((v) => (v || "").toLowerCase().includes(q));
   });
+
+  const filteredFunctional = functionalLeads.filter((sc) => {
+    const q = functionalQuery.trim().toLowerCase();
+    return !q || [sc.name, sc.role, sc.branch, sc.year].some((v) => (v || "").toLowerCase().includes(q));
+  });
+
+  function openAddModal(cat: "council" | "functional") {
+    setModalCategory(cat);
+    setForm({
+      name: "",
+      role: "",
+      branch: "",
+      year: "3rd Year",
+      avatar: "",
+      linkedinUrl: "",
+      category: cat,
+    });
+    setShowModal(true);
+  }
 
   async function handleAddLead(e: React.FormEvent) {
     e.preventDefault();
@@ -1460,45 +1485,58 @@ function ERPCouncilTab({ initialCouncil }: { initialCouncil: StudentCouncilLeadI
       const res = await fetch("/api/admin/student-council", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          category: modalCategory,
+        }),
       });
 
       if (res.ok) {
         const created = await res.json();
         setCouncil((prev) => [...prev, created]);
         setShowModal(false);
-        setForm({ name: "", role: "", branch: "", year: "", avatar: "", linkedinUrl: "" });
+        setForm({ name: "", role: "", branch: "", year: "", avatar: "", linkedinUrl: "", category: "council" });
       } else {
         const err = await res.json();
-        alert(err.error || "Failed to add council lead.");
+        alert(err.error || "Failed to add student leader.");
       }
     } catch {
-      alert("Error adding council lead.");
+      alert("Error adding student leader.");
     } finally {
       setSubmitting(false);
     }
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Are you sure you want to remove this student council lead?")) return;
+    if (!confirm("Are you sure you want to remove this student leader?")) return;
     try {
       const res = await fetch(`/api/admin/student-council?id=${encodeURIComponent(id)}`, { method: "DELETE" });
       if (res.ok) {
         setCouncil((prev) => prev.filter((sc) => sc.id !== id && sc.name !== id));
       }
     } catch {
-      alert("Failed to delete council lead.");
+      alert("Failed to delete student leader.");
     }
   }
 
+  const FUNCTIONAL_TRACKS = [
+    "Student Lead — 1. Innovation & Research",
+    "Student Lead — 2. Incubation & Start-up Support",
+    "Student Lead — 3. Skill Development & Training",
+    "Student Lead — 4. Industry & Investor Relations",
+    "Student Lead — 5. Events & Outreach",
+    "Student Lead — 6. Monitoring & Evaluation",
+  ];
+
   return (
     <div className="adm-tab-content">
+      {/* ─── SECTION 1: STUDENT INNOVATION COUNCIL (SIC) ─── */}
       <div className="adm-section-head">
         <div>
           <h2>Student Innovation Council (SIC)</h2>
-          <p>Manage elected student office bearers, hackathon leads &amp; lab managers · {council.length} council leads</p>
+          <p>Manage elected student office bearers, hackathon leads &amp; lab managers · {councilLeads.length} council leads</p>
         </div>
-        <button className="adm-btn adm-btn-primary" onClick={() => setShowModal(true)}>
+        <button className="adm-btn adm-btn-primary" onClick={() => openAddModal("council")}>
           <Plus size={15} /> Add Council Lead
         </button>
       </div>
@@ -1508,15 +1546,15 @@ function ERPCouncilTab({ initialCouncil }: { initialCouncil: StudentCouncilLeadI
           <Search size={16} className="adm-search-icon" />
           <input
             type="search"
-            placeholder=""
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search council leaders by name, designation, branch..."
+            value={councilQuery}
+            onChange={(e) => setCouncilQuery(e.target.value)}
             className="adm-search-input"
           />
         </div>
       </div>
 
-      <div className="adm-table-wrap">
+      <div className="adm-table-wrap" style={{ marginBottom: 48 }}>
         <table className="adm-table">
           <thead>
             <tr>
@@ -1530,12 +1568,12 @@ function ERPCouncilTab({ initialCouncil }: { initialCouncil: StudentCouncilLeadI
             </tr>
           </thead>
           <tbody>
-            {filtered.length === 0 ? (
+            {filteredCouncil.length === 0 ? (
               <tr>
                 <td colSpan={7} className="adm-empty-cell">No student council members found.</td>
               </tr>
             ) : (
-              filtered.map((sc, i) => (
+              filteredCouncil.map((sc, i) => (
                 <tr key={sc.id || sc.name}>
                   <td className="adm-td-muted">{i + 1}</td>
                   <td>
@@ -1568,12 +1606,101 @@ function ERPCouncilTab({ initialCouncil }: { initialCouncil: StudentCouncilLeadI
         </table>
       </div>
 
+      {/* ─── SECTION 2: STUDENT'S FUNCTIONAL COMMITTEE (SEPARATE SECTION) ─── */}
+      <div className="adm-section-head" style={{ paddingTop: 28, borderTop: "1px solid var(--ciel-gold-border)" }}>
+        <div>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "var(--ciel-gold-bright)", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
+            <Award size={15} /> Student Operational Tracks
+          </div>
+          <h2>Student&apos;s Functional Committee</h2>
+          <p>Manage student coordinators &amp; track leads across the 6 core innovation sections · {functionalLeads.length} student members</p>
+        </div>
+        <button className="adm-btn adm-btn-primary" onClick={() => openAddModal("functional")}>
+          <Plus size={15} /> Add Member
+        </button>
+      </div>
+
+      <div className="adm-toolbar">
+        <div className="adm-search">
+          <Search size={16} className="adm-search-icon" />
+          <input
+            type="search"
+            placeholder="Search student functional members by name, section, branch..."
+            value={functionalQuery}
+            onChange={(e) => setFunctionalQuery(e.target.value)}
+            className="adm-search-input"
+          />
+        </div>
+      </div>
+
+      <div className="adm-table-wrap">
+        <table className="adm-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Student Leader</th>
+              <th>Functional Committee Section / Role</th>
+              <th>Branch / Department</th>
+              <th>Academic Year</th>
+              <th>LinkedIn</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredFunctional.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="adm-empty-cell" style={{ padding: "36px 16px", textAlign: "center" }}>
+                  <Award size={30} style={{ color: "var(--ciel-gold)", margin: "0 auto 10px", opacity: 0.8 }} />
+                  <div style={{ color: "var(--text-white)", fontWeight: 600, fontSize: 15, marginBottom: 4 }}>No Student&apos;s Functional Committee members added yet.</div>
+                  <div style={{ color: "var(--text-secondary)", fontSize: 13, maxWidth: 500, margin: "0 auto" }}>
+                    Click &ldquo;+ Add Member&rdquo; above to assign student coordinators to CIEL&apos;s 6 core innovation sections.
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              filteredFunctional.map((sc, i) => (
+                <tr key={sc.id || sc.name}>
+                  <td className="adm-td-muted">{i + 1}</td>
+                  <td>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <AvatarDisplay avatar={sc.avatar} name={sc.name} size={32} />
+                      <span className="adm-td-primary">{sc.name}</span>
+                    </div>
+                  </td>
+                  <td className="adm-td-primary" style={{ color: "var(--ciel-gold-bright)" }}>
+                    <span className="badge badge-brand" style={{ fontSize: 12 }}>{sc.role}</span>
+                  </td>
+                  <td className="adm-td-secondary">{sc.branch}</td>
+                  <td className="adm-td-secondary">{sc.year}</td>
+                  <td>
+                    {sc.linkedinUrl ? (
+                      <a href={sc.linkedinUrl} target="_blank" rel="noreferrer" style={{ color: "#60A5FA", display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12 }}>
+                        <LinkedInIcon size={14} /> Profile
+                      </a>
+                    ) : (
+                      <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
+                    )}
+                  </td>
+                  <td>
+                    <button className="adm-btn adm-btn-outline" style={{ padding: "4px 8px", color: "#FF8080" }} onClick={() => handleDelete(sc.id || sc.name)}>
+                      <Trash2 size={14} />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
       {/* Modal Form */}
       {showModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: 20 }}>
-          <div style={{ background: "var(--charcoal-card)", border: "1px solid var(--ciel-gold-border)", borderRadius: "var(--radius-lg)", padding: 28, width: "100%", maxWidth: 520 }}>
+          <div style={{ background: "var(--charcoal-card)", border: "1px solid var(--ciel-gold-border)", borderRadius: "var(--radius-lg)", padding: 28, width: "100%", maxWidth: 480 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ color: "var(--text-white)", fontSize: 18, margin: 0 }}>Add Student Innovation Council Lead</h3>
+              <h3 style={{ color: "var(--text-white)", fontSize: 18, margin: 0 }}>
+                {modalCategory === "functional" ? "Add Member to Student's Functional Committee" : "Add Member to Student Innovation Council"}
+              </h3>
               <button style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }} onClick={() => setShowModal(false)}>
                 <X size={20} />
               </button>
@@ -1581,23 +1708,80 @@ function ERPCouncilTab({ initialCouncil }: { initialCouncil: StudentCouncilLeadI
 
             <form onSubmit={handleAddLead} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
-                <label className="field-label">Student Name *</label>
+                <label className="field-label">Target Committee *</label>
+                <input
+                  className="input"
+                  disabled
+                  value={modalCategory === "functional" ? "Student's Functional Committee" : "Student Innovation Council (SIC)"}
+                  style={{ opacity: 0.9, background: "rgba(255,255,255,0.05)", cursor: "not-allowed" }}
+                />
+              </div>
+
+              <div>
+                <label className="field-label">Member Name *</label>
                 <input required className="input" placeholder="" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               </div>
 
-              <div>
-                <label className="field-label">Council Designation / Role *</label>
-                <input required className="input" placeholder="" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} />
-              </div>
+              {modalCategory === "functional" ? (
+                <div>
+                  <label className="field-label">Functional Committee Section *</label>
+                  <select
+                    className="adm-select"
+                    style={{ width: "100%", marginBottom: 8 }}
+                    value={
+                      [
+                        "1: Innovation and Research",
+                        "2: Incubation and start-up support",
+                        "3: Skill Development and Training",
+                        "4: Industry and Investor",
+                        "5: Events and OutReach",
+                        "6: Monitoring And eveluation",
+                      ].find((s) =>
+                        form.role.toLowerCase().includes(s.split(":")[1]?.trim().toLowerCase())
+                      ) || ""
+                    }
+                    onChange={(e) => {
+                      const sec = e.target.value;
+                      if (sec) {
+                        setForm({ ...form, role: `Student Lead — ${sec}` });
+                      }
+                    }}
+                    required
+                  >
+                    <option value="">-- Select One of 6 Sections --</option>
+                    <option value="1: Innovation and Research">Section 1: Innovation and Research</option>
+                    <option value="2: Incubation and start-up support">Section 2: Incubation and start-up support</option>
+                    <option value="3: Skill Development and Training">Section 3: Skill Development and Training</option>
+                    <option value="4: Industry and Investor">Section 4: Industry and Investor</option>
+                    <option value="5: Events and OutReach">Section 5: Events and OutReach</option>
+                    <option value="6: Monitoring And eveluation">Section 6: Monitoring And eveluation</option>
+                  </select>
 
-              <div>
-                <label className="field-label">Department / Branch</label>
-                <input className="input" placeholder="" value={form.branch} onChange={(e) => setForm({ ...form, branch: e.target.value })} />
-              </div>
+                  <label className="field-label" style={{ fontSize: 12 }}>Role / Designation Format</label>
+                  <input
+                    required
+                    className="input"
+                    placeholder=""
+                    value={form.role}
+                    onChange={(e) => setForm({ ...form, role: e.target.value })}
+                  />
+                </div>
+              ) : (
+                <div>
+                  <label className="field-label">Council Designation / Role *</label>
+                  <input required className="input" placeholder="" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} />
+                </div>
+              )}
 
-              <div>
-                <label className="field-label">Academic Year</label>
-                <input className="input" placeholder="" value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <label className="field-label">Department / Branch</label>
+                  <input className="input" placeholder="" value={form.branch} onChange={(e) => setForm({ ...form, branch: e.target.value })} />
+                </div>
+                <div>
+                  <label className="field-label">Academic Year</label>
+                  <input className="input" placeholder="" value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} />
+                </div>
               </div>
 
               <div>
@@ -1643,7 +1827,7 @@ function ERPCouncilTab({ initialCouncil }: { initialCouncil: StudentCouncilLeadI
               <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 10 }}>
                 <button type="button" className="adm-btn adm-btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
                 <button type="submit" className="adm-btn adm-btn-primary" disabled={submitting}>
-                  {submitting ? "Adding..." : "Add Council Lead"}
+                  {submitting ? "Adding..." : "Add Member"}
                 </button>
               </div>
             </form>

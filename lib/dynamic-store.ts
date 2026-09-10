@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import { randomUUID } from "crypto";
 import { CIEL_MENTORS, GOVERNANCE_COMMITTEES, STUDENT_COUNCIL_LEADS, CIEL_DOWNLOADS, DEFAULT_GOOGLE_FORMS } from "./ciel-data";
 import type { GovernanceCommitteeItem, JourneyMilestone, MentorItem, StudentCouncilLeadItem, VentureProjectItem, UserProfileItem, CielEventItem, NewsItem, DownloadItem, GoogleFormItem, ElevatorPitchItem } from "./types";
 import { createAdminClient } from "./supabase/admin";
@@ -7,6 +8,7 @@ import { createAdminClient } from "./supabase/admin";
 type StoreData = {
   mentors: MentorItem[];
   studentCouncil: StudentCouncilLeadItem[];
+  studentFunctional?: StudentCouncilLeadItem[];
   governance: GovernanceCommitteeItem[];
   projects?: VentureProjectItem[];
   userProfiles?: UserProfileItem[];
@@ -42,6 +44,7 @@ function getInitialData(): StoreData {
       year: sc.year,
       avatar: sc.name.split(" ").map((n) => n[0]).join(""),
     })),
+    studentFunctional: [],
     governance: GOVERNANCE_COMMITTEES.map((c, idx) => ({
       id: `gov-${idx + 1}`,
       name: c.name,
@@ -63,6 +66,7 @@ async function ensureStore(): Promise<StoreData> {
     return {
       mentors: Array.isArray(parsed.mentors) ? parsed.mentors : getInitialData().mentors,
       studentCouncil: Array.isArray(parsed.studentCouncil) ? parsed.studentCouncil : getInitialData().studentCouncil,
+      studentFunctional: Array.isArray(parsed.studentFunctional) ? parsed.studentFunctional : [],
       governance: Array.isArray(parsed.governance) ? parsed.governance : getInitialData().governance,
       projects: Array.isArray(parsed.projects) ? parsed.projects : [],
       userProfiles: Array.isArray(parsed.userProfiles) ? parsed.userProfiles : [],
@@ -167,51 +171,84 @@ export async function deleteMentor(id: string): Promise<boolean> {
 // ─── STUDENT INNOVATION COUNCIL ──────────────────────────────────────────
 
 export async function getStudentCouncilLeads(): Promise<StudentCouncilLeadItem[]> {
+  const store = await ensureStore();
+  const localCouncil = (store.studentCouncil || []).map((sc) => ({
+    ...sc,
+    category: (sc.category || "council") as "council" | "functional",
+  }));
+  const localFunctional = (store.studentFunctional || []).map((sc) => ({
+    ...sc,
+    category: "functional" as const,
+  }));
+  const itemsMap = new Map<string, StudentCouncilLeadItem>();
+
+  // Initialize with local file store
+  [...localCouncil, ...localFunctional].forEach((item) => {
+    itemsMap.set(item.name.toLowerCase().trim(), item);
+  });
+
   try {
     const supabase = createAdminClient();
     const { data } = await supabase.from("student_council").select("*").order("created_at", { ascending: true });
     if (data && data.length > 0) {
-      return data.map((sc: any) => ({
-        id: sc.id,
-        name: sc.name,
-        role: sc.role,
-        branch: sc.branch,
-        year: sc.year,
-        avatar: sc.avatar || sc.name.split(" ").map((n: string) => n[0]).join(""),
-        linkedinUrl: sc.linkedin_url || sc.linkedinUrl,
-      }));
+      data.forEach((sc: any) => {
+        const isFunctional = sc.category === "functional" || (typeof sc.role === "string" && sc.role.startsWith("[Functional]"));
+        const role = typeof sc.role === "string" ? sc.role.replace(/^\[Functional\]\s*/, "") : sc.role;
+        const item: StudentCouncilLeadItem = {
+          id: String(sc.id),
+          name: sc.name,
+          role,
+          branch: sc.branch,
+          year: sc.year,
+          avatar: sc.avatar || sc.name.split(" ").map((n: string) => n[0]).join(""),
+          linkedinUrl: sc.linkedin_url || sc.linkedinUrl,
+          category: (isFunctional ? "functional" : (sc.category || "council")) as "council" | "functional",
+        };
+        itemsMap.set(sc.name.toLowerCase().trim(), item);
+      });
     }
   } catch {
-    // Fallback
+    // Fallback to local
   }
-  const store = await ensureStore();
-  return store.studentCouncil;
+
+  return Array.from(itemsMap.values());
 }
 
 export async function addStudentCouncilLead(lead: Omit<StudentCouncilLeadItem, "id">): Promise<StudentCouncilLeadItem> {
+  const isFunctional = lead.category === "functional";
+  const generatedId = randomUUID();
   const newLead: StudentCouncilLeadItem = {
     ...lead,
-    id: `sc-${Date.now()}`,
+    id: generatedId,
     avatar: lead.avatar || lead.name.split(" ").map((n) => n[0]).join(""),
+    category: isFunctional ? "functional" : "council",
   };
 
   try {
     const supabase = createAdminClient();
     await supabase.from("student_council").insert({
-      id: newLead.id,
+      id: generatedId,
       name: newLead.name,
-      role: newLead.role,
+      role: isFunctional && !newLead.role.startsWith("[Functional]") ? `[Functional] ${newLead.role}` : newLead.role,
       branch: newLead.branch,
       year: newLead.year,
       avatar: newLead.avatar,
       linkedin_url: newLead.linkedinUrl,
     });
-  } catch {
-    // Ignore
+  } catch (err) {
+    console.error("Supabase insert student error:", err);
   }
 
   const store = await ensureStore();
-  store.studentCouncil.push(newLead);
+  if (isFunctional) {
+    if (!store.studentFunctional) store.studentFunctional = [];
+    store.studentFunctional = store.studentFunctional.filter((s) => s.name.toLowerCase().trim() !== newLead.name.toLowerCase().trim());
+    store.studentFunctional.push(newLead);
+  } else {
+    if (!store.studentCouncil) store.studentCouncil = [];
+    store.studentCouncil = store.studentCouncil.filter((s) => s.name.toLowerCase().trim() !== newLead.name.toLowerCase().trim());
+    store.studentCouncil.push(newLead);
+  }
   await saveStore(store);
   return newLead;
 }
@@ -225,18 +262,42 @@ export async function deleteStudentCouncilLead(id: string): Promise<boolean> {
   }
 
   const store = await ensureStore();
-  store.studentCouncil = store.studentCouncil.filter((sc) => sc.id !== id && sc.name !== id);
+  if (store.studentCouncil) {
+    store.studentCouncil = store.studentCouncil.filter((sc) => sc.id !== id && sc.name !== id);
+  }
+  if (store.studentFunctional) {
+    store.studentFunctional = store.studentFunctional.filter((sc) => sc.id !== id && sc.name !== id);
+  }
   await saveStore(store);
   return true;
 }
 
 // ─── GOVERNANCE ───────────────────────────────────────────────────────────
 
+export function getGovernanceSortPriority(name: string): number {
+  const n = (name || "").toLowerCase().trim();
+  if (n.includes("governing")) return 1;
+  if (n.includes("joint") || n.includes("steering")) return 2;
+  if (n.includes("functional")) return 3;
+  return 99;
+}
+
 export async function getGovernanceCommittees(): Promise<GovernanceCommitteeItem[]> {
   try {
     const supabase = createAdminClient();
-    const { data: committees } = await supabase.from("governance_committees").select("*").order("created_at", { ascending: true });
-    if (committees && committees.length > 0) {
+    const { data: rawCommittees } = await supabase
+      .from("governance_committees")
+      .select("*")
+      .order("sort_order", { ascending: true });
+
+    if (rawCommittees && rawCommittees.length > 0) {
+      const committees = [...rawCommittees].sort((a: any, b: any) => {
+        const pA = getGovernanceSortPriority(a.name);
+        const pB = getGovernanceSortPriority(b.name);
+        if (pA !== pB) return pA - pB;
+        return (a.sort_order ?? 99) - (b.sort_order ?? 99);
+      });
+
       const { data: members } = await supabase.from("governance_members").select("*").order("sort_order", { ascending: true });
       return committees.map((c: any) => ({
         id: String(c.id),
@@ -275,7 +336,11 @@ export async function getGovernanceCommittees(): Promise<GovernanceCommitteeItem
   }
 
   const store = await ensureStore();
-  return store.governance;
+  return [...store.governance].sort((a, b) => {
+    const pA = getGovernanceSortPriority(a.name);
+    const pB = getGovernanceSortPriority(b.name);
+    return pA - pB;
+  });
 }
 
 export async function addGovernanceCommittee(comm: { name: string; description: string }): Promise<GovernanceCommitteeItem> {

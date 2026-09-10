@@ -55,44 +55,42 @@
   ],
   "studentCouncil": [
     {
-      "id": "sc-1",
-      "name": "Aarav Sharma",
-      "role": "President, Student Innovation Council",
+      "name": "sdcv",
+      "role": "sdf",
+      "branch": "sxdfg",
+      "year": "Final Year",
+      "avatar": "s",
+      "id": "sc-1789046107643"
+    }
+  ],
+  "studentFunctional": [
+    {
+      "name": "njkm",
+      "role": "Student Lead — 2: Incubation and start-up support",
+      "branch": "sdf",
+      "year": "1st Year",
+      "avatar": "n",
+      "category": "functional",
+      "id": "sc-1789048364241"
+    },
+    {
+      "name": "Aryan Deshmukh",
+      "role": "Student Lead — 1: Innovation and Research",
       "branch": "Computer Engineering",
-      "year": "Final Year",
-      "avatar": "AS"
+      "year": "3rd Year",
+      "avatar": "AD",
+      "linkedinUrl": "https://linkedin.com/in/aryandeshmukh",
+      "category": "functional",
+      "id": "b1840120-0ec1-40d3-8543-e27032fbd838"
     },
     {
-      "id": "sc-2",
-      "name": "Neha Kadam",
-      "role": "Vice President, Hackathons & Competitions",
-      "branch": "Information Technology",
-      "year": "Final Year",
-      "avatar": "NK"
-    },
-    {
-      "id": "sc-3",
-      "name": "Rishi Verma",
-      "role": "Lead, Prototyping & Makerspace Labs",
-      "branch": "Mechanical Engineering",
-      "year": "Pre-Final Year",
-      "avatar": "RV"
-    },
-    {
-      "id": "sc-4",
-      "name": "Ananya Roy",
-      "role": "Lead, Women Entrepreneurship Cell",
-      "branch": "Electronics & Telecom",
-      "year": "Pre-Final Year",
-      "avatar": "AR"
-    },
-    {
-      "id": "sc-5",
-      "name": "Devansh Mehta",
-      "role": "Lead, Industry Outreach & Media",
-      "branch": "Management Studies",
-      "year": "Final Year",
-      "avatar": "DM"
+      "name": "abc",
+      "role": "Student Lead — 2: Incubation and start-up support",
+      "branch": "df",
+      "year": "1stYear",
+      "avatar": "a",
+      "category": "functional",
+      "id": "838ab883-a6ed-46de-8613-a86d6abb8e50"
     }
   ],
   "governance": [
@@ -116,6 +114,10 @@
         {
           "name": "Mr. Anand Rathi",
           "role": "Industry Representative (Managing Director, Rathi Tech)"
+        },
+        {
+          "name": "kjb",
+          "role": "bhnj"
         }
       ]
     },
@@ -142,9 +144,21 @@
         },
         {
           "name": "Samad Qureshi",
-          "role": "Innovation Managaer",
-          "linkedinUrl": "https://www.linkedin.com/in/abdussamadqureshi84?utm_source=share_via&utm_content=profile&utm_medium=member_androidhttps://www.linkedin.com/in/abdussamadqureshi84?utm_source=share_via&utm_content=profile&utm_medium=member_android",
-          "avatar": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/uploads/photo-1789045378092-0dyfxx0gto7.png"
+          "role": "Innovation Manager - Events,COmmunication and Outreach",
+          "linkedinUrl": "https://www.linkedin.com/in/abdussamadqureshi84?utm_source=share_via&utm_content=profile&utm_medium=member_android",
+          "avatar": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/uploads/photo-1789046683253-3hkkg1dfmsy.png"
+        },
+        {
+          "name": "Noorjahan Charania",
+          "role": "Innovation Manager - Digital Innovation,Branding & Technology",
+          "linkedinUrl": "https://www.linkedin.com/in/noorjahan-charania?utm_source=share_via&utm_content=profile&utm_medium=member_ios",
+          "avatar": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/uploads/photo-1789046741827-xvwynvhqmya.png"
+        },
+        {
+          "name": "Vishnuraj Vishwakarma",
+          "role": "Innovation Manager - Operations, Planning & Execution",
+          "linkedinUrl": "https://www.linkedin.com/in/vishnuraj-vishwakarma",
+          "avatar": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/uploads/photo-1789046943591-vd5hyhatqrq.png"
         }
       ]
     },

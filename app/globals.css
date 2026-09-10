@@ -7609,3 +7609,183 @@ body.light-theme .pitch-thumb-placeholder,
     grid-template-columns: 1fr;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   LEADERSHIP & COMMITTEE CIRCULAR PORTRAIT TEAM GRID
+   Matches the 120px circular portrait specifications
+═══════════════════════════════════════════════════════════════════════ */
+
+.team-portrait-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 28px 20px;
+}
+
+@media (max-width: 1024px) {
+  .team-portrait-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .team-portrait-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 14px;
+  }
+}
+
+@media (max-width: 440px) {
+  .team-portrait-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.portrait-member-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 14px 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  height: 100%;
+  position: relative;
+}
+
+.portrait-member-card:hover {
+  border-color: rgba(212, 175, 55, 0.5);
+  background: rgba(255, 255, 255, 0.04);
+  transform: translateY(-4px);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
+}
+
+.portrait-photo {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center top;
+  border: 2.5px solid rgba(212, 175, 55, 0.45);
+  display: block;
+  margin: 0 auto 16px;
+  background: #0d0d16;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  flex-shrink: 0;
+}
+
+.portrait-member-card:hover .portrait-photo {
+  border-color: var(--ciel-gold);
+  transform: scale(1.04);
+  box-shadow: 0 10px 26px rgba(212, 175, 55, 0.25);
+}
+
+.portrait-avatar-placeholder {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 800;
+  font-family: var(--font-serif-family);
+  color: var(--ciel-gold);
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.18), rgba(212, 175, 55, 0.05));
+  border: 2.5px solid rgba(212, 175, 55, 0.35);
+  margin: 0 auto 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  transition: transform 0.25s ease, border-color 0.25s ease;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.portrait-member-card:hover .portrait-avatar-placeholder {
+  border-color: var(--ciel-gold);
+  transform: scale(1.04);
+}
+
+.portrait-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-white);
+  margin: 0 0 6px;
+  line-height: 1.35;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.portrait-role {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 4px;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.portrait-meta {
+  font-size: 12px;
+  color: var(--ciel-gold-bright);
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+
+.portrait-linkedin-btn {
+  margin-top: auto;
+  padding-top: 10px;
+  font-size: 11.5px;
+  color: #60a5fa;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.2s ease;
+}
+
+.portrait-linkedin-btn:hover {
+  color: #93c5fd;
+  text-decoration: underline;
+}
+
+/* Light Mode Overrides for Crisp Portrait Cards */
+body.light-theme .portrait-member-card,
+[data-theme="light"] .portrait-member-card {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+body.light-theme .portrait-member-card:hover,
+[data-theme="light"] .portrait-member-card:hover {
+  border-color: var(--ciel-gold);
+  background: #ffffff;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+}
+
+body.light-theme .portrait-photo,
+[data-theme="light"] .portrait-photo {
+  background: #f3f4f6;
+  border-color: rgba(212, 175, 55, 0.4);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+body.light-theme .portrait-avatar-placeholder,
+[data-theme="light"] .portrait-avatar-placeholder {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.06));
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+body.light-theme .portrait-name,
+[data-theme="light"] .portrait-name {
+  color: #111827;
+}
+
+body.light-theme .portrait-role,
+[data-theme="light"] .portrait-role {
+  color: #4b5563;
+}

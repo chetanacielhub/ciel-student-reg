@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { name, role, branch, year, avatar, linkedinUrl } = body;
+    const { name, role, branch, year, avatar, linkedinUrl, category } = body;
 
     if (!name || !role) {
       return NextResponse.json({ error: "Name and role are required." }, { status: 400 });
@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
       year: year || "Final Year",
       avatar: avatar || name.split(" ").map((n: string) => n[0]).join(""),
       linkedinUrl: linkedinUrl || undefined,
+      category: category === "functional" ? "functional" : "council",
     });
 
     revalidatePath("/student-council");

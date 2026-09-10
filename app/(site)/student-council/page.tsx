@@ -13,7 +13,9 @@ export const metadata: Metadata = {
 };
 
 export default async function StudentCouncilPage() {
-  const councilLeads = await getStudentCouncilLeads();
+  const allLeads = await getStudentCouncilLeads();
+  const councilLeads = allLeads.filter((l) => l.category !== "functional");
+  const functionalLeads = allLeads.filter((l) => l.category === "functional");
 
   return (
     <div className="shell page-section">
@@ -36,34 +38,34 @@ export default async function StudentCouncilPage() {
         <p>Elected student office bearers representing nearly 200 active student innovators across engineering, technology, and management.</p>
       </div>
 
-      <div className="grid-3" style={{ marginBottom: 64 }}>
+      <div className="team-portrait-grid" style={{ marginBottom: 64 }}>
         {councilLeads.map((lead) => {
           const cardContent = (
-            <article className="member-card" key={lead.id || lead.name} style={{ position: "relative" }}>
+            <article className="portrait-member-card" key={lead.id || lead.name}>
               {lead.avatar && (lead.avatar.startsWith("/") || lead.avatar.startsWith("http")) ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={lead.avatar}
                   alt={lead.name}
-                  style={{ width: 72, height: 72, borderRadius: "50%", objectFit: "cover", margin: "0 auto 16px", border: "1.5px solid var(--ciel-gold-border)", display: "block" }}
+                  className="portrait-photo"
                 />
               ) : (
-                <div className="member-avatar">
+                <div className="portrait-avatar-placeholder">
                   {lead.avatar || lead.name.split(" ").map((n) => n[0]).join("")}
                 </div>
               )}
-              <h3 className="member-name" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                {lead.name}
-                {lead.linkedinUrl && <LinkedInIcon size={15} color="#60A5FA" />}
+              <h3 className="portrait-name">
+                <span>{lead.name}</span>
+                {lead.linkedinUrl && <LinkedInIcon size={14} color="#60A5FA" />}
               </h3>
-              <div className="member-role">{lead.role}</div>
-              <div className="member-dept">
+              <p className="portrait-role" style={{ color: "var(--ciel-gold-bright)", fontWeight: 600 }}>{lead.role}</p>
+              <div className="portrait-meta" style={{ color: "var(--text-secondary)", fontWeight: 400 }}>
                 {lead.branch} · {lead.year}
               </div>
               {lead.linkedinUrl && (
-                <div style={{ marginTop: 12, fontSize: 12, color: "#60A5FA", fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+                <span className="portrait-linkedin-btn">
                   Connect on LinkedIn &rarr;
-                </div>
+                </span>
               )}
             </article>
           );
@@ -74,7 +76,7 @@ export default async function StudentCouncilPage() {
               target="_blank"
               rel="noopener noreferrer"
               key={lead.id || lead.name}
-              style={{ textDecoration: "none", color: "inherit", display: "block" }}
+              style={{ textDecoration: "none", color: "inherit", display: "block", height: "100%" }}
             >
               {cardContent}
             </a>
@@ -83,6 +85,67 @@ export default async function StudentCouncilPage() {
           );
         })}
       </div>
+
+      {/* Student Functional Committee Section */}
+      {functionalLeads.length > 0 && (
+        <div style={{ marginBottom: 64 }}>
+          <div className="section-heading" style={{ marginBottom: 36, textAlign: "left" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "var(--ciel-gold-bright)", fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
+              <Award size={16} /> Operational Verticals
+            </div>
+            <h2>Student Functional Committee</h2>
+            <p>Dedicated student track coordinators executing CIEL&apos;s 6 core innovation verticals alongside institutional leads.</p>
+          </div>
+
+          <div className="team-portrait-grid">
+            {functionalLeads.map((lead) => {
+              const cardContent = (
+                <article className="portrait-member-card" key={lead.id || lead.name}>
+                  {lead.avatar && (lead.avatar.startsWith("/") || lead.avatar.startsWith("http")) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={lead.avatar}
+                      alt={lead.name}
+                      className="portrait-photo"
+                    />
+                  ) : (
+                    <div className="portrait-avatar-placeholder">
+                      {lead.avatar || lead.name.split(" ").map((n) => n[0]).join("")}
+                    </div>
+                  )}
+                  <h3 className="portrait-name">
+                    <span>{lead.name}</span>
+                    {lead.linkedinUrl && <LinkedInIcon size={14} color="#60A5FA" />}
+                  </h3>
+                  <p className="portrait-role" style={{ color: "var(--ciel-gold-bright)", fontWeight: 600 }}>{lead.role}</p>
+                  <div className="portrait-meta" style={{ color: "var(--text-secondary)", fontWeight: 400 }}>
+                    {lead.branch} · {lead.year}
+                  </div>
+                  {lead.linkedinUrl && (
+                    <span className="portrait-linkedin-btn">
+                      Connect on LinkedIn &rarr;
+                    </span>
+                  )}
+                </article>
+              );
+
+              return lead.linkedinUrl ? (
+                <a
+                  href={lead.linkedinUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  key={lead.id || lead.name}
+                  style={{ textDecoration: "none", color: "inherit", display: "block", height: "100%" }}
+                >
+                  {cardContent}
+                </a>
+              ) : (
+                cardContent
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Council Initiatives */}
       <div className="grid-2" style={{ marginBottom: 64 }}>
