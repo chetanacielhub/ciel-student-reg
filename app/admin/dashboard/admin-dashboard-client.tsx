@@ -3238,7 +3238,75 @@ function ERPPitchesTab({ initialPitches = [] }: { initialPitches?: ElevatorPitch
     setUploadProgress(0);
     setMsg(null);
 
+    // 1. Direct Supabase Cloud Upload (bypasses Vercel 4.5MB limits & works seamlessly on production)
     try {
+      const signRes = await fetch("/api/admin/upload/sign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filename: file.name,
+          contentType: file.type || "video/mp4",
+        }),
+      });
+      const signData = await signRes.json();
+
+      if (signRes.ok && signData.signedUrl) {
+        const formData = new FormData();
+        formData.append("cacheControl", "3600");
+        formData.append("", file);
+
+        let uploadSuccess = false;
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("PUT", signData.signedUrl);
+          xhr.setRequestHeader("x-upsert", "true");
+
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable && e.total > 0) {
+              const pct = Math.round((e.loaded / e.total) * 100);
+              setUploadProgress(pct);
+            }
+          };
+
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              setVideoUrl(signData.publicUrl);
+              setMsg({
+                type: "ok",
+                text: `Video "${file.name}" (${formatBytes(file.size)}) uploaded successfully to Supabase Cloud!`,
+              });
+              uploadSuccess = true;
+              resolve();
+            } else if (xhr.status === 413 || xhr.status === 400) {
+              reject(new Error("FILE_SIZE_LIMIT"));
+            } else {
+              reject(new Error(`Upload failed with status ${xhr.status}`));
+            }
+          };
+
+          xhr.onerror = () => reject(new Error("Network error"));
+          xhr.send(formData);
+        });
+
+        if (uploadSuccess) return;
+      }
+    } catch (err: any) {
+      if (err.message === "FILE_SIZE_LIMIT" || file.size > 50 * 1024 * 1024) {
+        setMsg({
+          type: "err",
+          text: `Video size is ${formatBytes(file.size)}. Supabase Storage Free Tier has a 50 MB limit per file. Please compress this video to under 50 MB, or use a YouTube/Vimeo URL.`,
+        });
+        return;
+      }
+      // Otherwise fall back to route upload
+    } finally {
+      setUploadingVideo(false);
+      setUploadProgress(0);
+    }
+
+    // 2. Fallback upload to local server
+    try {
+      setUploadingVideo(true);
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open("POST", "/api/admin/upload");

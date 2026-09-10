@@ -4,6 +4,9 @@ import type { EventRecord } from "@/lib/types";
 import { HomeView } from "@/components/home/home-view";
 import { getElevatorPitches } from "@/lib/dynamic-store";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function HomePage() {
   const supabase = await createClient();
   const { data } = await supabase

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -151,9 +151,21 @@ function AngledImagePanel({ id, src }: { id: string; src?: string }) {
   );
 }
 
-export function HomeView({ event, pitches = [] }: HomeViewProps) {
+export function HomeView({ event, pitches: initialPitches = [] }: HomeViewProps) {
   const [activeWing, setActiveWing] = useState<"incubation" | "accelerator" | "impact">("incubation");
   const [activePitch, setActivePitch] = useState<ElevatorPitchItem | null>(null);
+  const [pitches, setPitches] = useState<ElevatorPitchItem[]>(initialPitches);
+
+  useEffect(() => {
+    fetch("/api/pitches")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.pitches && Array.isArray(d.pitches)) {
+          setPitches(d.pitches);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <div style={{ position: "relative" }}>
