@@ -3639,11 +3639,17 @@ function ERPPitchesTab({ initialPitches = [] }: { initialPitches?: ElevatorPitch
                 <div style={{ position: "relative" }}>
                   {thumb ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={thumb} alt={pitch.title} className="pitch-admin-thumb" />
+                    <img
+                      src={thumb}
+                      alt={pitch.title}
+                      className="pitch-admin-thumb"
+                      style={{ objectPosition: "center top" }}
+                    />
                   ) : direct ? (
                     <video
                       src={`${pitch.videoUrl}#t=0.5`}
                       className="pitch-admin-thumb"
+                      style={{ objectPosition: "center top" }}
                       preload="metadata"
                       muted
                       playsInline

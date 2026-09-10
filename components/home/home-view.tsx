@@ -695,11 +695,17 @@ export function HomeView({ event, pitches: initialPitches = [] }: HomeViewProps)
                     <div className="pitch-thumb-wrap">
                       {thumb ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={thumb} alt={pitch.title} className="pitch-thumb" />
+                        <img
+                          src={thumb}
+                          alt={pitch.title}
+                          className="pitch-thumb"
+                          style={{ objectPosition: "center top" }}
+                        />
                       ) : directVideo ? (
                         <video
                           src={`${pitch.videoUrl}#t=0.5`}
                           className="pitch-thumb"
+                          style={{ objectPosition: "center top" }}
                           preload="metadata"
                           muted
                           playsInline
