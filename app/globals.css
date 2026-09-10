@@ -7081,7 +7081,7 @@ body::after {
 /* ─ Thumbnail ─────────────────────────────────────────────────────────── */
 .pitch-thumb-wrap {
   position: relative;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
   background: #0a0a0f;
   flex-shrink: 0;
@@ -7340,7 +7340,7 @@ body.light-theme .pitch-thumb-placeholder,
 
 .pitch-admin-thumb {
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
   object-position: center top;
   display: block;
@@ -7349,7 +7349,7 @@ body.light-theme .pitch-thumb-placeholder,
 
 .pitch-admin-thumb-placeholder {
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 1 / 1;
   display: flex;
   align-items: center;
   justify-content: center;
