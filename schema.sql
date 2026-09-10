@@ -168,6 +168,7 @@ CREATE TABLE IF NOT EXISTS public.governance_members (
   committee_id  UUID REFERENCES public.governance_committees(id) ON DELETE CASCADE,
   name          TEXT NOT NULL,
   role          TEXT NOT NULL,
+  avatar        TEXT,
   linkedin_url  TEXT,
   sort_order    INT DEFAULT 0,
   created_at    TIMESTAMPTZ DEFAULT NOW()
@@ -228,6 +229,21 @@ CREATE POLICY "Public read access for mentors" ON public.mentors FOR SELECT USIN
 CREATE POLICY "Public read access for student_council" ON public.student_council FOR SELECT USING (true);
 CREATE POLICY "Public read access for governance_committees" ON public.governance_committees FOR SELECT USING (true);
 CREATE POLICY "Public read access for governance_members" ON public.governance_members FOR SELECT USING (true);
+
+-- Elevator Pitches
+CREATE TABLE IF NOT EXISTS public.elevator_pitches (
+  id            TEXT PRIMARY KEY,
+  title         TEXT NOT NULL,
+  founder       TEXT DEFAULT '',
+  startup       TEXT NOT NULL,
+  video_url     TEXT NOT NULL,
+  thumbnail_url TEXT,
+  description   TEXT,
+  created_at    TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.elevator_pitches ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read access for elevator_pitches" ON public.elevator_pitches FOR SELECT USING (true);
 
 -- 9. EMPLOYEE PORTAL TABLES
 CREATE TABLE IF NOT EXISTS public.employee_attendance (

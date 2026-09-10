@@ -237,20 +237,37 @@ export async function getGovernanceCommittees(): Promise<GovernanceCommitteeItem
     const supabase = createAdminClient();
     const { data: committees } = await supabase.from("governance_committees").select("*").order("created_at", { ascending: true });
     if (committees && committees.length > 0) {
-      const { data: members } = await supabase.from("governance_members").select("*");
+      const { data: members } = await supabase.from("governance_members").select("*").order("sort_order", { ascending: true });
       return committees.map((c: any) => ({
-        id: c.id,
+        id: String(c.id),
         name: c.name,
         description: c.description || "",
         members: (members || [])
           .filter((m: any) => m.committee_id === c.id)
-          .map((m: any) => ({
-            id: m.id,
-            name: m.name,
-            role: m.role,
-            linkedinUrl: m.linkedin_url || m.linkedinUrl,
-            avatar: m.avatar,
-          })),
+          .map((m: any) => {
+            let role = m.role || "";
+            let linkedinUrl = m.linkedin_url || m.linkedinUrl || undefined;
+            let avatar = m.avatar || undefined;
+            try {
+              if (typeof role === "string" && role.startsWith("{") && role.endsWith("}")) {
+                const parsed = JSON.parse(role);
+                if (parsed.r) {
+                  role = parsed.r;
+                  avatar = parsed.a || avatar;
+                  linkedinUrl = parsed.l || linkedinUrl;
+                }
+              }
+            } catch {
+              // Plain text role
+            }
+            return {
+              id: String(m.id),
+              name: m.name,
+              role,
+              linkedinUrl,
+              avatar,
+            };
+          }),
       }));
     }
   } catch {
@@ -262,23 +279,32 @@ export async function getGovernanceCommittees(): Promise<GovernanceCommitteeItem
 }
 
 export async function addGovernanceCommittee(comm: { name: string; description: string }): Promise<GovernanceCommitteeItem> {
+  let createdId = `gov-${Date.now()}`;
+
+  try {
+    const supabase = createAdminClient();
+    const { data } = await supabase
+      .from("governance_committees")
+      .insert({
+        name: comm.name,
+        description: comm.description,
+      })
+      .select()
+      .single();
+
+    if (data && data.id) {
+      createdId = String(data.id);
+    }
+  } catch {
+    // Fallback to local id
+  }
+
   const newComm: GovernanceCommitteeItem = {
-    id: `gov-${Date.now()}`,
+    id: createdId,
     name: comm.name,
     description: comm.description,
     members: [],
   };
-
-  try {
-    const supabase = createAdminClient();
-    await supabase.from("governance_committees").insert({
-      id: newComm.id,
-      name: newComm.name,
-      description: newComm.description,
-    });
-  } catch {
-    // Ignore
-  }
 
   const store = await ensureStore();
   const existing = store.governance.find((g) => g.name.toLowerCase() === comm.name.toLowerCase());
@@ -307,27 +333,61 @@ export async function addGovernanceMember(
     store.governance.push(comm);
   }
 
-  comm.members.push({ name: member.name, role: member.role, linkedinUrl: member.linkedinUrl, avatar: member.avatar });
+  comm.members.push({
+    name: member.name,
+    role: member.role,
+    linkedinUrl: member.linkedinUrl,
+    avatar: member.avatar,
+  });
 
   try {
     const supabase = createAdminClient();
-    const { data: existingComm } = await supabase.from("governance_committees").select("id").eq("name", committeeName).maybeSingle();
+    const { data: existingComm } = await supabase
+      .from("governance_committees")
+      .select("id")
+      .eq("name", committeeName)
+      .maybeSingle();
+
     let cId = existingComm?.id;
     if (!cId) {
-      const { data: newC } = await supabase.from("governance_committees").insert({ name: committeeName, description: comm.description }).select().single();
+      const { data: newC } = await supabase
+        .from("governance_committees")
+        .insert({ name: committeeName, description: comm.description })
+        .select()
+        .single();
       cId = newC?.id;
     }
+
     if (cId) {
-      await supabase.from("governance_members").insert({
+      const nativePayload = {
         committee_id: cId,
         name: member.name,
         role: member.role,
-        linkedin_url: member.linkedinUrl,
-        avatar: member.avatar,
-      });
+        avatar: member.avatar || null,
+        linkedin_url: member.linkedinUrl || null,
+      };
+
+      const { error: insertErr } = await supabase.from("governance_members").insert(nativePayload);
+
+      // If native columns don't exist yet before SQL migration is run, fall back gracefully
+      if (insertErr) {
+        let rolePayload = member.role;
+        if (member.avatar || member.linkedinUrl) {
+          rolePayload = JSON.stringify({
+            r: member.role,
+            a: member.avatar || "",
+            l: member.linkedinUrl || "",
+          });
+        }
+        await supabase.from("governance_members").insert({
+          committee_id: cId,
+          name: member.name,
+          role: rolePayload,
+        });
+      }
     }
   } catch {
-    // Ignore
+    // Local store already updated
   }
 
   await saveStore(store);
@@ -343,7 +403,16 @@ export async function deleteGovernanceMember(committeeName: string, memberName: 
 
   try {
     const supabase = createAdminClient();
-    await supabase.from("governance_members").delete().eq("name", memberName);
+    const { data: comms } = await supabase.from("governance_committees").select("id").eq("name", committeeName).maybeSingle();
+    if (comms?.id) {
+      await supabase
+        .from("governance_members")
+        .delete()
+        .eq("committee_id", comms.id)
+        .eq("name", memberName);
+    } else {
+      await supabase.from("governance_members").delete().eq("name", memberName);
+    }
   } catch {
     // Ignore
   }
@@ -358,7 +427,13 @@ export async function deleteGovernanceCommittee(committeeName: string): Promise<
 
   try {
     const supabase = createAdminClient();
-    await supabase.from("governance_committees").delete().eq("name", committeeName);
+    const { data: comms } = await supabase.from("governance_committees").select("id").eq("name", committeeName).maybeSingle();
+    if (comms?.id) {
+      await supabase.from("governance_members").delete().eq("committee_id", comms.id);
+      await supabase.from("governance_committees").delete().eq("id", comms.id);
+    } else {
+      await supabase.from("governance_committees").delete().eq("name", committeeName);
+    }
   } catch {
     // Ignore
   }
@@ -366,6 +441,7 @@ export async function deleteGovernanceCommittee(committeeName: string): Promise<
   await saveStore(store);
   return true;
 }
+
 
 // ─── VENTURE PROJECTS & INNOVATION JOURNEY ───────────────────────────────
 

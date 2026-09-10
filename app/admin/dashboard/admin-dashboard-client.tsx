@@ -1703,8 +1703,19 @@ function ERPGovernanceTab({ initialGovernance }: { initialGovernance: Governance
 
   async function handleAddMember(e: React.FormEvent) {
     e.preventDefault();
-    const cName = memberForm.committeeName || selectedCommittee;
-    if (!cName || !memberForm.name || !memberForm.role) return;
+    const cName = memberForm.committeeName || selectedCommittee || governance[0]?.name;
+    if (!cName) {
+      alert("Please select or add a committee first.");
+      return;
+    }
+    if (!memberForm.name.trim()) {
+      alert("Please enter the member's name.");
+      return;
+    }
+    if (!memberForm.role.trim()) {
+      alert("Please specify the member's role.");
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -1714,10 +1725,10 @@ function ERPGovernanceTab({ initialGovernance }: { initialGovernance: Governance
         body: JSON.stringify({
           action: "add_member",
           committeeName: cName,
-          memberName: memberForm.name,
-          role: memberForm.role,
-          linkedinUrl: memberForm.linkedinUrl,
-          avatar: memberForm.avatar,
+          memberName: memberForm.name.trim(),
+          role: memberForm.role.trim(),
+          linkedinUrl: memberForm.linkedinUrl?.trim() || "",
+          avatar: memberForm.avatar?.trim() || "",
         }),
       });
 
@@ -1727,7 +1738,7 @@ function ERPGovernanceTab({ initialGovernance }: { initialGovernance: Governance
             if (g.name.toLowerCase() === cName.toLowerCase()) {
               return {
                 ...g,
-                members: [...g.members, { name: memberForm.name, role: memberForm.role, linkedinUrl: memberForm.linkedinUrl, avatar: memberForm.avatar }],
+                members: [...g.members, { name: memberForm.name.trim(), role: memberForm.role.trim(), linkedinUrl: memberForm.linkedinUrl?.trim() || undefined, avatar: memberForm.avatar?.trim() || undefined }],
               };
             }
             return g;
@@ -1788,7 +1799,15 @@ function ERPGovernanceTab({ initialGovernance }: { initialGovernance: Governance
           <button className="adm-btn adm-btn-outline" onClick={() => setShowCommitteeModal(true)}>
             <Plus size={14} /> Add Committee
           </button>
-          <button className="adm-btn adm-btn-primary" onClick={() => { setSelectedCommittee(governance[0]?.name || ""); setShowMemberModal(true); }}>
+          <button
+            className="adm-btn adm-btn-primary"
+            onClick={() => {
+              const def = governance[0]?.name || "";
+              setSelectedCommittee(def);
+              setMemberForm({ committeeName: def, name: "", role: "", linkedinUrl: "", avatar: "" });
+              setShowMemberModal(true);
+            }}
+          >
             <UserPlus size={14} /> Add Committee Member
           </button>
         </div>

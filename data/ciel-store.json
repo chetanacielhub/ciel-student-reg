@@ -1,169 +1,235 @@
 {
   "mentors": [
     {
-      "name": "abc",
-      "designation": "abc",
-      "organization": "dcfv",
-      "category": "industry",
+      "id": "m-1",
+      "name": "Dr. Rajesh Kulkarni",
+      "designation": "Chief Innovation Advisor",
+      "organization": "Ex-Director, Tech Ventures",
       "expertise": [
-        "Incubation",
-        "Strategic Guidance"
+        "Venture Capital",
+        "IP Strategy",
+        "DeepTech"
       ],
-      "avatar": "a",
-      "id": "m-1788179203560"
+      "avatar": "RK",
+      "category": "industry"
+    },
+    {
+      "id": "m-2",
+      "name": "Sunita Nambiar",
+      "designation": "Managing Partner",
+      "organization": "Vanguard Seed Fund",
+      "expertise": [
+        "Early Stage Angel Funding",
+        "Go-To-Market",
+        "SaaS Scale"
+      ],
+      "avatar": "SN",
+      "category": "investor"
+    },
+    {
+      "id": "m-3",
+      "name": "Prof. Arvind Mehta",
+      "designation": "Head of Research & IPR",
+      "organization": "Chetana Institute",
+      "expertise": [
+        "Patent Drafting",
+        "Tech Transfer",
+        "Material Sciences"
+      ],
+      "avatar": "AM",
+      "category": "academic"
+    },
+    {
+      "id": "m-4",
+      "name": "Priya Nair",
+      "designation": "Founder & CEO",
+      "organization": "GreenGrid Energy (CIEL Alumnus)",
+      "expertise": [
+        "CleanTech",
+        "Hardware Prototyping",
+        "Supply Chain"
+      ],
+      "avatar": "PN",
+      "category": "alumni"
     }
   ],
   "studentCouncil": [
     {
-      "name": "fdc",
-      "role": "df",
-      "branch": "dfvgb",
-      "year": "dfg",
-      "avatar": "/uploads/photo-1786172160069-zh65gtrwiqo.jfif",
-      "id": "sc-1786172162526"
+      "id": "sc-1",
+      "name": "Aarav Sharma",
+      "role": "President, Student Innovation Council",
+      "branch": "Computer Engineering",
+      "year": "Final Year",
+      "avatar": "AS"
     },
     {
-      "name": "dfvg",
-      "role": "defrgvb",
-      "branch": "dfvgb",
-      "year": "dfg",
-      "avatar": "d",
-      "id": "sc-1788179230520"
+      "id": "sc-2",
+      "name": "Neha Kadam",
+      "role": "Vice President, Hackathons & Competitions",
+      "branch": "Information Technology",
+      "year": "Final Year",
+      "avatar": "NK"
+    },
+    {
+      "id": "sc-3",
+      "name": "Rishi Verma",
+      "role": "Lead, Prototyping & Makerspace Labs",
+      "branch": "Mechanical Engineering",
+      "year": "Pre-Final Year",
+      "avatar": "RV"
+    },
+    {
+      "id": "sc-4",
+      "name": "Ananya Roy",
+      "role": "Lead, Women Entrepreneurship Cell",
+      "branch": "Electronics & Telecom",
+      "year": "Pre-Final Year",
+      "avatar": "AR"
+    },
+    {
+      "id": "sc-5",
+      "name": "Devansh Mehta",
+      "role": "Lead, Industry Outreach & Media",
+      "branch": "Management Studies",
+      "year": "Final Year",
+      "avatar": "DM"
     }
   ],
   "governance": [
     {
-      "id": "governing-committee",
+      "id": "gov-1",
       "name": "Governing Committee",
       "description": "Apex institutional decision-making body establishing strategic governance policies, resource allocations, and venture acceleration mandates for CIEL.",
       "members": [
         {
-          "name": "sdwef",
-          "role": "sd"
+          "name": "Dr. B. R. Patil",
+          "role": "Chairman, Governing Board"
+        },
+        {
+          "name": "Prof. S. R. Joshi",
+          "role": "Director, Chetana Institute"
+        },
+        {
+          "name": "Dr. Rajesh Kulkarni",
+          "role": "CEO, CIEL Innovation Hub"
+        },
+        {
+          "name": "Mr. Anand Rathi",
+          "role": "Industry Representative (Managing Director, Rathi Tech)"
         }
       ]
     },
     {
-      "id": "joint-steering-committee",
+      "id": "gov-2",
       "name": "Joint-Steering Committee",
       "description": "Provides operational leadership, interdisciplinary academic integration, cross-faculty research synergy, and ecosystem partner alignment.",
       "members": [
         {
-          "name": "decfv",
-          "role": "ef"
+          "name": "Prof. Arvind Mehta",
+          "role": "Chair, Joint-Steering & Research"
+        },
+        {
+          "name": "Dr. Smita Rao",
+          "role": "Director of Academic Partnerships"
+        },
+        {
+          "name": "Sunita Nambiar",
+          "role": "Venture Partner, Lead Investor"
+        },
+        {
+          "name": "Karan Johar",
+          "role": "Senior Partner, Angel Network"
+        },
+        {
+          "name": "Samad Qureshi",
+          "role": "Innovation Managaer",
+          "linkedinUrl": "https://www.linkedin.com/in/abdussamadqureshi84?utm_source=share_via&utm_content=profile&utm_medium=member_androidhttps://www.linkedin.com/in/abdussamadqureshi84?utm_source=share_via&utm_content=profile&utm_medium=member_android",
+          "avatar": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/uploads/photo-1789045378092-0dyfxx0gto7.png"
         }
       ]
     },
     {
-      "id": "functional-committee",
+      "id": "gov-3",
       "name": "Functional Committee",
       "description": "Operational leadership bodies executing CIEL's 6 core innovation tracks, each spearheaded by a dedicated committee lead.",
       "members": [
         {
-          "name": "frg",
-          "role": "Lead — 1: Innovation and Research"
+          "name": "Dr. Arvind Mehta",
+          "role": "Lead — 1. Innovation and Research"
+        },
+        {
+          "name": "Dr. Rajesh Kulkarni",
+          "role": "Lead — 2. Incubation and Start-up Support"
+        },
+        {
+          "name": "Prof. Smita Rao",
+          "role": "Lead — 3. Skill Development and Training"
+        },
+        {
+          "name": "Mr. Anand Rathi",
+          "role": "Lead — 4. Industry and Investor"
+        },
+        {
+          "name": "Ms. Meera Fernandez",
+          "role": "Lead — 5. Events and Outreach"
+        },
+        {
+          "name": "Prof. S. R. Joshi",
+          "role": "Lead — 6. Monitoring and Evaluation"
         }
       ]
     }
   ],
-  "projects": [
-    {
-      "id": "team-1788606021307",
-      "name": "Innovation Venture",
-      "journeyMilestones": [
-        {
-          "id": "jm-1788606168304",
-          "projectId": "team-1788606021307",
-          "stage": "prototype",
-          "title": "bhnjmk",
-          "description": "gbhnj",
-          "date": "2026-09-05",
-          "status": "completed"
-        },
-        {
-          "id": "jm-1788606152693",
-          "projectId": "team-1788606021307",
-          "stage": "validation",
-          "title": "gbhnj",
-          "description": "bnm,",
-          "date": "2026-09-05",
-          "status": "completed"
-        }
-      ],
-      "documents": [
-        {
-          "id": "doc-1788606266676",
-          "title": "gbh",
-          "category": "Pitch Deck",
-          "filename": "disclosureSEOutcomeResults290526-.pdf",
-          "format": "PDF",
-          "size": "8.6 MB",
-          "date": "2026-09-05",
-          "url": "/uploads/Document_Attachment.pdf"
-        }
-      ],
-      "updatedAt": "2026-09-05T11:07:47.426Z",
-      "leaderEmail": "xyz@gmail.com",
-      "leaderName": "xyzz",
-      "teamName": "Innovation Venture",
-      "problemStatement": "defgvb",
-      "stage": "incubation",
-      "progress": 55,
-      "pitchDeck": "",
-      "traction": {
-        "funding": "Not Sanctioned Yet",
-        "activePilots": "0 Pilots Active",
-        "iprStatus": "Not Filed",
-        "mrr": "₹0 / mo"
-      }
-    }
-  ],
-  "userProfiles": [
-    {
-      "id": "usr-1788007854070",
-      "full_name": "abc",
-      "email": "abc@gmail.com",
-      "phone": "+9112345678",
-      "password": "abc123",
-      "created_at": "2026-08-29T12:50:54.070Z",
-      "status": "active"
-    },
-    {
-      "id": "f05f8fe5-ce8a-408a-aadc-c145d8a9dbdb",
-      "full_name": "xyzz",
-      "email": "xyz@gmail.com",
-      "phone": "+9112345678",
-      "password": "12345678",
-      "created_at": "2026-09-05T10:59:50.848752+00:00"
-    }
-  ],
-  "registrations": [
-    {
-      "id": "reg-1786175937680",
-      "fullName": "Registered Innovator",
-      "email": "innovator@ciel.edu",
-      "phone": "—",
-      "institution": "667ce20b-ef79-46dd-8a9f-16160f2dab93",
-      "className": "8c540818-372e-4a34-9979-59df4f135913",
-      "rollNumber": "34",
-      "role": "team_leader",
-      "teamName": "ghj",
-      "problemStatement": "dfcghjkl;.,mnbvgcfdrtyuiop",
-      "createdAt": "2026-08-08T07:58:57.680Z"
-    }
-  ],
+  "projects": [],
+  "userProfiles": [],
+  "registrations": [],
   "events": [],
   "news": [],
   "downloads": [
     {
-      "title": "dsf",
+      "id": "d-1",
+      "title": "CIEL Incubation & Seed Support Policy Handbook",
       "category": "policy",
-      "fileSize": "0.0 MB",
+      "fileSize": "2.4 MB",
       "format": "PDF",
-      "updatedAt": "2026-08-25",
-      "description": "sdfgh",
-      "fileUrl": "/uploads/photo-1787648782372-neziohddkz.pdf",
-      "id": "d-1787648792463"
+      "updatedAt": "2026-01-15",
+      "description": "Official guidelines covering equity terms, seed grant disbursal, lab usage, and IP sharing ratio."
+    },
+    {
+      "id": "d-2",
+      "title": "Institutional Intellectual Property (IPR) Policy",
+      "category": "policy",
+      "fileSize": "1.8 MB",
+      "format": "PDF",
+      "updatedAt": "2025-11-20",
+      "description": "Comprehensive policy regarding student/faculty patent ownership, commercialization, and royalties."
+    },
+    {
+      "id": "d-3",
+      "title": "Incubation Application & Pitch Deck Template",
+      "category": "template",
+      "fileSize": "5.1 MB",
+      "format": "ZIP",
+      "updatedAt": "2026-02-01",
+      "description": "Standard slide structure, financial projection sheet, and executive summary format required for evaluation."
+    },
+    {
+      "id": "d-4",
+      "title": "Student Innovation Council Charter & Constitution",
+      "category": "manual",
+      "fileSize": "1.2 MB",
+      "format": "PDF",
+      "updatedAt": "2025-09-10",
+      "description": "Operational framework, roles, selection criteria, and event hosting guidelines for student leaders."
+    },
+    {
+      "id": "d-5",
+      "title": "Annual Incubation & Impact Report 2025-26",
+      "category": "report",
+      "fileSize": "8.6 MB",
+      "format": "PDF",
+      "updatedAt": "2026-01-05",
+      "description": "Performance metrics, graduate startups, grant allocations, patent filings, and industry partnerships."
     }
   ],
   "googleForms": [
@@ -188,184 +254,6 @@
       "createdAt": "2026-02-10T12:30:00.000Z"
     }
   ],
-  "gallery": [
-    {
-      "id": "img-1788183454890",
-      "filename": "1788183454197-IMG_0876.jpg",
-      "url": "/gallery/1788183454197-IMG_0876.jpg",
-      "title": "IMG_0876.jpg",
-      "category": "general",
-      "created_at": "2026-08-31T13:37:34.890Z"
-    },
-    {
-      "id": "img-1788183422808",
-      "filename": "1788183421179-IMG_0878.jpg",
-      "url": "/gallery/1788183421179-IMG_0878.jpg",
-      "title": "IMG_0878.jpg",
-      "category": "general",
-      "created_at": "2026-08-31T13:37:02.808Z"
-    },
-    {
-      "id": "img-1788183310662",
-      "filename": "1788183310297-IMG_0890.jpg",
-      "url": "/gallery/1788183310297-IMG_0890.jpg",
-      "title": "IMG_0890.jpg",
-      "category": "general",
-      "created_at": "2026-08-31T13:35:10.662Z"
-    },
-    {
-      "id": "img-1788183291721",
-      "filename": "1788183291089-IMG_0891.jpg",
-      "url": "/gallery/1788183291089-IMG_0891.jpg",
-      "title": "IMG_0891.jpg",
-      "category": "general",
-      "created_at": "2026-08-31T13:34:51.721Z"
-    },
-    {
-      "id": "img-1788183245893",
-      "filename": "1788183245467-IMG_0879.jpg",
-      "url": "/gallery/1788183245467-IMG_0879.jpg",
-      "title": "IMG_0879.jpg",
-      "category": "general",
-      "created_at": "2026-08-31T13:34:05.893Z"
-    },
-    {
-      "id": "img-1788183235837",
-      "filename": "1788183235437-IMG_0889.jpg",
-      "url": "/gallery/1788183235437-IMG_0889.jpg",
-      "title": "IMG_0889.jpg",
-      "category": "general",
-      "created_at": "2026-08-31T13:33:55.837Z"
-    },
-    {
-      "id": "img-1788183224687",
-      "filename": "1788183224509-IMG_0890.jpg",
-      "url": "/gallery/1788183224509-IMG_0890.jpg",
-      "title": "IMG_0890.jpg",
-      "category": "general",
-      "created_at": "2026-08-31T13:33:44.687Z"
-    },
-    {
-      "id": "img-1788183175065",
-      "filename": "1788183174847-IMG_0885.jpg",
-      "url": "/gallery/1788183174847-IMG_0885.jpg",
-      "title": "IMG_0885.jpg",
-      "category": "general",
-      "created_at": "2026-08-31T13:32:55.065Z"
-    },
-    {
-      "id": "img-1788183163677",
-      "filename": "1788183162716-IMG_0888.jpg",
-      "url": "/gallery/1788183162716-IMG_0888.jpg",
-      "title": "IMG_0888.jpg",
-      "category": "general",
-      "created_at": "2026-08-31T13:32:43.677Z"
-    },
-    {
-      "id": "img-1788183136666",
-      "filename": "1788183136441-IMG_0886.jpg",
-      "url": "/gallery/1788183136441-IMG_0886.jpg",
-      "title": "IMG_0886.jpg",
-      "category": "general",
-      "created_at": "2026-08-31T13:32:16.666Z"
-    },
-    {
-      "id": "img-1788183107674",
-      "filename": "1788183106965-IMG_0881.jpg",
-      "url": "/gallery/1788183106965-IMG_0881.jpg",
-      "title": "IMG_0881.jpg",
-      "category": "general",
-      "created_at": "2026-08-31T13:31:47.674Z"
-    },
-    {
-      "id": "img-1788181633690",
-      "filename": "1788181633338-Screenshot_2026-08-29_190450.png",
-      "url": "/gallery/1788181633338-Screenshot_2026-08-29_190450.png",
-      "title": "Screenshot 2026-08-29 190450.png",
-      "category": "general",
-      "created_at": "2026-08-31T13:07:13.690Z"
-    }
-  ],
-  "pitches": [
-    {
-      "title": "Pravaaha",
-      "founder": "",
-      "startup": "Pravaaha",
-      "videoUrl": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/uploads/video-1789041853262-p9fvsq678e.mp4",
-      "id": "pitch-1789041864653",
-      "createdAt": "2026-09-10T12:04:24.653Z"
-    },
-    {
-      "title": "HydraEdge",
-      "founder": "",
-      "startup": "HydraEdge",
-      "videoUrl": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/uploads/video-1789041066272-ddefkjk9hhd.mp4",
-      "id": "pitch-1789041076546",
-      "createdAt": "2026-09-10T11:51:16.546Z"
-    },
-    {
-      "title": "Nexora",
-      "founder": "",
-      "startup": "Nexora",
-      "videoUrl": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/uploads/video-1789041042087-78mqk5y1vtd.mp4",
-      "id": "pitch-1789041056331",
-      "createdAt": "2026-09-10T11:50:56.331Z"
-    },
-    {
-      "title": "MacEazy",
-      "founder": "Samad Qureshi & Vishnuraj Vishwakarma",
-      "startup": "MacEazy",
-      "videoUrl": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/uploads/video-1789040784931-xoww72fhpaa.mp4",
-      "id": "pitch-1789040832552",
-      "createdAt": "2026-09-10T11:47:12.552Z"
-    },
-    {
-      "title": "Logiapp",
-      "founder": "",
-      "startup": "Logiapp",
-      "videoUrl": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/uploads/video-1789040763237-i7jaqs0y4qg.mp4",
-      "id": "pitch-1789040778055",
-      "createdAt": "2026-09-10T11:46:18.055Z"
-    },
-    {
-      "title": "Synko",
-      "founder": "",
-      "startup": "Synko",
-      "videoUrl": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/uploads/video-1789040743835-3cou4vluisj.mp4",
-      "id": "pitch-1789040758337",
-      "createdAt": "2026-09-10T11:45:58.337Z"
-    },
-    {
-      "title": "Athena",
-      "founder": "",
-      "startup": "Athena",
-      "videoUrl": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/uploads/video-1789012707034-8h6fxrvo4yl.mp4",
-      "id": "pitch-1789012715683",
-      "createdAt": "2026-09-10T03:58:35.683Z"
-    },
-    {
-      "title": "SatSecure",
-      "founder": "",
-      "startup": "SatSecure",
-      "videoUrl": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/uploads/video-1789012149246-nx50zrbo13.mp4",
-      "id": "pitch-1789012157839",
-      "createdAt": "2026-09-10T03:49:17.839Z"
-    },
-    {
-      "title": "SatSecure",
-      "founder": "",
-      "startup": "SatSecure",
-      "videoUrl": "/uploads/video-1789010472603-e6ud886cvqj.mp4",
-      "id": "pitch-1789010497786",
-      "createdAt": "2026-09-10T03:21:37.786Z"
-    },
-    {
-      "title": "Elevator Pitch",
-      "founder": "Samad Qureshi and Vishnuraj Vishwakarma",
-      "startup": "Austrange Solutions Pvt. Ltd.",
-      "videoUrl": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/uploads/video-1788787564721-8a62zwzc967.mp4",
-      "id": "pitch-1788787622311",
-      "createdAt": "2026-09-07T13:27:02.311Z"
-    }
-  ]
+  "gallery": [],
+  "pitches": []
 }
