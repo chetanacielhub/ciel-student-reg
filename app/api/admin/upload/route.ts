@@ -7,7 +7,7 @@ import fs from "fs/promises";
 export const dynamic = "force-dynamic";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
-const MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB
+const MAX_SIZE_BYTES = 2 * 1024 * 1024 * 1024; // 2 GB
 
 export async function POST(req: NextRequest) {
   const authErr = await verifyAdminApiSession();
@@ -19,14 +19,33 @@ export async function POST(req: NextRequest) {
     let originalName = "";
     let mimeType = "";
 
-    // 1. Direct binary upload (bypasses undici multipart/form-data 10MB limit)
+    // 1. Direct binary upload (bypasses undici multipart/form-data limit)
     const headerFilename = req.headers.get("x-filename");
     if (headerFilename || !contentTypeHeader.includes("multipart/form-data")) {
       originalName = headerFilename ? decodeURIComponent(headerFilename) : `file-${Date.now()}`;
       mimeType = contentTypeHeader.split(";")[0] || "application/octet-stream";
-      buffer = Buffer.from(await req.arrayBuffer());
+
+      if (req.body) {
+        const reader = req.body.getReader();
+        const chunks: Uint8Array[] = [];
+        let total = 0;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (value) {
+            chunks.push(value);
+            total += value.length;
+            if (total > MAX_SIZE_BYTES) {
+              return NextResponse.json({ error: "File size exceeds 2 GB limit." }, { status: 400 });
+            }
+          }
+        }
+        buffer = Buffer.concat(chunks, total);
+      } else {
+        buffer = Buffer.from(await req.arrayBuffer());
+      }
     } else {
-      // 2. Multipart form-data parser (for standard forms & image uploads <10MB)
+      // 2. Multipart form-data parser (for standard forms & image uploads)
       const formData = await req.formData();
       const file = (formData.get("video") || formData.get("file") || formData.get("image")) as File | null;
 
@@ -44,7 +63,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (buffer.length > MAX_SIZE_BYTES) {
-      return NextResponse.json({ error: "File size exceeds 100 MB limit." }, { status: 400 });
+      return NextResponse.json({ error: "File size exceeds 2 GB limit." }, { status: 400 });
     }
 
     const isVideo = mimeType.startsWith("video/") || /\.(mp4|webm|ogg|mov|m4v|mkv)$/i.test(originalName);
@@ -65,33 +84,35 @@ export async function POST(req: NextRequest) {
     let finalUrl = `/uploads/${safeName}`;
     let uploadedToCloud = false;
 
-    // 1. Try Supabase Storage
-    try {
-      const supabase = createAdminClient();
-      const bucketName = "uploads";
+    // 1. Try Supabase Storage (for files <= 50MB; larger files save directly to server disk)
+    if (buffer.length <= 50 * 1024 * 1024) {
       try {
-        await supabase.storage.createBucket(bucketName, { public: true });
-      } catch {
-        // Bucket might exist
-      }
-
-      const contentType = mimeType || (isVideo ? "video/mp4" : isImage ? "image/jpeg" : "application/octet-stream");
-      const { error: uploadError } = await supabase.storage
-        .from(bucketName)
-        .upload(safeName, buffer, {
-          contentType,
-          upsert: true,
-        });
-
-      if (!uploadError) {
-        const { data: { publicUrl } } = supabase.storage.from(bucketName).getPublicUrl(safeName);
-        if (publicUrl) {
-          finalUrl = publicUrl;
-          uploadedToCloud = true;
+        const supabase = createAdminClient();
+        const bucketName = "uploads";
+        try {
+          await supabase.storage.createBucket(bucketName, { public: true });
+        } catch {
+          // Bucket might exist
         }
+
+        const contentType = mimeType || (isVideo ? "video/mp4" : isImage ? "image/jpeg" : "application/octet-stream");
+        const { error: uploadError } = await supabase.storage
+          .from(bucketName)
+          .upload(safeName, buffer, {
+            contentType,
+            upsert: true,
+          });
+
+        if (!uploadError) {
+          const { data: { publicUrl } } = supabase.storage.from(bucketName).getPublicUrl(safeName);
+          if (publicUrl) {
+            finalUrl = publicUrl;
+            uploadedToCloud = true;
+          }
+        }
+      } catch {
+        // Ignore
       }
-    } catch {
-      // Ignore
     }
 
     // 2. Try writing to public/uploads (local dev & persistent servers)

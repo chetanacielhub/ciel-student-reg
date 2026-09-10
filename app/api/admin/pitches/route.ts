@@ -31,16 +31,16 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { title, founder, startup, videoUrl, thumbnailUrl, description } = body;
 
-    if (!title?.trim() || !founder?.trim() || !startup?.trim() || !videoUrl?.trim()) {
+    if (!title?.trim() || !startup?.trim() || !videoUrl?.trim()) {
       return NextResponse.json(
-        { error: "title, founder, startup, and videoUrl are required." },
+        { error: "title, startup, and videoUrl are required." },
         { status: 400 }
       );
     }
 
     const pitch = await addElevatorPitch({
       title: title.trim(),
-      founder: founder.trim(),
+      founder: founder?.trim() || "",
       startup: startup.trim(),
       videoUrl: videoUrl.trim(),
       thumbnailUrl: thumbnailUrl?.trim() || undefined,

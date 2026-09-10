@@ -271,7 +271,7 @@ export type GoogleFormItem = {
 export type ElevatorPitchItem = {
   id: string;
   title: string;
-  founder: string;
+  founder?: string;
   startup: string;
   videoUrl: string;
   thumbnailUrl?: string;

@@ -707,9 +707,11 @@ export function HomeView({ event, pitches = [] }: HomeViewProps) {
                     {/* Info */}
                     <div className="pitch-info">
                       <h3 className="pitch-title">{pitch.startup || pitch.title}</h3>
-                      <p className="pitch-meta">
-                        Founder: <strong>{pitch.founder}</strong>
-                      </p>
+                      {pitch.founder ? (
+                        <p className="pitch-meta">
+                          Founder: <strong>{pitch.founder}</strong>
+                        </p>
+                      ) : null}
                     </div>
                   </article>
                 </StaggerItem>
@@ -732,9 +734,11 @@ export function HomeView({ event, pitches = [] }: HomeViewProps) {
             <div className="pitch-modal-header">
               <div>
                 <h3 className="pitch-modal-title">{activePitch.startup || activePitch.title}</h3>
-                <p className="pitch-modal-meta">
-                  Founder: <strong>{activePitch.founder}</strong>
-                </p>
+                {activePitch.founder ? (
+                  <p className="pitch-modal-meta">
+                    Founder: <strong>{activePitch.founder}</strong>
+                  </p>
+                ) : null}
               </div>
               <button
                 className="pitch-modal-close"
@@ -747,13 +751,18 @@ export function HomeView({ event, pitches = [] }: HomeViewProps) {
             <div className="pitch-modal-player">
               {isDirectVideo(activePitch.videoUrl) ? (
                 <video
+                  key={activePitch.videoUrl}
                   src={activePitch.videoUrl}
                   controls
                   autoPlay
                   playsInline
+                  preload="auto"
                   controlsList="nodownload"
                   style={{ width: "100%", height: "100%", objectFit: "contain", background: "#000" }}
-                />
+                >
+                  <source src={activePitch.videoUrl} type="video/mp4" />
+                  Your browser does not support playing this video.
+                </video>
               ) : (
                 <iframe
                   src={getEmbedUrl(activePitch.videoUrl)}

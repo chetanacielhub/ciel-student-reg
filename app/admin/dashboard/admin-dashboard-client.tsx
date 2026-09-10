@@ -3185,6 +3185,7 @@ function ERPPitchesTab({ initialPitches = [] }: { initialPitches?: ElevatorPitch
 
   // Device upload states
   const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [videoFileName, setVideoFileName] = useState("");
   const [videoFileSize, setVideoFileSize] = useState("");
   const [videoPreviewUrl, setVideoPreviewUrl] = useState("");
@@ -3209,7 +3210,8 @@ function ERPPitchesTab({ initialPitches = [] }: { initialPitches?: ElevatorPitch
   function formatBytes(bytes: number): string {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
   }
 
   function handleVideoUrlChange(v: string) {
@@ -3222,8 +3224,9 @@ function ERPPitchesTab({ initialPitches = [] }: { initialPitches?: ElevatorPitch
 
   async function handleVideoFileSelect(file: File) {
     if (!file) return;
-    if (file.size > 100 * 1024 * 1024) {
-      setMsg({ type: "err", text: "Video file exceeds 100 MB limit." });
+    const MAX_VIDEO_SIZE = 2 * 1024 * 1024 * 1024; // 2 GB
+    if (file.size > MAX_VIDEO_SIZE) {
+      setMsg({ type: "err", text: "Video file exceeds 2 GB limit." });
       return;
     }
 
@@ -3232,29 +3235,52 @@ function ERPPitchesTab({ initialPitches = [] }: { initialPitches?: ElevatorPitch
     const localUrl = URL.createObjectURL(file);
     setVideoPreviewUrl(localUrl);
     setUploadingVideo(true);
+    setUploadProgress(0);
     setMsg(null);
 
     try {
-      // Direct binary stream bypasses undici multipart 10MB limit
-      const res = await fetch("/api/admin/upload", {
-        method: "POST",
-        headers: {
-          "Content-Type": file.type || "video/mp4",
-          "x-filename": encodeURIComponent(file.name),
-        },
-        body: file,
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "/api/admin/upload");
+        xhr.setRequestHeader("Content-Type", file.type || "video/mp4");
+        xhr.setRequestHeader("x-filename", encodeURIComponent(file.name));
+
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable && e.total > 0) {
+            const pct = Math.round((e.loaded / e.total) * 100);
+            setUploadProgress(pct);
+          }
+        };
+
+        xhr.onload = () => {
+          try {
+            const json = JSON.parse(xhr.responseText);
+            if (xhr.status >= 200 && xhr.status < 300 && json.url) {
+              setVideoUrl(json.url);
+              setMsg({ type: "ok", text: `Video "${file.name}" uploaded successfully!` });
+              resolve();
+            } else {
+              setMsg({ type: "err", text: json.error || "Failed to upload video from device." });
+              reject(new Error(json.error || "Upload failed"));
+            }
+          } catch {
+            setMsg({ type: "err", text: "Failed to parse upload response." });
+            reject(new Error("Parse error"));
+          }
+        };
+
+        xhr.onerror = () => {
+          setMsg({ type: "err", text: "Network error while uploading video." });
+          reject(new Error("Network error"));
+        };
+
+        xhr.send(file);
       });
-      const json = await res.json();
-      if (res.ok && json.url) {
-        setVideoUrl(json.url);
-        setMsg({ type: "ok", text: `Video "${file.name}" uploaded successfully!` });
-      } else {
-        setMsg({ type: "err", text: json.error || "Failed to upload video from device." });
-      }
     } catch {
-      setMsg({ type: "err", text: "Network error while uploading video." });
+      // Error message handled in callbacks
     } finally {
       setUploadingVideo(false);
+      setUploadProgress(0);
     }
   }
 
@@ -3276,8 +3302,8 @@ function ERPPitchesTab({ initialPitches = [] }: { initialPitches?: ElevatorPitch
     const sTitle = (startup || title).trim();
     const fName = founder.trim();
 
-    if (!sTitle || !fName) {
-      setMsg({ type: "err", text: "Please enter the startup title and founder's name." });
+    if (!sTitle) {
+      setMsg({ type: "err", text: "Please enter the startup title." });
       return;
     }
     if (!videoUrl.trim()) {
@@ -3389,14 +3415,13 @@ function ERPPitchesTab({ initialPitches = [] }: { initialPitches?: ElevatorPitch
             </div>
 
             <div className="field" style={{ margin: 0 }}>
-              <label className="field-label" style={{ fontSize: 12, marginBottom: 4 }}>Founder's Name *</label>
+              <label className="field-label" style={{ fontSize: 12, marginBottom: 4 }}>Founder's Name (Optional)</label>
               <input
                 className="input"
                 style={{ padding: "8px 12px", fontSize: 13, height: 38 }}
-                placeholder="e.g. Rohan Deshmukh"
+                placeholder="e.g. Rohan Deshmukh (optional)"
                 value={founder}
                 onChange={(e) => setFounder(e.target.value)}
-                required
               />
             </div>
 
@@ -3430,18 +3455,55 @@ function ERPPitchesTab({ initialPitches = [] }: { initialPitches?: ElevatorPitch
                       }}
                     >
                       <Upload size={14} style={{ color: "var(--ciel-gold)" }} />
-                      <span>Choose or drop video file</span>
+                      <span>Choose or drop video file (up to 2 GB)</span>
                     </div>
                   ) : uploadingVideo ? (
-                    <div className="pitch-compact-dropzone" style={{ cursor: "default" }}>
-                      <RefreshCw size={14} className="spin text-gold" />
-                      <span>Uploading {videoFileName}…</span>
+                    <div className="pitch-compact-progress" title={`Uploading ${videoFileName} (${uploadProgress}%)`}>
+                      <div className="pitch-compact-progress-bar" style={{ width: `${Math.max(6, uploadProgress)}%` }} />
+                      <div className="pitch-compact-progress-content">
+                        <RefreshCw size={13} className="spin text-gold" style={{ flexShrink: 0 }} />
+                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+                          Uploading {videoFileName}…
+                        </span>
+                        <span style={{ fontWeight: 700, color: "var(--ciel-gold)", marginLeft: "auto", flexShrink: 0 }}>
+                          {uploadProgress}%
+                        </span>
+                      </div>
                     </div>
                   ) : (
                     <div className="pitch-compact-file">
                       <CheckCircle2 size={15} style={{ color: "#10b981", flexShrink: 0 }} />
                       <span className="pitch-compact-name" title={videoFileName}>{videoFileName || "Uploaded Video"}</span>
                       {videoFileSize && <span style={{ opacity: 0.6, fontSize: 11 }}>({videoFileSize})</span>}
+                      {(videoUrl || videoPreviewUrl) && (
+                        <button
+                          type="button"
+                          onClick={() => setPreviewPitch({
+                            id: "temp-preview",
+                            title: startup || "Video Preview",
+                            startup: startup || "Video Preview",
+                            videoUrl: videoUrl || videoPreviewUrl,
+                            createdAt: "",
+                          })}
+                          style={{
+                            background: "rgba(212,175,55,0.15)",
+                            border: "1px solid rgba(212,175,55,0.4)",
+                            color: "var(--ciel-gold)",
+                            cursor: "pointer",
+                            padding: "2px 8px",
+                            borderRadius: 4,
+                            fontSize: 11,
+                            fontWeight: 600,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 4,
+                            marginLeft: 4,
+                          }}
+                          title="Preview video playback"
+                        >
+                          <Play size={10} fill="currentColor" /> Play Test
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={() => {
@@ -3532,7 +3594,9 @@ function ERPPitchesTab({ initialPitches = [] }: { initialPitches?: ElevatorPitch
                 </div>
                 <div className="pitch-admin-info">
                   <p className="pitch-admin-title">{pitch.startup || pitch.title}</p>
-                  <p className="pitch-admin-meta">Founder: <strong>{pitch.founder}</strong></p>
+                  {pitch.founder ? (
+                    <p className="pitch-admin-meta">Founder: <strong>{pitch.founder}</strong></p>
+                  ) : null}
                   <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                     <button
                       type="button"
@@ -3570,7 +3634,9 @@ function ERPPitchesTab({ initialPitches = [] }: { initialPitches?: ElevatorPitch
             <div className="pitch-modal-header">
               <div>
                 <h3 className="pitch-modal-title">{previewPitch.startup || previewPitch.title}</h3>
-                <p className="pitch-modal-meta">Founder: <strong>{previewPitch.founder}</strong></p>
+                {previewPitch.founder ? (
+                  <p className="pitch-modal-meta">Founder: <strong>{previewPitch.founder}</strong></p>
+                ) : null}
               </div>
               <button
                 className="pitch-modal-close"
@@ -3583,12 +3649,17 @@ function ERPPitchesTab({ initialPitches = [] }: { initialPitches?: ElevatorPitch
             <div className="pitch-modal-player">
               {isDirectVideo(previewPitch.videoUrl) ? (
                 <video
+                  key={previewPitch.videoUrl}
                   src={previewPitch.videoUrl}
                   controls
                   autoPlay
                   playsInline
+                  preload="auto"
                   style={{ width: "100%", height: "100%", objectFit: "contain", background: "#000" }}
-                />
+                >
+                  <source src={previewPitch.videoUrl} type="video/mp4" />
+                  Your browser does not support playing this video.
+                </video>
               ) : (
                 <iframe
                   src={
