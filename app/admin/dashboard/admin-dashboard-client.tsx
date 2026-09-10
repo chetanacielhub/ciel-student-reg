@@ -3194,6 +3194,22 @@ function ERPPitchesTab({ initialPitches = [] }: { initialPitches?: ElevatorPitch
   // Admin watch modal preview
   const [previewPitch, setPreviewPitch] = useState<ElevatorPitchItem | null>(null);
 
+  // Admin edit modal state
+  const [editingPitch, setEditingPitch] = useState<ElevatorPitchItem | null>(null);
+  const [editStartup, setEditStartup] = useState("");
+  const [editFounder, setEditFounder] = useState("");
+  const [editVideoUrl, setEditVideoUrl] = useState("");
+  const [editThumbnailUrl, setEditThumbnailUrl] = useState("");
+  const [editVideoSource, setEditVideoSource] = useState<"device" | "url">("device");
+  const [editUploadingVideo, setEditUploadingVideo] = useState(false);
+  const [editUploadProgress, setEditUploadProgress] = useState(0);
+  const [editVideoFileName, setEditVideoFileName] = useState("");
+  const [editVideoFileSize, setEditVideoFileSize] = useState("");
+  const [editIsDragOver, setEditIsDragOver] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editMsg, setEditMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function extractYTId(url: string): string | null {
@@ -3429,6 +3445,191 @@ function ERPPitchesTab({ initialPitches = [] }: { initialPitches?: ElevatorPitch
       alert("Network error.");
     }
   }
+
+  function handleStartEdit(pitch: ElevatorPitchItem) {
+    setEditingPitch(pitch);
+    setEditStartup(pitch.startup || pitch.title);
+    setEditFounder(pitch.founder || "");
+    setEditVideoUrl(pitch.videoUrl);
+    setEditThumbnailUrl(pitch.thumbnailUrl || "");
+    setEditVideoSource(isDirectVideo(pitch.videoUrl) ? "device" : "url");
+    setEditVideoFileName("");
+    setEditVideoFileSize("");
+    setEditMsg(null);
+  }
+
+  async function handleEditVideoFileSelect(file: File) {
+    if (!file) return;
+    const MAX_VIDEO_SIZE = 2 * 1024 * 1024 * 1024; // 2 GB
+    if (file.size > MAX_VIDEO_SIZE) {
+      setEditMsg({ type: "err", text: "Video file exceeds 2 GB limit." });
+      return;
+    }
+
+    setEditVideoFileName(file.name);
+    setEditVideoFileSize(formatBytes(file.size));
+    setEditUploadingVideo(true);
+    setEditUploadProgress(0);
+    setEditMsg(null);
+
+    // 1. Direct Supabase Cloud Upload
+    try {
+      const signRes = await fetch("/api/admin/upload/sign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filename: file.name,
+          contentType: file.type || "video/mp4",
+        }),
+      });
+      const signData = await signRes.json();
+
+      if (signRes.ok && signData.signedUrl) {
+        const formData = new FormData();
+        formData.append("cacheControl", "3600");
+        formData.append("", file);
+
+        let uploadSuccess = false;
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("PUT", signData.signedUrl);
+          xhr.setRequestHeader("x-upsert", "true");
+
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable && e.total > 0) {
+              const pct = Math.round((e.loaded / e.total) * 100);
+              setEditUploadProgress(pct);
+            }
+          };
+
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              setEditVideoUrl(signData.publicUrl);
+              setEditMsg({
+                type: "ok",
+                text: `New video "${file.name}" (${formatBytes(file.size)}) uploaded successfully to Supabase Cloud!`,
+              });
+              uploadSuccess = true;
+              resolve();
+            } else if (xhr.status === 413 || xhr.status === 400) {
+              reject(new Error("FILE_SIZE_LIMIT"));
+            } else {
+              reject(new Error(`Upload failed with status ${xhr.status}`));
+            }
+          };
+
+          xhr.onerror = () => reject(new Error("Network error"));
+          xhr.send(formData);
+        });
+
+        if (uploadSuccess) return;
+      }
+    } catch (err: any) {
+      if (err.message === "FILE_SIZE_LIMIT" || file.size > 50 * 1024 * 1024) {
+        setEditMsg({
+          type: "err",
+          text: `Video size is ${formatBytes(file.size)}. Supabase Storage Free Tier has a 50 MB limit per file. Please compress this video or use a YouTube URL.`,
+        });
+        return;
+      }
+    } finally {
+      setEditUploadingVideo(false);
+      setEditUploadProgress(0);
+    }
+
+    // 2. Fallback upload to local server
+    try {
+      setEditUploadingVideo(true);
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "/api/admin/upload");
+        xhr.setRequestHeader("Content-Type", file.type || "video/mp4");
+        xhr.setRequestHeader("x-filename", encodeURIComponent(file.name));
+
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable && e.total > 0) {
+            const pct = Math.round((e.loaded / e.total) * 100);
+            setEditUploadProgress(pct);
+          }
+        };
+
+        xhr.onload = () => {
+          try {
+            const json = JSON.parse(xhr.responseText);
+            if (xhr.status >= 200 && xhr.status < 300 && json.url) {
+              setEditVideoUrl(json.url);
+              setEditMsg({ type: "ok", text: `Video "${file.name}" uploaded successfully!` });
+              resolve();
+            } else {
+              setEditMsg({ type: "err", text: json.error || "Failed to upload video from device." });
+              reject(new Error(json.error || "Upload failed"));
+            }
+          } catch {
+            setEditMsg({ type: "err", text: "Failed to parse upload response." });
+            reject(new Error("Parse error"));
+          }
+        };
+
+        xhr.onerror = () => {
+          setEditMsg({ type: "err", text: "Network error while uploading video." });
+          reject(new Error("Network error"));
+        };
+
+        xhr.send(file);
+      });
+    } catch {
+      // Handled
+    } finally {
+      setEditUploadingVideo(false);
+      setEditUploadProgress(0);
+    }
+  }
+
+  async function handleSaveEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingPitch) return;
+    const sTitle = editStartup.trim();
+    const fName = editFounder.trim();
+
+    if (!sTitle) {
+      setEditMsg({ type: "err", text: "Please enter the startup title." });
+      return;
+    }
+    if (!editVideoUrl.trim()) {
+      setEditMsg({ type: "err", text: "Please provide a valid video URL or upload a video." });
+      return;
+    }
+
+    setEditSaving(true);
+    setEditMsg(null);
+    try {
+      const res = await fetch("/api/admin/pitches", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editingPitch.id,
+          title: sTitle,
+          founder: fName,
+          startup: sTitle,
+          videoUrl: editVideoUrl.trim(),
+          thumbnailUrl: editThumbnailUrl.trim() || undefined,
+        }),
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        setPitches((prev) => prev.map((p) => (p.id === editingPitch.id ? json.pitch : p)));
+        setEditingPitch(null);
+        setMsg({ type: "ok", text: `Pitch "${sTitle}" updated successfully!` });
+      } else {
+        setEditMsg({ type: "err", text: json.error || "Failed to update pitch." });
+      }
+    } catch {
+      setEditMsg({ type: "err", text: "Network error. Please try again." });
+    } finally {
+      setEditSaving(false);
+    }
+  }
+
 
   return (
     <div className="adm-tab-content">
@@ -3682,8 +3883,18 @@ function ERPPitchesTab({ initialPitches = [] }: { initialPitches?: ElevatorPitch
                     </button>
                     <button
                       type="button"
+                      className="adm-btn adm-btn-secondary"
+                      style={{ fontSize: 12, padding: "5px 10px", flex: 1, justifyContent: "center" }}
+                      title="Edit Pitch"
+                      onClick={() => handleStartEdit(pitch)}
+                    >
+                      <Edit size={12} /> Edit
+                    </button>
+                    <button
+                      type="button"
                       className="adm-btn adm-btn-danger"
                       style={{ fontSize: 12, padding: "5px 10px" }}
+                      title="Delete Pitch"
                       onClick={() => handleDelete(pitch.id, pitch.startup || pitch.title)}
                     >
                       <Trash2 size={12} />
@@ -3751,6 +3962,274 @@ function ERPPitchesTab({ initialPitches = [] }: { initialPitches?: ElevatorPitch
           </div>
         </div>
       )}
+
+      {/* Admin Edit Modal */}
+      {editingPitch && (
+        <div
+          className="pitch-modal-overlay"
+          onClick={() => {
+            if (!editSaving && !editUploadingVideo) setEditingPitch(null);
+          }}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="pitch-modal-box"
+            style={{ maxWidth: 540, padding: 0, overflow: "hidden", borderRadius: 16 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              className="pitch-modal-header"
+              style={{
+                padding: "16px 20px",
+                borderBottom: "1px solid var(--line)",
+                background: "rgba(255,255,255,0.02)",
+              }}
+            >
+              <div>
+                <h3 className="pitch-modal-title" style={{ fontSize: 16, display: "flex", alignItems: "center", gap: 8 }}>
+                  <Edit size={16} style={{ color: "var(--ciel-gold)" }} /> Edit Elevator Pitch
+                </h3>
+                <p style={{ margin: 0, fontSize: 12, color: "var(--text-muted)" }}>
+                  Update details or replace video for &ldquo;{editingPitch.startup || editingPitch.title}&rdquo;
+                </p>
+              </div>
+              <button
+                className="pitch-modal-close"
+                onClick={() => setEditingPitch(null)}
+                aria-label="Close"
+                disabled={editSaving || editUploadingVideo}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} style={{ padding: "20px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <div className="field" style={{ margin: 0 }}>
+                  <label className="field-label" style={{ fontSize: 12, marginBottom: 4 }}>
+                    Startup Title *
+                  </label>
+                  <input
+                    className="input"
+                    style={{ padding: "8px 12px", fontSize: 13, height: 38, width: "100%" }}
+                    placeholder="e.g. AgriTech Dynamics"
+                    value={editStartup}
+                    onChange={(e) => setEditStartup(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="field" style={{ margin: 0 }}>
+                  <label className="field-label" style={{ fontSize: 12, marginBottom: 4 }}>
+                    Founder&apos;s Name (Optional)
+                  </label>
+                  <input
+                    className="input"
+                    style={{ padding: "8px 12px", fontSize: 13, height: 38, width: "100%" }}
+                    placeholder="e.g. Rohan Deshmukh (optional)"
+                    value={editFounder}
+                    onChange={(e) => setEditFounder(e.target.value)}
+                  />
+                </div>
+
+                {/* Video Source Switcher */}
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                    <label className="field-label" style={{ fontSize: 12, margin: 0 }}>
+                      Video Source
+                    </label>
+                    <div className="pitch-source-selector" style={{ margin: 0 }}>
+                      <button
+                        type="button"
+                        className={`pitch-source-btn ${editVideoSource === "device" ? "active" : ""}`}
+                        style={{ padding: "3px 10px", fontSize: 11 }}
+                        onClick={() => {
+                          setEditVideoSource("device");
+                          setEditMsg(null);
+                        }}
+                      >
+                        <Upload size={11} /> Device Video
+                      </button>
+                      <button
+                        type="button"
+                        className={`pitch-source-btn ${editVideoSource === "url" ? "active" : ""}`}
+                        style={{ padding: "3px 10px", fontSize: 11 }}
+                        onClick={() => {
+                          setEditVideoSource("url");
+                          setEditMsg(null);
+                        }}
+                      >
+                        <Globe size={11} /> Web URL
+                      </button>
+                    </div>
+                  </div>
+
+                  {editVideoSource === "device" ? (
+                    <div>
+                      <input
+                        type="file"
+                        ref={editFileInputRef}
+                        accept="video/mp4,video/webm,video/ogg,video/quicktime,video/*"
+                        style={{ display: "none" }}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) handleEditVideoFileSelect(f);
+                        }}
+                      />
+                      {editUploadingVideo ? (
+                        <div className="pitch-compact-progress" title={`Uploading ${editVideoFileName} (${editUploadProgress}%)`}>
+                          <div className="pitch-compact-progress-bar" style={{ width: `${Math.max(6, editUploadProgress)}%` }} />
+                          <div className="pitch-compact-progress-content">
+                            <RefreshCw size={13} className="spin text-gold" style={{ flexShrink: 0 }} />
+                            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+                              Uploading {editVideoFileName}…
+                            </span>
+                            <span style={{ fontWeight: 700, color: "var(--ciel-gold)", marginLeft: "auto", flexShrink: 0 }}>
+                              {editUploadProgress}%
+                            </span>
+                          </div>
+                        </div>
+                      ) : editVideoUrl ? (
+                        <div className="pitch-compact-file" style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px" }}>
+                          <CheckCircle2 size={15} style={{ color: "#10b981", flexShrink: 0 }} />
+                          <span
+                            className="pitch-compact-name"
+                            style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12 }}
+                            title={editVideoFileName || editVideoUrl}
+                          >
+                            {editVideoFileName ? editVideoFileName : (isDirectVideo(editVideoUrl) ? "Current Video Attached" : editVideoUrl)}
+                          </span>
+                          {editVideoFileSize && <span style={{ opacity: 0.6, fontSize: 11 }}>({editVideoFileSize})</span>}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setPreviewPitch({
+                                id: "temp-preview",
+                                title: editStartup || "Preview",
+                                startup: editStartup || "Preview",
+                                videoUrl: editVideoUrl,
+                                createdAt: "",
+                              })
+                            }
+                            style={{
+                              background: "rgba(212,175,55,0.15)",
+                              border: "1px solid rgba(212,175,55,0.4)",
+                              color: "var(--ciel-gold)",
+                              cursor: "pointer",
+                              padding: "3px 8px",
+                              borderRadius: 4,
+                              fontSize: 11,
+                              fontWeight: 600,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 4,
+                            }}
+                            title="Preview video playback"
+                          >
+                            <Play size={10} fill="currentColor" /> Play
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => editFileInputRef.current?.click()}
+                            style={{
+                              background: "rgba(255,255,255,0.06)",
+                              border: "1px solid var(--line)",
+                              color: "var(--text-white)",
+                              cursor: "pointer",
+                              padding: "3px 8px",
+                              borderRadius: 4,
+                              fontSize: 11,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 4,
+                            }}
+                            title="Replace video file"
+                          >
+                            <Upload size={10} /> Replace
+                          </button>
+                        </div>
+                      ) : (
+                        <div
+                          className={`pitch-compact-dropzone ${editIsDragOver ? "dragover" : ""}`}
+                          onClick={() => editFileInputRef.current?.click()}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            setEditIsDragOver(true);
+                          }}
+                          onDragLeave={() => setEditIsDragOver(false)}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            setEditIsDragOver(false);
+                            const f = e.dataTransfer.files?.[0];
+                            if (f) handleEditVideoFileSelect(f);
+                          }}
+                        >
+                          <Upload size={14} style={{ color: "var(--ciel-gold)" }} />
+                          <span>Choose or drop new video file (up to 2 GB)</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <input
+                      className="input"
+                      style={{ padding: "8px 12px", fontSize: 13, height: 38, width: "100%" }}
+                      placeholder="https://youtu.be/... or https://vimeo.com/..."
+                      value={editVideoUrl}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setEditVideoUrl(val);
+                        const ytId = extractYTId(val);
+                        if (ytId) {
+                          setEditThumbnailUrl(`https://img.youtube.com/vi/${ytId}/hqdefault.jpg`);
+                        }
+                      }}
+                      required={editVideoSource === "url"}
+                    />
+                  )}
+                </div>
+
+                {editMsg && (
+                  <div
+                    className={`alert ${editMsg.type === "ok" ? "alert-success" : "alert-error"}`}
+                    style={{ padding: "8px 12px", margin: 0, fontSize: 13 }}
+                  >
+                    {editMsg.text}
+                  </div>
+                )}
+
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 8 }}>
+                  <button
+                    type="button"
+                    className="adm-btn adm-btn-secondary"
+                    onClick={() => setEditingPitch(null)}
+                    disabled={editSaving || editUploadingVideo}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="adm-btn adm-btn-primary"
+                    disabled={editSaving || editUploadingVideo}
+                    style={{ minWidth: 120, justifyContent: "center" }}
+                  >
+                    {editSaving ? (
+                      <>
+                        <RefreshCw size={13} className="spin" /> Saving…
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 size={13} /> Save Changes
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

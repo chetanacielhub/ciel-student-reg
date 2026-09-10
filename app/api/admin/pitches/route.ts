@@ -3,6 +3,7 @@ import { verifyAdminApiSession } from "@/lib/admin-auth";
 import {
   getElevatorPitches,
   addElevatorPitch,
+  updateElevatorPitch,
   deleteElevatorPitch,
 } from "@/lib/dynamic-store";
 
@@ -53,6 +54,45 @@ export async function POST(req: NextRequest) {
   }
 }
 
+/** PUT /api/admin/pitches — update an existing elevator pitch */
+export async function PUT(req: NextRequest) {
+  const authErr = await verifyAdminApiSession();
+  if (authErr) return authErr;
+
+  try {
+    const body = await req.json();
+    const { id, title, founder, startup, videoUrl, thumbnailUrl, description } = body;
+
+    if (!id?.trim()) {
+      return NextResponse.json({ error: "Pitch id is required." }, { status: 400 });
+    }
+
+    if (!title?.trim() || !startup?.trim() || !videoUrl?.trim()) {
+      return NextResponse.json(
+        { error: "title, startup, and videoUrl are required." },
+        { status: 400 }
+      );
+    }
+
+    const updated = await updateElevatorPitch(id.trim(), {
+      title: title.trim(),
+      founder: founder?.trim() || "",
+      startup: startup.trim(),
+      videoUrl: videoUrl.trim(),
+      thumbnailUrl: thumbnailUrl?.trim() || undefined,
+      description: description?.trim() || undefined,
+    });
+
+    if (!updated) {
+      return NextResponse.json({ error: "Pitch not found." }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, pitch: updated });
+  } catch {
+    return NextResponse.json({ error: "Failed to update pitch." }, { status: 500 });
+  }
+}
+
 /** DELETE /api/admin/pitches?id=pitch-xxx — delete a pitch */
 export async function DELETE(req: NextRequest) {
   const authErr = await verifyAdminApiSession();
@@ -70,3 +110,4 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Failed to delete pitch." }, { status: 500 });
   }
 }
+

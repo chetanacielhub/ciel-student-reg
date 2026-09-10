@@ -1321,6 +1321,65 @@ export async function addElevatorPitch(pitch: Omit<ElevatorPitchItem, "id" | "cr
   return newPitch;
 }
 
+export async function updateElevatorPitch(
+  id: string,
+  updates: Partial<Omit<ElevatorPitchItem, "id" | "createdAt">>
+): Promise<ElevatorPitchItem | null> {
+  let updatedPitch: ElevatorPitchItem | null = null;
+
+  try {
+    const supabase = createAdminClient();
+    const updatePayload: Record<string, any> = {};
+    if (updates.title !== undefined) updatePayload.title = updates.title;
+    if (updates.founder !== undefined) updatePayload.founder = updates.founder || "";
+    if (updates.startup !== undefined) updatePayload.startup = updates.startup;
+    if (updates.videoUrl !== undefined) updatePayload.video_url = updates.videoUrl;
+    if (updates.thumbnailUrl !== undefined) updatePayload.thumbnail_url = updates.thumbnailUrl || null;
+    if (updates.description !== undefined) updatePayload.description = updates.description || null;
+
+    const { data, error } = await supabase
+      .from("elevator_pitches")
+      .update(updatePayload)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (!error && data) {
+      updatedPitch = {
+        id: String(data.id),
+        title: data.title,
+        founder: data.founder || "",
+        startup: data.startup || data.title,
+        videoUrl: data.video_url || data.videoUrl,
+        thumbnailUrl: data.thumbnail_url || data.thumbnailUrl,
+        description: data.description || "",
+        createdAt: data.created_at || data.createdAt,
+      };
+    }
+  } catch {
+    // Fallback to local store
+  }
+
+  const store = await ensureStore();
+  if (!store.pitches) store.pitches = [];
+  const idx = store.pitches.findIndex((p) => p.id === id);
+  if (idx !== -1) {
+    store.pitches[idx] = {
+      ...store.pitches[idx],
+      ...updates,
+    };
+    await saveStore(store);
+    if (!updatedPitch) {
+      updatedPitch = store.pitches[idx];
+    }
+  } else if (updatedPitch) {
+    store.pitches.unshift(updatedPitch);
+    await saveStore(store);
+  }
+
+  return updatedPitch;
+}
+
 export async function deleteElevatorPitch(id: string): Promise<boolean> {
   try {
     const supabase = createAdminClient();
@@ -1336,3 +1395,4 @@ export async function deleteElevatorPitch(id: string): Promise<boolean> {
   }
   return true;
 }
+
