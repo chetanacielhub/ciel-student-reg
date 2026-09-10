@@ -1264,6 +1264,29 @@ export async function deleteGalleryImage(filename: string): Promise<boolean> {
 // ─── ELEVATOR PITCHES ─────────────────────────────────────────────────────
 
 export async function getElevatorPitches(): Promise<ElevatorPitchItem[]> {
+  try {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from("elevator_pitches")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!error && data && data.length > 0) {
+      return data.map((p: any) => ({
+        id: String(p.id),
+        title: p.title,
+        founder: p.founder || "",
+        startup: p.startup || p.title,
+        videoUrl: p.video_url || p.videoUrl,
+        thumbnailUrl: p.thumbnail_url || p.thumbnailUrl,
+        description: p.description || "",
+        createdAt: p.created_at || p.createdAt,
+      }));
+    }
+  } catch {
+    // Fallback to file store
+  }
+
   const store = await ensureStore();
   return store.pitches || [];
 }
@@ -1275,6 +1298,22 @@ export async function addElevatorPitch(pitch: Omit<ElevatorPitchItem, "id" | "cr
     createdAt: new Date().toISOString(),
   };
 
+  try {
+    const supabase = createAdminClient();
+    await supabase.from("elevator_pitches").insert({
+      id: newPitch.id,
+      title: newPitch.title,
+      founder: newPitch.founder || "",
+      startup: newPitch.startup,
+      video_url: newPitch.videoUrl,
+      thumbnail_url: newPitch.thumbnailUrl || null,
+      description: newPitch.description || null,
+      created_at: newPitch.createdAt,
+    });
+  } catch {
+    // Fallback to local store if table is not yet created
+  }
+
   const store = await ensureStore();
   if (!store.pitches) store.pitches = [];
   store.pitches.unshift(newPitch);
@@ -1283,6 +1322,13 @@ export async function addElevatorPitch(pitch: Omit<ElevatorPitchItem, "id" | "cr
 }
 
 export async function deleteElevatorPitch(id: string): Promise<boolean> {
+  try {
+    const supabase = createAdminClient();
+    await supabase.from("elevator_pitches").delete().eq("id", id);
+  } catch {
+    // Fallback to local store
+  }
+
   const store = await ensureStore();
   if (store.pitches) {
     store.pitches = store.pitches.filter((p) => p.id !== id);
