@@ -168,7 +168,7 @@ export function HomeView({ event, pitches: initialPitches = [] }: HomeViewProps)
   }, []);
 
   return (
-    <div style={{ position: "relative" }}>
+    <div className="home-root" style={{ position: "relative" }}>
       {/* Scroll progress — fixed positioned, zero layout impact */}
       <ScrollProgressBar />
 

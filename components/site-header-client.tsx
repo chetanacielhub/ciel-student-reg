@@ -12,6 +12,7 @@ import {
   FileSpreadsheet,
   FileText,
   Globe,
+  GraduationCap,
   Heart,
   Home,
   Images,
@@ -62,6 +63,50 @@ export function SiteHeaderClient({ signedIn }: { signedIn: boolean }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  // Smooth scroll to hash target on navigation or page load
+  useEffect(() => {
+    const scrollToHash = () => {
+      if (typeof window === "undefined" || !window.location.hash) return;
+      const targetId = window.location.hash.replace("#", "");
+      if (!targetId) return;
+
+      const attemptScroll = (delay: number) => {
+        setTimeout(() => {
+          const el = document.getElementById(targetId);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }, delay);
+      };
+
+      attemptScroll(50);
+      attemptScroll(250);
+      attemptScroll(600);
+    };
+
+    scrollToHash();
+    window.addEventListener("hashchange", scrollToHash);
+    return () => window.removeEventListener("hashchange", scrollToHash);
+  }, [pathname]);
+
+  const handleNavAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.includes("#")) {
+      const [path, hash] = href.split("#");
+      const isSamePath = pathname === path || (path === "" && hash);
+      if (isSamePath) {
+        e.preventDefault();
+        const el = document.getElementById(hash);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+          window.history.pushState(null, "", `#${hash}`);
+        }
+        setMobileMenuOpen(false);
+        return;
+      }
+    }
+    setMobileMenuOpen(false);
+  };
+
   // All hooks must be called before any early returns (Rules of Hooks)
   if (pathname?.startsWith("/dashboard")) {
     return null;
@@ -92,17 +137,47 @@ export function SiteHeaderClient({ signedIn }: { signedIn: boolean }) {
           <Link className="mobile-nav-link" href="/" onClick={() => setMobileMenuOpen(false)}>
             <Home size={18} /> Home
           </Link>
-          <Link className="mobile-nav-link" href="/about" onClick={() => setMobileMenuOpen(false)}>
+          <Link
+            className="mobile-nav-link"
+            href="/about#vision-mission"
+            onClick={(e) => handleNavAnchorClick(e, "/about#vision-mission")}
+          >
             <Compass size={18} /> Vision &amp; Mission
           </Link>
-          <Link className="mobile-nav-link" href="/governance#governing-committee" onClick={() => setMobileMenuOpen(false)}>
+          <Link
+            className="mobile-nav-link"
+            href="/about#governing-committee"
+            onClick={(e) => handleNavAnchorClick(e, "/about#governing-committee")}
+          >
             <Shield size={18} /> Governing Committee
           </Link>
-          <Link className="mobile-nav-link" href="/governance#joint-steering-committee" onClick={() => setMobileMenuOpen(false)}>
+          <Link
+            className="mobile-nav-link"
+            href="/about#joint-steering-committee"
+            onClick={(e) => handleNavAnchorClick(e, "/about#joint-steering-committee")}
+          >
             <Layers size={18} /> Joint-Steering Committee
           </Link>
-          <Link className="mobile-nav-link" href="/governance#functional-committee" onClick={() => setMobileMenuOpen(false)}>
+          <Link
+            className="mobile-nav-link"
+            href="/about#functional-committee"
+            onClick={(e) => handleNavAnchorClick(e, "/about#functional-committee")}
+          >
             <Award size={18} /> Functional Committee
+          </Link>
+          <Link
+            className="mobile-nav-link"
+            href="/about#student-innovation-council"
+            onClick={(e) => handleNavAnchorClick(e, "/about#student-innovation-council")}
+          >
+            <Users size={18} /> Student Innovation Council
+          </Link>
+          <Link
+            className="mobile-nav-link"
+            href="/about#student-functional-committee"
+            onClick={(e) => handleNavAnchorClick(e, "/about#student-functional-committee")}
+          >
+            <GraduationCap size={18} /> Student&apos;s Functional Committee
           </Link>
           <Link className="mobile-nav-link" href="/incubation" onClick={() => setMobileMenuOpen(false)}>
             <Lightbulb size={18} /> Incubation Cell
@@ -115,9 +190,6 @@ export function SiteHeaderClient({ signedIn }: { signedIn: boolean }) {
           </Link>
           <Link className="mobile-nav-link" href="/showcase" onClick={() => setMobileMenuOpen(false)}>
             <Trophy size={18} /> Incubated Portfolio
-          </Link>
-          <Link className="mobile-nav-link" href="/student-council" onClick={() => setMobileMenuOpen(false)}>
-            <Users size={18} /> Student Council
           </Link>
           <Link className="mobile-nav-link" href="/downloads" onClick={() => setMobileMenuOpen(false)}>
             <FileText size={18} /> Policy Manuals
@@ -183,20 +255,47 @@ export function SiteHeaderClient({ signedIn }: { signedIn: boolean }) {
                 <ChevronDown size={13} aria-hidden="true" />
               </button>
               <div className="nav-dropdown">
-                <Link className="dropdown-link" href="/about">
+                <Link
+                  className="dropdown-link"
+                  href="/about#vision-mission"
+                  onClick={(e) => handleNavAnchorClick(e, "/about#vision-mission")}
+                >
                   <Compass size={15} /> Vision &amp; Mission
                 </Link>
-                <Link className="dropdown-link" href="/governance#governing-committee">
+                <Link
+                  className="dropdown-link"
+                  href="/about#governing-committee"
+                  onClick={(e) => handleNavAnchorClick(e, "/about#governing-committee")}
+                >
                   <Shield size={15} /> Governing Committee
                 </Link>
-                <Link className="dropdown-link" href="/governance#joint-steering-committee">
+                <Link
+                  className="dropdown-link"
+                  href="/about#joint-steering-committee"
+                  onClick={(e) => handleNavAnchorClick(e, "/about#joint-steering-committee")}
+                >
                   <Layers size={15} /> Joint-Steering Committee
                 </Link>
-                <Link className="dropdown-link" href="/student-council">
+                <Link
+                  className="dropdown-link"
+                  href="/about#functional-committee"
+                  onClick={(e) => handleNavAnchorClick(e, "/about#functional-committee")}
+                >
+                  <Award size={15} /> Functional Committee
+                </Link>
+                <Link
+                  className="dropdown-link"
+                  href="/about#student-innovation-council"
+                  onClick={(e) => handleNavAnchorClick(e, "/about#student-innovation-council")}
+                >
                   <Users size={15} /> Student Innovation Council
                 </Link>
-                <Link className="dropdown-link" href="/governance#functional-committee">
-                  <Award size={15} /> Functional Committee
+                <Link
+                  className="dropdown-link"
+                  href="/about#student-functional-committee"
+                  onClick={(e) => handleNavAnchorClick(e, "/about#student-functional-committee")}
+                >
+                  <GraduationCap size={15} /> Student&apos;s Functional Committee
                 </Link>
                 <Link className="dropdown-link" href="/downloads">
                   <FileText size={15} /> Policy Manuals

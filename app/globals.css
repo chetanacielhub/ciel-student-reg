@@ -66,6 +66,10 @@ html {
   color-scheme: dark;
 }
 
+[id] {
+  scroll-margin-top: 115px;
+}
+
 body {
   min-height: 100vh;
   color: var(--text-primary);
@@ -790,14 +794,32 @@ a {
   position: relative;
 }
 
-/* Remove extra space between page content and navbar */
+/* Keep a clean, comfortable distance between page content and sticky navbar */
 .site-main> :first-child,
 .site-main>.page-section:first-child,
 .site-main>.shell:first-child,
 .site-main>div:first-child,
 .site-main>section:first-child {
-  padding-top: 4px !important;
+  padding-top: 28px !important;
   margin-top: 0 !important;
+}
+
+.site-main > .home-root {
+  padding-top: 0 !important;
+}
+
+@media (max-width: 768px) {
+  .site-main> :first-child,
+  .site-main>.page-section:first-child,
+  .site-main>.shell:first-child,
+  .site-main>div:first-child,
+  .site-main>section:first-child {
+    padding-top: 20px !important;
+  }
+
+  .site-main > .home-root {
+    padding-top: 0 !important;
+  }
 }
 
 .site-main> :first-child .section-heading:first-child,

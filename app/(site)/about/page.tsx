@@ -39,7 +39,7 @@ export default async function AboutPage() {
       </div>
 
       {/* Vision & Mission Grid */}
-      <div className="grid-2" style={{ gap: 36, marginBottom: 72 }}>
+      <div id="vision-mission" className="grid-2" style={{ gap: 36, marginBottom: 72 }}>
         <article className="luxury-card">
           <div className="card-icon-wrap">
             <Eye size={28} />

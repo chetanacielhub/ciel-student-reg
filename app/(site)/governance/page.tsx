@@ -40,7 +40,14 @@ export default async function GovernancePage() {
 
       <div style={{ display: "flex", flexDirection: "column", gap: 36, marginBottom: 64 }}>
         {committees.map((comm) => {
-          const sectionId = comm.id?.replace(/^gov-/, "") || comm.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+          const getSectionId = (name: string, id?: string) => {
+            const n = (name || "").toLowerCase();
+            if (n.includes("governing")) return "governing-committee";
+            if (n.includes("joint") || n.includes("steering")) return "joint-steering-committee";
+            if (n.includes("functional")) return "functional-committee";
+            return id?.replace(/^gov-/, "") || n.replace(/[^a-z0-9]+/g, "-");
+          };
+          const sectionId = getSectionId(comm.name, comm.id);
           return (
             <article className="event-card" key={comm.id || comm.name} id={sectionId}>
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>

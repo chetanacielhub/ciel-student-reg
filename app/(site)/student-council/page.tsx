@@ -33,12 +33,13 @@ export default async function StudentCouncilPage() {
       </div>
 
       {/* Leadership Grid */}
-      <div className="section-heading" style={{ marginBottom: 36, textAlign: "left" }}>
-        <h2>Council Leadership</h2>
-        <p>Elected student office bearers representing nearly 200 active student innovators across engineering, technology, and management.</p>
-      </div>
+      <div id="student-innovation-council" style={{ marginBottom: 64 }}>
+        <div className="section-heading" style={{ marginBottom: 36, textAlign: "left" }}>
+          <h2>Council Leadership</h2>
+          <p>Elected student office bearers representing nearly 200 active student innovators across engineering, technology, and management.</p>
+        </div>
 
-      <div className="team-portrait-grid" style={{ marginBottom: 64 }}>
+        <div className="team-portrait-grid">
         {councilLeads.map((lead) => {
           const cardContent = (
             <article className="portrait-member-card" key={lead.id || lead.name}>
@@ -84,11 +85,12 @@ export default async function StudentCouncilPage() {
             cardContent
           );
         })}
+        </div>
       </div>
 
       {/* Student Functional Committee Section */}
       {functionalLeads.length > 0 && (
-        <div style={{ marginBottom: 64 }}>
+        <div id="student-functional-committee" style={{ marginBottom: 64 }}>
           <div className="section-heading" style={{ marginBottom: 36, textAlign: "left" }}>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "var(--ciel-gold-bright)", fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
               <Award size={16} /> Operational Verticals
