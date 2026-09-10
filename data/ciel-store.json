@@ -288,6 +288,62 @@
   ],
   "pitches": [
     {
+      "title": "Pravaaha",
+      "founder": "",
+      "startup": "Pravaaha",
+      "videoUrl": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/uploads/video-1789041853262-p9fvsq678e.mp4",
+      "id": "pitch-1789041864653",
+      "createdAt": "2026-09-10T12:04:24.653Z"
+    },
+    {
+      "title": "HydraEdge",
+      "founder": "",
+      "startup": "HydraEdge",
+      "videoUrl": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/uploads/video-1789041066272-ddefkjk9hhd.mp4",
+      "id": "pitch-1789041076546",
+      "createdAt": "2026-09-10T11:51:16.546Z"
+    },
+    {
+      "title": "Nexora",
+      "founder": "",
+      "startup": "Nexora",
+      "videoUrl": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/uploads/video-1789041042087-78mqk5y1vtd.mp4",
+      "id": "pitch-1789041056331",
+      "createdAt": "2026-09-10T11:50:56.331Z"
+    },
+    {
+      "title": "MacEazy",
+      "founder": "Samad Qureshi & Vishnuraj Vishwakarma",
+      "startup": "MacEazy",
+      "videoUrl": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/uploads/video-1789040784931-xoww72fhpaa.mp4",
+      "id": "pitch-1789040832552",
+      "createdAt": "2026-09-10T11:47:12.552Z"
+    },
+    {
+      "title": "Logiapp",
+      "founder": "",
+      "startup": "Logiapp",
+      "videoUrl": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/uploads/video-1789040763237-i7jaqs0y4qg.mp4",
+      "id": "pitch-1789040778055",
+      "createdAt": "2026-09-10T11:46:18.055Z"
+    },
+    {
+      "title": "Synko",
+      "founder": "",
+      "startup": "Synko",
+      "videoUrl": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/uploads/video-1789040743835-3cou4vluisj.mp4",
+      "id": "pitch-1789040758337",
+      "createdAt": "2026-09-10T11:45:58.337Z"
+    },
+    {
+      "title": "Athena",
+      "founder": "",
+      "startup": "Athena",
+      "videoUrl": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/uploads/video-1789012707034-8h6fxrvo4yl.mp4",
+      "id": "pitch-1789012715683",
+      "createdAt": "2026-09-10T03:58:35.683Z"
+    },
+    {
       "title": "SatSecure",
       "founder": "",
       "startup": "SatSecure",
