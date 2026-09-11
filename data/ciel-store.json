@@ -1,98 +1,18 @@
 {
-  "mentors": [
-    {
-      "id": "m-1",
-      "name": "Dr. Rajesh Kulkarni",
-      "designation": "Chief Innovation Advisor",
-      "organization": "Ex-Director, Tech Ventures",
-      "expertise": [
-        "Venture Capital",
-        "IP Strategy",
-        "DeepTech"
-      ],
-      "avatar": "RK",
-      "category": "industry"
-    },
-    {
-      "id": "m-2",
-      "name": "Sunita Nambiar",
-      "designation": "Managing Partner",
-      "organization": "Vanguard Seed Fund",
-      "expertise": [
-        "Early Stage Angel Funding",
-        "Go-To-Market",
-        "SaaS Scale"
-      ],
-      "avatar": "SN",
-      "category": "investor"
-    },
-    {
-      "id": "m-3",
-      "name": "Prof. Arvind Mehta",
-      "designation": "Head of Research & IPR",
-      "organization": "Chetana Institute",
-      "expertise": [
-        "Patent Drafting",
-        "Tech Transfer",
-        "Material Sciences"
-      ],
-      "avatar": "AM",
-      "category": "academic"
-    },
-    {
-      "id": "m-4",
-      "name": "Priya Nair",
-      "designation": "Founder & CEO",
-      "organization": "GreenGrid Energy (CIEL Alumnus)",
-      "expertise": [
-        "CleanTech",
-        "Hardware Prototyping",
-        "Supply Chain"
-      ],
-      "avatar": "PN",
-      "category": "alumni"
-    }
-  ],
+  "mentors": [],
   "studentCouncil": [
     {
-      "name": "sdcv",
-      "role": "sdf",
-      "branch": "sxdfg",
-      "year": "Final Year",
-      "avatar": "s",
-      "id": "sc-1789046107643"
-    }
-  ],
-  "studentFunctional": [
-    {
-      "name": "njkm",
-      "role": "Student Lead — 2: Incubation and start-up support",
-      "branch": "sdf",
-      "year": "1st Year",
-      "avatar": "n",
-      "category": "functional",
-      "id": "sc-1789048364241"
-    },
-    {
-      "name": "Aryan Deshmukh",
-      "role": "Student Lead — 1: Innovation and Research",
-      "branch": "Computer Engineering",
-      "year": "3rd Year",
-      "avatar": "AD",
-      "linkedinUrl": "https://linkedin.com/in/aryandeshmukh",
-      "category": "functional",
-      "id": "b1840120-0ec1-40d3-8543-e27032fbd838"
-    },
-    {
       "name": "abc",
-      "role": "Student Lead — 2: Incubation and start-up support",
-      "branch": "df",
-      "year": "1stYear",
+      "role": "abc",
+      "branch": "Technology & Engineering",
+      "year": "1st Year",
       "avatar": "a",
-      "category": "functional",
-      "id": "838ab883-a6ed-46de-8613-a86d6abb8e50"
+      "category": "council",
+      "institute": "Chetana's SFC",
+      "id": "777c7ad6-9cfe-4787-bdea-cc7e463be61f"
     }
   ],
+  "studentFunctional": [],
   "governance": [
     {
       "id": "gov-1",
@@ -114,10 +34,6 @@
         {
           "name": "Mr. Anand Rathi",
           "role": "Industry Representative (Managing Director, Rathi Tech)"
-        },
-        {
-          "name": "kjb",
-          "role": "bhnj"
         }
       ]
     },
@@ -268,6 +184,15 @@
       "createdAt": "2026-02-10T12:30:00.000Z"
     }
   ],
-  "gallery": [],
+  "gallery": [
+    {
+      "id": "img-1789131654747",
+      "filename": "1789131653594-IMG_0891_JPG.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1789131653594-IMG_0891_JPG.jpg",
+      "title": "IMG_0891.JPG",
+      "category": "general",
+      "created_at": "2026-09-11T13:00:54.748Z"
+    }
+  ],
   "pitches": []
 }

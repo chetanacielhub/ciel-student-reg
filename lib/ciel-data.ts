@@ -319,13 +319,7 @@ export const GOVERNANCE_COMMITTEES = [
   },
 ];
 
-export const STUDENT_COUNCIL_LEADS = [
-  { name: "Aarav Sharma", role: "President, Student Innovation Council", branch: "Computer Engineering", year: "Final Year" },
-  { name: "Neha Kadam", role: "Vice President, Hackathons & Competitions", branch: "Information Technology", year: "Final Year" },
-  { name: "Rishi Verma", role: "Lead, Prototyping & Makerspace Labs", branch: "Mechanical Engineering", year: "Pre-Final Year" },
-  { name: "Ananya Roy", role: "Lead, Women Entrepreneurship Cell", branch: "Electronics & Telecom", year: "Pre-Final Year" },
-  { name: "Devansh Mehta", role: "Lead, Industry Outreach & Media", branch: "Management Studies", year: "Final Year" },
-];
+export const STUDENT_COUNCIL_LEADS: { name: string; role: string; branch: string; year: string }[] = [];
 
 export const DEFAULT_GOOGLE_FORMS = [
   {

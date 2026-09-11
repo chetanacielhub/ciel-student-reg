@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminApiSession } from "@/lib/admin-auth";
-import { addMentor, deleteMentor, getMentors } from "@/lib/dynamic-store";
+import { addMentor, deleteMentor, getMentors, updateMentor } from "@/lib/dynamic-store";
 import { revalidatePath } from "next/cache";
 
 export const dynamic = "force-dynamic";
@@ -47,6 +47,47 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function PUT(req: NextRequest) {
+  const authErr = await verifyAdminApiSession();
+  if (authErr) return authErr;
+
+  try {
+    const body = await req.json();
+    const { id, name, designation, organization, category, expertise, avatar, linkedinUrl } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: "Mentor ID is required." }, { status: 400 });
+    }
+
+    const updates: Record<string, any> = {};
+    if (name !== undefined) updates.name = name;
+    if (designation !== undefined) updates.designation = designation;
+    if (organization !== undefined) updates.organization = organization;
+    if (category !== undefined) updates.category = category;
+    if (expertise !== undefined) {
+      updates.expertise = Array.isArray(expertise)
+        ? expertise
+        : typeof expertise === "string"
+        ? expertise.split(",").map((e: string) => e.trim()).filter(Boolean)
+        : [];
+    }
+    if (avatar !== undefined) updates.avatar = avatar;
+    if (linkedinUrl !== undefined) updates.linkedinUrl = linkedinUrl;
+
+    const updated = await updateMentor(id, updates);
+    if (!updated) {
+      return NextResponse.json({ error: "Mentor not found." }, { status: 404 });
+    }
+
+    revalidatePath("/mentors");
+    revalidatePath("/admin/dashboard");
+
+    return NextResponse.json(updated);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || "Failed to update mentor." }, { status: 500 });
+  }
+}
+
 export async function DELETE(req: NextRequest) {
   const authErr = await verifyAdminApiSession();
   if (authErr) return authErr;
@@ -63,3 +104,4 @@ export async function DELETE(req: NextRequest) {
 
   return NextResponse.json({ ok: true });
 }
+

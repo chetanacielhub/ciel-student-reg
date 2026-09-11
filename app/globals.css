@@ -7810,4 +7810,537 @@ body.light-theme .portrait-name,
 body.light-theme .portrait-role,
 [data-theme="light"] .portrait-role {
   color: #4b5563;
-}
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   STUDENT COUNCIL — LIGHT GLASS MORPHISM THEME
+   Scoped under .sic-glass-page so it only affects /student-council
+   ═══════════════════════════════════════════════════════════ */
+
+.sic-glass-page {
+  position: relative;
+  min-height: 100vh;
+  background: linear-gradient(160deg, #f8f9ff 0%, #eef1fa 30%, #fdf6ec 60%, #f4f0ff 100%);
+  overflow: hidden;
+  color: #1e293b;
+}
+
+/* Decorative floating blobs */
+.sic-bg-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+}
+.sic-bg-blob--1 {
+  width: 600px;
+  height: 600px;
+  top: -100px;
+  right: -150px;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.18), transparent 70%);
+}
+.sic-bg-blob--2 {
+  width: 500px;
+  height: 500px;
+  top: 40%;
+  left: -200px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.12), transparent 70%);
+}
+.sic-bg-blob--3 {
+  width: 450px;
+  height: 450px;
+  bottom: -100px;
+  right: 20%;
+  background: radial-gradient(circle, rgba(244, 114, 182, 0.1), transparent 70%);
+}
+
+/* ── Hero ── */
+.sic-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #b17d10;
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  padding: 6px 16px;
+  border-radius: 24px;
+  margin-bottom: 16px;
+}
+
+.sic-hero-title {
+  font-size: clamp(28px, 4vw, 46px);
+  line-height: 1.15;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 16px;
+  letter-spacing: -0.02em;
+}
+
+.sic-hero-subtitle {
+  max-width: 840px;
+  margin: 0 auto;
+  font-size: 16px;
+  line-height: 1.7;
+  color: #475569;
+}
+.sic-hero-subtitle strong {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+/* ── Quick Directory Cards ── */
+.sic-directory-card {
+  position: relative;
+  padding: 22px 20px;
+  cursor: pointer;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s ease,
+              border-color 0.25s ease;
+  overflow: hidden;
+}
+.sic-directory-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(212, 175, 55, 0.08);
+  border-color: rgba(212, 175, 55, 0.35);
+}
+
+.sic-directory-card__badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 4px 12px;
+  background: rgba(212, 175, 55, 0.1);
+  border-bottom-left-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #b17d10;
+  letter-spacing: 0.05em;
+}
+
+.sic-directory-card__name {
+  font-size: 16px;
+  margin: 0;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.sic-directory-card__tagline {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 16px;
+  line-height: 1.5;
+  min-height: 40px;
+}
+
+.sic-directory-card__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  font-size: 12px;
+  color: #b17d10;
+  font-weight: 600;
+}
+
+/* ── Sticky Toolbar ── */
+.sic-toolbar {
+  position: sticky;
+  top: 74px;
+  z-index: 40;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 18px;
+  padding: 14px 20px;
+  margin-bottom: 52px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+}
+
+/* ── Tabs ── */
+.sic-tab {
+  padding: 7px 16px;
+  border-radius: 22px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.5);
+  color: #64748b;
+}
+.sic-tab:hover {
+  border-color: rgba(212, 175, 55, 0.35);
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.8);
+}
+.sic-tab--active {
+  border-color: #d4af37 !important;
+  background: rgba(212, 175, 55, 0.12) !important;
+  color: #8b6914 !important;
+}
+
+/* ── Search Input ── */
+.sic-search-input {
+  width: 100%;
+  padding: 8px 14px 8px 36px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 22px;
+  font-size: 13px;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.sic-search-input::placeholder {
+  color: #94a3b8;
+}
+.sic-search-input:focus {
+  border-color: rgba(212, 175, 55, 0.4);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.08);
+}
+
+/* ── Filter Select ── */
+.sic-filter-select {
+  padding: 8px 32px 8px 14px;
+  background-color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 22px;
+  font-size: 12.5px;
+  color: #0f172a;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px;
+  flex-shrink: 0;
+  transition: border-color 0.2s ease;
+}
+.sic-filter-select:hover {
+  border-color: rgba(212, 175, 55, 0.35);
+}
+.sic-filter-select:focus {
+  border-color: rgba(212, 175, 55, 0.4);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.08);
+}
+
+/* ── Institute Sections ── */
+.sic-institute-section {
+  scroll-margin-top: 140px;
+  position: relative;
+  border-radius: 28px;
+  padding: clamp(24px, 4vw, 48px);
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(20px) saturate(1.3);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: box-shadow 0.3s ease;
+  overflow: hidden;
+}
+.sic-institute-section:hover {
+  box-shadow: 0 16px 56px rgba(0, 0, 0, 0.06);
+}
+
+.sic-section-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding-bottom: 28px;
+  margin-bottom: 36px;
+}
+
+.sic-section-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 14px;
+  border-radius: 14px;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  color: #8b6914;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.sic-section-title {
+  font-size: clamp(22px, 3.2vw, 32px);
+  color: #0f172a;
+  margin: 0 0 8px;
+  line-height: 1.3;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.sic-section-logo {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.sic-section-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  font-size: 13px;
+  color: #64748b;
+  padding-top: 14px;
+}
+.sic-section-meta strong {
+  color: #0f172a;
+}
+
+/* ── Stat Chips ── */
+.sic-stat-chip {
+  padding: 10px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  text-align: center;
+}
+.sic-stat-chip__number {
+  font-size: 16px;
+  font-weight: 800;
+  color: #b17d10;
+}
+.sic-stat-chip__label {
+  font-size: 11px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+/* ── Subsection Headers ── */
+.sic-subsection-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.sic-subsection-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #b17d10;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+
+.sic-subsection-title {
+  font-size: 20px;
+  color: #0f172a;
+  margin: 0;
+  font-weight: 700;
+}
+
+.sic-count-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(212, 175, 55, 0.1);
+  color: #8b6914;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  letter-spacing: 0.04em;
+}
+
+/* ── Member Cards (Glass) ── */
+.sic-glass-page .team-portrait-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 18px;
+}
+
+.sic-member-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 26px 16px 22px;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 20px;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  height: 100%;
+  position: relative;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+}
+.sic-member-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(212, 175, 55, 0.4);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(212, 175, 55, 0.06);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.sic-member-card__photo {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center top;
+  border: 2px solid rgba(212, 175, 55, 0.35);
+  display: block;
+  margin: 0 auto 12px;
+  background: #f1f5f9;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  flex-shrink: 0;
+}
+.sic-member-card:hover .sic-member-card__photo {
+  border-color: #d4af37;
+  transform: scale(1.05);
+  box-shadow: 0 10px 28px rgba(212, 175, 55, 0.15);
+}
+
+.sic-member-card__avatar-placeholder {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 800;
+  color: #8b6914;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.05));
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  margin: 0 auto 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+  transition: transform 0.25s ease, border-color 0.25s ease;
+  flex-shrink: 0;
+  user-select: none;
+}
+.sic-member-card:hover .sic-member-card__avatar-placeholder {
+  border-color: #d4af37;
+  transform: scale(1.05);
+}
+
+.sic-member-card__name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 6px;
+  line-height: 1.35;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.sic-member-card__role {
+  font-size: 13px;
+  color: #8b6914;
+  margin: 0 0 4px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+.sic-member-card__meta {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0 0 6px;
+  font-weight: 500;
+}
+
+.sic-member-card__linkedin {
+  margin-top: auto;
+  padding-top: 10px;
+  font-size: 11.5px;
+  color: #2563eb;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.2s ease;
+}
+.sic-member-card:hover .sic-member-card__linkedin {
+  color: #1d4ed8;
+}
+
+.sic-track-badge {
+  display: inline-block;
+  font-size: 10.5px;
+  margin-bottom: 10px;
+  padding: 3px 10px;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-radius: 10px;
+  background: rgba(212, 175, 55, 0.1);
+  color: #8b6914;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+/* ── Responsive adjustments ── */
+@media (max-width: 768px) {
+  .sic-glass-page {
+    overflow-x: hidden;
+  }
+  .sic-bg-blob--1 { width: 350px; height: 350px; }
+  .sic-bg-blob--2 { width: 300px; height: 300px; }
+  .sic-bg-blob--3 { width: 280px; height: 280px; }
+
+  .sic-toolbar {
+    padding: 12px 14px;
+    border-radius: 14px;
+  }
+
+  .sic-institute-section {
+    padding: 20px 16px;
+    border-radius: 20px;
+  }
+
+  .sic-glass-page .team-portrait-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+  }
+
+  .sic-member-card {
+    padding: 20px 12px 18px;
+  }
+
+  .sic-member-card__photo,
+  .sic-member-card__avatar-placeholder {
+    width: 90px;
+    height: 90px;
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 440px) {
+  .sic-glass-page .team-portrait-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+

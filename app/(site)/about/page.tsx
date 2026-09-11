@@ -271,95 +271,33 @@ export default async function AboutPage() {
 
         {/* 4. Student Innovation Council */}
         <div id="student-innovation-council" style={{ marginBottom: 60 }}>
-          <div style={{ marginBottom: 24, textAlign: "center" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "var(--ciel-gold-bright)", fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
-              <GraduationCap size={16} /> Youth Leadership
-            </div>
-            <h3 style={{ fontSize: 24, color: "var(--text-white)", margin: "0 0 8px" }}>Student Innovation Council</h3>
-            <p style={{ fontSize: 14, color: "var(--text-secondary)", maxWidth: 660, margin: "0 auto" }}>
-              Active office bearers representing nearly 200 student innovators driving hackathons, seminars, and tech prototyping at CIEL.
-            </p>
-          </div>
-
-          <div className="team-portrait-grid">
-            {councilLeads.map((lead, idx) => (
-              <div key={lead.id || lead.name + idx} className="portrait-member-card">
-                {lead.avatar && (lead.avatar.startsWith("/") || lead.avatar.startsWith("http")) ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={lead.avatar} alt={lead.name} className="portrait-photo" />
-                ) : (
-                  <div className="portrait-avatar-placeholder">
-                    {lead.avatar || lead.name.split(" ").map((n) => n[0]).join("")}
-                  </div>
-                )}
-                <h4 className="portrait-name">
-                  <span>{lead.name}</span>
-                  {lead.linkedinUrl && (
-                    <a href={lead.linkedinUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex" }}>
-                      <LinkedInIcon size={14} color="#60A5FA" />
-                    </a>
-                  )}
-                </h4>
-                <p className="portrait-role" style={{ color: "var(--ciel-gold-bright)", fontWeight: 600 }}>{lead.role}</p>
-                <div className="portrait-meta" style={{ color: "var(--text-secondary)", fontWeight: 400 }}>
-                  {lead.branch} · {lead.year}
-                </div>
-                {lead.linkedinUrl && (
-                  <a href={lead.linkedinUrl} target="_blank" rel="noopener noreferrer" className="portrait-linkedin-btn">
-                    Connect on LinkedIn &rarr;
-                  </a>
-                )}
+          {/* Dedicated 4-Institute Portal Link Banner */}
+          <div
+            style={{
+              padding: "16px 20px",
+              borderRadius: 14,
+              border: "1px solid rgba(212, 175, 55, 0.4)",
+              background: "linear-gradient(135deg, rgba(212, 175, 55, 0.12), rgba(212, 175, 55, 0.03))",
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+            }}
+          >
+            <div>
+              <div style={{ fontWeight: 700, color: "var(--ciel-gold-bright)", fontSize: 13, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
+                Dedicated Multi-Institute Governance Page
               </div>
-            ))}
+              <div style={{ fontSize: 13.5, color: "var(--text-secondary)" }}>
+                View dedicated sections for all 4 institutes: <strong>CIMR</strong>, <strong>CRKIMR</strong>, <strong>Chetana&apos;s SFC</strong>, and <strong>H.S. Commerce &amp; Arts</strong>.
+              </div>
+            </div>
+            <Link className="button button-primary button-small" href="/student-council">
+              Open 4-Institutes Council Page &rarr;
+            </Link>
           </div>
         </div>
-
-        {/* 5. Student's Functional Committee */}
-        {studentFunctionalLeads.length > 0 && (
-          <div id="student-functional-committee" style={{ marginBottom: 60 }}>
-            <div style={{ marginBottom: 24, textAlign: "center" }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "var(--ciel-gold-bright)", fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
-                <Award size={16} /> Student Operational Tracks
-              </div>
-              <h3 style={{ fontSize: 24, color: "var(--text-white)", margin: "0 0 8px" }}>Student&apos;s Functional Committee</h3>
-              <p style={{ fontSize: 14, color: "var(--text-secondary)", maxWidth: 660, margin: "0 auto" }}>
-                Dedicated student coordinators and track leads executing CIEL&apos;s 6 core innovation sections alongside institutional leadership.
-              </p>
-            </div>
-
-            <div className="team-portrait-grid">
-              {studentFunctionalLeads.map((lead, idx) => (
-                <div key={lead.id || lead.name + idx} className="portrait-member-card">
-                  {lead.avatar && (lead.avatar.startsWith("/") || lead.avatar.startsWith("http")) ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={lead.avatar} alt={lead.name} className="portrait-photo" />
-                  ) : (
-                    <div className="portrait-avatar-placeholder">
-                      {lead.avatar || lead.name.split(" ").map((n) => n[0]).join("")}
-                    </div>
-                  )}
-                  <h4 className="portrait-name">
-                    <span>{lead.name}</span>
-                    {lead.linkedinUrl && (
-                      <a href={lead.linkedinUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex" }}>
-                        <LinkedInIcon size={14} color="#60A5FA" />
-                      </a>
-                    )}
-                  </h4>
-                  <p className="portrait-role" style={{ color: "var(--ciel-gold-bright)", fontWeight: 600 }}>{lead.role}</p>
-                  <div className="portrait-meta" style={{ color: "var(--text-secondary)", fontWeight: 400 }}>
-                    {lead.branch} · {lead.year}
-                  </div>
-                  {lead.linkedinUrl && (
-                    <a href={lead.linkedinUrl} target="_blank" rel="noopener noreferrer" className="portrait-linkedin-btn">
-                      Connect on LinkedIn &rarr;
-                    </a>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Any other committees */}
         {otherComms.map((comm) => (

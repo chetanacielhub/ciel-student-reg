@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminApiSession } from "@/lib/admin-auth";
-import { getCielEvents, addCielEvent, deleteCielEvent } from "@/lib/dynamic-store";
+import { getCielEvents, addCielEvent, deleteCielEvent, updateCielEvent } from "@/lib/dynamic-store";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +37,38 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function PUT(req: NextRequest) {
+  const authErr = await verifyAdminApiSession();
+  if (authErr) return authErr;
+
+  try {
+    const body = await req.json();
+    const { id, title, category, date, time, venue, desc, posterUrl } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: "Event ID is required." }, { status: 400 });
+    }
+
+    const updates: Record<string, any> = {};
+    if (title !== undefined) updates.title = title;
+    if (category !== undefined) updates.category = category;
+    if (date !== undefined) updates.date = date;
+    if (time !== undefined) updates.time = time;
+    if (venue !== undefined) updates.venue = venue;
+    if (desc !== undefined) updates.desc = desc;
+    if (posterUrl !== undefined) updates.posterUrl = posterUrl;
+
+    const event = await updateCielEvent(id, updates);
+    if (!event) {
+      return NextResponse.json({ error: "Event not found." }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, event });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || "Failed to update event." }, { status: 500 });
+  }
+}
+
 export async function DELETE(req: NextRequest) {
   const authErr = await verifyAdminApiSession();
   if (authErr) return authErr;
@@ -55,3 +87,4 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: error.message || "Failed to delete event." }, { status: 500 });
   }
 }
+

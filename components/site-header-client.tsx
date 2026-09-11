@@ -167,17 +167,10 @@ export function SiteHeaderClient({ signedIn }: { signedIn: boolean }) {
           </Link>
           <Link
             className="mobile-nav-link"
-            href="/about#student-innovation-council"
-            onClick={(e) => handleNavAnchorClick(e, "/about#student-innovation-council")}
+            href="/student-council"
+            onClick={() => setMobileMenuOpen(false)}
           >
-            <Users size={18} /> Student Innovation Council
-          </Link>
-          <Link
-            className="mobile-nav-link"
-            href="/about#student-functional-committee"
-            onClick={(e) => handleNavAnchorClick(e, "/about#student-functional-committee")}
-          >
-            <GraduationCap size={18} /> Student&apos;s Functional Committee
+            <Users size={18} /> Student Innovation Council (SIC)
           </Link>
           <Link className="mobile-nav-link" href="/incubation" onClick={() => setMobileMenuOpen(false)}>
             <Lightbulb size={18} /> Incubation Cell
@@ -285,17 +278,9 @@ export function SiteHeaderClient({ signedIn }: { signedIn: boolean }) {
                 </Link>
                 <Link
                   className="dropdown-link"
-                  href="/about#student-innovation-council"
-                  onClick={(e) => handleNavAnchorClick(e, "/about#student-innovation-council")}
+                  href="/student-council"
                 >
-                  <Users size={15} /> Student Innovation Council
-                </Link>
-                <Link
-                  className="dropdown-link"
-                  href="/about#student-functional-committee"
-                  onClick={(e) => handleNavAnchorClick(e, "/about#student-functional-committee")}
-                >
-                  <GraduationCap size={15} /> Student&apos;s Functional Committee
+                  <Users size={15} /> Student Innovation Council (SIC)
                 </Link>
                 <Link className="dropdown-link" href="/downloads">
                   <FileText size={15} /> Policy Manuals

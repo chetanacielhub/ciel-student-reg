@@ -1185,6 +1185,7 @@ function ERPMentorsTab({ initialMentors }: { initialMentors: MentorItem[] }) {
   const [mentors, setMentors] = useState<MentorItem[]>(initialMentors);
   const [query, setQuery] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [editingMentor, setEditingMentor] = useState<MentorItem | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -1201,32 +1202,74 @@ function ERPMentorsTab({ initialMentors }: { initialMentors: MentorItem[] }) {
     return !q || [m.name, m.designation, m.organization, m.category].some((v) => v.toLowerCase().includes(q));
   });
 
-  async function handleAddMentor(e: React.FormEvent) {
+  function resetForm() {
+    setShowModal(false);
+    setEditingMentor(null);
+    setForm({ name: "", designation: "", organization: "", category: "industry", expertise: "", avatar: "", linkedinUrl: "" });
+  }
+
+  function handleEditMentor(m: MentorItem) {
+    setEditingMentor(m);
+    setForm({
+      name: m.name,
+      designation: m.designation,
+      organization: m.organization || "",
+      category: m.category || "industry",
+      expertise: Array.isArray(m.expertise) ? m.expertise.join(", ") : "",
+      avatar: m.avatar || "",
+      linkedinUrl: m.linkedinUrl || "",
+    });
+    setShowModal(true);
+  }
+
+  async function handleAddOrEditMentor(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name || !form.designation) return;
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/admin/mentors", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          expertise: form.expertise ? form.expertise.split(",").map((s) => s.trim()).filter(Boolean) : [],
-        }),
-      });
+      const expertiseArr = form.expertise ? form.expertise.split(",").map((s) => s.trim()).filter(Boolean) : [];
 
-      if (res.ok) {
-        const created = await res.json();
-        setMentors((prev) => [created, ...prev]);
-        setShowModal(false);
-        setForm({ name: "", designation: "", organization: "", category: "industry", expertise: "", avatar: "", linkedinUrl: "" });
+      if (editingMentor) {
+        const res = await fetch("/api/admin/mentors", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: editingMentor.id,
+            ...form,
+            expertise: expertiseArr,
+          }),
+        });
+
+        if (res.ok) {
+          const updated = await res.json();
+          setMentors((prev) => prev.map((m) => (m.id === editingMentor.id ? updated : m)));
+          resetForm();
+        } else {
+          const err = await res.json();
+          alert(err.error || "Failed to update mentor.");
+        }
       } else {
-        const err = await res.json();
-        alert(err.error || "Failed to add mentor.");
+        const res = await fetch("/api/admin/mentors", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...form,
+            expertise: expertiseArr,
+          }),
+        });
+
+        if (res.ok) {
+          const created = await res.json();
+          setMentors((prev) => [created, ...prev]);
+          resetForm();
+        } else {
+          const err = await res.json();
+          alert(err.error || "Failed to add mentor.");
+        }
       }
     } catch {
-      alert("Error adding mentor.");
+      alert("Error saving mentor.");
     } finally {
       setSubmitting(false);
     }
@@ -1324,9 +1367,14 @@ function ERPMentorsTab({ initialMentors }: { initialMentors: MentorItem[] }) {
                     </div>
                   </td>
                   <td>
-                    <button className="adm-btn adm-btn-outline" style={{ padding: "4px 8px", color: "#FF8080" }} onClick={() => handleDelete(m.id)}>
-                      <Trash2 size={14} />
-                    </button>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button className="adm-btn adm-btn-outline" style={{ padding: "4px 8px" }} title="Edit Mentor" onClick={() => handleEditMentor(m)}>
+                        <Edit size={14} />
+                      </button>
+                      <button className="adm-btn adm-btn-outline" style={{ padding: "4px 8px", color: "#FF8080" }} title="Delete Mentor" onClick={() => handleDelete(m.id)}>
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -1340,13 +1388,15 @@ function ERPMentorsTab({ initialMentors }: { initialMentors: MentorItem[] }) {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: 20 }}>
           <div style={{ background: "var(--charcoal-card)", border: "1px solid var(--ciel-gold-border)", borderRadius: "var(--radius-lg)", padding: 28, width: "100%", maxWidth: 520 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ color: "var(--text-white)", fontSize: 18, margin: 0 }}>Add New Mentor / Advisor</h3>
-              <button style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }} onClick={() => setShowModal(false)}>
+              <h3 style={{ color: "var(--text-white)", fontSize: 18, margin: 0 }}>
+                {editingMentor ? "Edit Mentor / Advisor" : "Add New Mentor / Advisor"}
+              </h3>
+              <button style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }} onClick={resetForm}>
                 <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleAddMentor} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <form onSubmit={handleAddOrEditMentor} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
                 <label className="field-label">Full Name *</label>
                 <input required className="input" placeholder="" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
@@ -1418,9 +1468,9 @@ function ERPMentorsTab({ initialMentors }: { initialMentors: MentorItem[] }) {
               </div>
 
               <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 10 }}>
-                <button type="button" className="adm-btn adm-btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="button" className="adm-btn adm-btn-outline" onClick={resetForm}>Cancel</button>
                 <button type="submit" className="adm-btn adm-btn-primary" disabled={submitting}>
-                  {submitting ? "Adding..." : "Add Mentor"}
+                  {submitting ? (editingMentor ? "Saving..." : "Adding...") : (editingMentor ? "Save Changes" : "Add Mentor")}
                 </button>
               </div>
             </form>
@@ -1438,6 +1488,7 @@ function ERPCouncilTab({ initialCouncil }: { initialCouncil: StudentCouncilLeadI
   const [functionalQuery, setFunctionalQuery] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [modalCategory, setModalCategory] = useState<"council" | "functional">("council");
+  const [editingLead, setEditingLead] = useState<StudentCouncilLeadItem | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -1447,6 +1498,7 @@ function ERPCouncilTab({ initialCouncil }: { initialCouncil: StudentCouncilLeadI
     avatar: "",
     linkedinUrl: "",
     category: "council" as "council" | "functional",
+    institute: "Chetana's Institue of Management and Research",
   });
 
   const councilLeads = council.filter((sc) => sc.category !== "functional");
@@ -1454,15 +1506,31 @@ function ERPCouncilTab({ initialCouncil }: { initialCouncil: StudentCouncilLeadI
 
   const filteredCouncil = councilLeads.filter((sc) => {
     const q = councilQuery.trim().toLowerCase();
-    return !q || [sc.name, sc.role, sc.branch, sc.year].some((v) => (v || "").toLowerCase().includes(q));
+    return !q || [sc.name, sc.role, sc.branch, sc.year, sc.institute].some((v) => (v || "").toLowerCase().includes(q));
   });
 
   const filteredFunctional = functionalLeads.filter((sc) => {
     const q = functionalQuery.trim().toLowerCase();
-    return !q || [sc.name, sc.role, sc.branch, sc.year].some((v) => (v || "").toLowerCase().includes(q));
+    return !q || [sc.name, sc.role, sc.branch, sc.year, sc.institute].some((v) => (v || "").toLowerCase().includes(q));
   });
 
+  function resetCouncilForm() {
+    setShowModal(false);
+    setEditingLead(null);
+    setForm({
+      name: "",
+      role: "",
+      branch: "",
+      year: "",
+      avatar: "",
+      linkedinUrl: "",
+      category: "council",
+      institute: "Chetana's Institue of Management and Research",
+    });
+  }
+
   function openAddModal(cat: "council" | "functional") {
+    setEditingLead(null);
     setModalCategory(cat);
     setForm({
       name: "",
@@ -1472,36 +1540,80 @@ function ERPCouncilTab({ initialCouncil }: { initialCouncil: StudentCouncilLeadI
       avatar: "",
       linkedinUrl: "",
       category: cat,
+      institute: "Chetana's Institue of Management and Research",
     });
     setShowModal(true);
   }
 
-  async function handleAddLead(e: React.FormEvent) {
+  function handleEditLead(sc: StudentCouncilLeadItem) {
+    setEditingLead(sc);
+    const cat = (sc.category || "council") as "council" | "functional";
+    setModalCategory(cat);
+    setForm({
+      name: sc.name,
+      role: sc.role,
+      branch: sc.branch || "",
+      year: sc.year || "",
+      avatar: sc.avatar || "",
+      linkedinUrl: sc.linkedinUrl || "",
+      category: cat,
+      institute: sc.institute || "Chetana's Institue of Management and Research",
+    });
+    setShowModal(true);
+  }
+
+  async function handleAddOrEditLead(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name || !form.role) return;
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/admin/student-council", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          category: modalCategory,
-        }),
-      });
+      if (editingLead) {
+        const res = await fetch("/api/admin/student-council", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: editingLead.id || editingLead.name,
+            ...form,
+            category: modalCategory,
+          }),
+        });
 
-      if (res.ok) {
-        const created = await res.json();
-        setCouncil((prev) => [...prev, created]);
-        setShowModal(false);
-        setForm({ name: "", role: "", branch: "", year: "", avatar: "", linkedinUrl: "", category: "council" });
+        if (res.ok) {
+          const updated = await res.json();
+          setCouncil((prev) =>
+            prev.map((item) =>
+              (item.id && item.id === editingLead.id) || item.name.toLowerCase() === editingLead.name.toLowerCase()
+                ? updated
+                : item
+            )
+          );
+          resetCouncilForm();
+        } else {
+          const err = await res.json();
+          alert(err.error || "Failed to update student leader.");
+        }
       } else {
-        const err = await res.json();
-        alert(err.error || "Failed to add student leader.");
+        const res = await fetch("/api/admin/student-council", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...form,
+            category: modalCategory,
+          }),
+        });
+
+        if (res.ok) {
+          const created = await res.json();
+          setCouncil((prev) => [...prev, created]);
+          resetCouncilForm();
+        } else {
+          const err = await res.json();
+          alert(err.error || "Failed to add student leader.");
+        }
       }
     } catch {
-      alert("Error adding student leader.");
+      alert("Error saving student leader.");
     } finally {
       setSubmitting(false);
     }
@@ -1595,9 +1707,14 @@ function ERPCouncilTab({ initialCouncil }: { initialCouncil: StudentCouncilLeadI
                     )}
                   </td>
                   <td>
-                    <button className="adm-btn adm-btn-outline" style={{ padding: "4px 8px", color: "#FF8080" }} onClick={() => handleDelete(sc.id || sc.name)}>
-                      <Trash2 size={14} />
-                    </button>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button className="adm-btn adm-btn-outline" style={{ padding: "4px 8px" }} title="Edit Member" onClick={() => handleEditLead(sc)}>
+                        <Edit size={14} />
+                      </button>
+                      <button className="adm-btn adm-btn-outline" style={{ padding: "4px 8px", color: "#FF8080" }} title="Delete Member" onClick={() => handleDelete(sc.id || sc.name)}>
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -1682,9 +1799,14 @@ function ERPCouncilTab({ initialCouncil }: { initialCouncil: StudentCouncilLeadI
                     )}
                   </td>
                   <td>
-                    <button className="adm-btn adm-btn-outline" style={{ padding: "4px 8px", color: "#FF8080" }} onClick={() => handleDelete(sc.id || sc.name)}>
-                      <Trash2 size={14} />
-                    </button>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button className="adm-btn adm-btn-outline" style={{ padding: "4px 8px" }} title="Edit Member" onClick={() => handleEditLead(sc)}>
+                        <Edit size={14} />
+                      </button>
+                      <button className="adm-btn adm-btn-outline" style={{ padding: "4px 8px", color: "#FF8080" }} title="Delete Member" onClick={() => handleDelete(sc.id || sc.name)}>
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -1699,14 +1821,16 @@ function ERPCouncilTab({ initialCouncil }: { initialCouncil: StudentCouncilLeadI
           <div style={{ background: "var(--charcoal-card)", border: "1px solid var(--ciel-gold-border)", borderRadius: "var(--radius-lg)", padding: 28, width: "100%", maxWidth: 480 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ color: "var(--text-white)", fontSize: 18, margin: 0 }}>
-                {modalCategory === "functional" ? "Add Member to Student's Functional Committee" : "Add Member to Student Innovation Council"}
+                {editingLead
+                  ? (modalCategory === "functional" ? "Edit Functional Committee Member" : "Edit Student Council Member")
+                  : (modalCategory === "functional" ? "Add Member to Student's Functional Committee" : "Add Member to Student Innovation Council")}
               </h3>
-              <button style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }} onClick={() => setShowModal(false)}>
+              <button style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }} onClick={resetCouncilForm}>
                 <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleAddLead} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <form onSubmit={handleAddOrEditLead} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
                 <label className="field-label">Target Committee *</label>
                 <input
@@ -1715,6 +1839,30 @@ function ERPCouncilTab({ initialCouncil }: { initialCouncil: StudentCouncilLeadI
                   value={modalCategory === "functional" ? "Student's Functional Committee" : "Student Innovation Council (SIC)"}
                   style={{ opacity: 0.9, background: "rgba(255,255,255,0.05)", cursor: "not-allowed" }}
                 />
+              </div>
+
+              <div>
+                <label className="field-label">Institute / College *</label>
+                <select
+                  className="adm-select"
+                  style={{ width: "100%" }}
+                  value={form.institute}
+                  onChange={(e) => setForm({ ...form, institute: e.target.value })}
+                  required
+                >
+                  <option value="Chetana's Institue of Management and Research">
+                    Chetana&apos;s Institue of Management and Research (CIMR)
+                  </option>
+                  <option value="Chetana's R.K Institute of Management and Research">
+                    Chetana&apos;s R.K Institute of Management and Research (CRKIMR)
+                  </option>
+                  <option value="Chetana's SFC">
+                    Chetana&apos;s SFC (Self-Financing Courses)
+                  </option>
+                  <option value="Chetana's H.S college of commerce and Smt. Kusumtai Chaudhari College of Arts">
+                    Chetana&apos;s H.S college of commerce and Smt. Kusumtai Chaudhari College of Arts
+                  </option>
+                </select>
               </div>
 
               <div>
@@ -1825,9 +1973,9 @@ function ERPCouncilTab({ initialCouncil }: { initialCouncil: StudentCouncilLeadI
               </div>
 
               <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 10 }}>
-                <button type="button" className="adm-btn adm-btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="button" className="adm-btn adm-btn-outline" onClick={resetCouncilForm}>Cancel</button>
                 <button type="submit" className="adm-btn adm-btn-primary" disabled={submitting}>
-                  {submitting ? "Adding..." : "Add Member"}
+                  {submitting ? (editingLead ? "Saving..." : "Adding...") : (editingLead ? "Save Changes" : "Add Member")}
                 </button>
               </div>
             </form>
@@ -1843,49 +1991,108 @@ function ERPGovernanceTab({ initialGovernance }: { initialGovernance: Governance
   const [governance, setGovernance] = useState<GovernanceCommitteeItem[]>(initialGovernance);
   const [showCommitteeModal, setShowCommitteeModal] = useState(false);
   const [showMemberModal, setShowMemberModal] = useState(false);
+  const [editingMember, setEditingMember] = useState<{ committeeName: string; name: string } | null>(null);
+  const [editingCommittee, setEditingCommittee] = useState<string | null>(null);
   const [selectedCommittee, setSelectedCommittee] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const [commForm, setCommForm] = useState({ name: "", description: "" });
   const [memberForm, setMemberForm] = useState({ committeeName: "", name: "", role: "", linkedinUrl: "", avatar: "" });
 
-  async function handleAddCommittee(e: React.FormEvent) {
+  function resetCommForm() {
+    setShowCommitteeModal(false);
+    setEditingCommittee(null);
+    setCommForm({ name: "", description: "" });
+  }
+
+  function resetMemberForm() {
+    setShowMemberModal(false);
+    setEditingMember(null);
+    setMemberForm({ committeeName: "", name: "", role: "", linkedinUrl: "", avatar: "" });
+  }
+
+  function handleEditCommittee(comm: GovernanceCommitteeItem) {
+    setEditingCommittee(comm.name);
+    setCommForm({ name: comm.name, description: comm.description });
+    setShowCommitteeModal(true);
+  }
+
+  function handleEditMember(commName: string, m: { name: string; role: string; avatar?: string; linkedinUrl?: string }) {
+    setEditingMember({ committeeName: commName, name: m.name });
+    setSelectedCommittee(commName);
+    setMemberForm({
+      committeeName: commName,
+      name: m.name,
+      role: m.role,
+      linkedinUrl: m.linkedinUrl || "",
+      avatar: m.avatar || "",
+    });
+    setShowMemberModal(true);
+  }
+
+  async function handleAddOrEditCommittee(e: React.FormEvent) {
     e.preventDefault();
     if (!commForm.name) return;
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/admin/governance", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "add_committee", committeeName: commForm.name, description: commForm.description }),
-      });
-
-      if (res.ok) {
-        const created = await res.json();
-        setGovernance((prev) => {
-          const idx = prev.findIndex((g) => g.name.toLowerCase() === commForm.name.toLowerCase());
-          if (idx >= 0) {
-            const updated = [...prev];
-            updated[idx].description = commForm.description;
-            return updated;
-          }
-          return [...prev, created];
+      if (editingCommittee) {
+        const res = await fetch("/api/admin/governance", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "update_committee",
+            originalCommitteeName: editingCommittee,
+            committeeName: commForm.name,
+            description: commForm.description,
+          }),
         });
-        setShowCommitteeModal(false);
-        setCommForm({ name: "", description: "" });
+
+        if (res.ok) {
+          setGovernance((prev) =>
+            prev.map((g) =>
+              g.name.toLowerCase() === editingCommittee.toLowerCase()
+                ? { ...g, name: commForm.name, description: commForm.description }
+                : g
+            )
+          );
+          resetCommForm();
+        } else {
+          const err = await res.json();
+          alert(err.error || "Failed to update committee.");
+        }
       } else {
-        const err = await res.json();
-        alert(err.error || "Failed to add committee.");
+        const res = await fetch("/api/admin/governance", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "add_committee", committeeName: commForm.name, description: commForm.description }),
+        });
+
+        if (res.ok) {
+          const created = await res.json();
+          setGovernance((prev) => {
+            const idx = prev.findIndex((g) => g.name.toLowerCase() === commForm.name.toLowerCase());
+            if (idx >= 0) {
+              const updated = [...prev];
+              updated[idx].description = commForm.description;
+              return updated;
+            }
+            return [...prev, created];
+          });
+          resetCommForm();
+        } else {
+          const err = await res.json();
+          alert(err.error || "Failed to add committee.");
+        }
       }
     } catch {
-      alert("Error adding committee.");
+      alert("Error saving committee.");
     } finally {
       setSubmitting(false);
     }
   }
 
-  async function handleAddMember(e: React.FormEvent) {
+  async function handleAddOrEditMember(e: React.FormEvent) {
     e.preventDefault();
     const cName = memberForm.committeeName || selectedCommittee || governance[0]?.name;
     if (!cName) {
@@ -1903,39 +2110,81 @@ function ERPGovernanceTab({ initialGovernance }: { initialGovernance: Governance
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/admin/governance", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "add_member",
-          committeeName: cName,
-          memberName: memberForm.name.trim(),
-          role: memberForm.role.trim(),
-          linkedinUrl: memberForm.linkedinUrl?.trim() || "",
-          avatar: memberForm.avatar?.trim() || "",
-        }),
-      });
+      if (editingMember) {
+        const res = await fetch("/api/admin/governance", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "update_member",
+            committeeName: editingMember.committeeName,
+            originalMemberName: editingMember.name,
+            memberName: memberForm.name.trim(),
+            role: memberForm.role.trim(),
+            linkedinUrl: memberForm.linkedinUrl?.trim() || "",
+            avatar: memberForm.avatar?.trim() || "",
+          }),
+        });
 
-      if (res.ok) {
-        setGovernance((prev) =>
-          prev.map((g) => {
-            if (g.name.toLowerCase() === cName.toLowerCase()) {
-              return {
-                ...g,
-                members: [...g.members, { name: memberForm.name.trim(), role: memberForm.role.trim(), linkedinUrl: memberForm.linkedinUrl?.trim() || undefined, avatar: memberForm.avatar?.trim() || undefined }],
-              };
-            }
-            return g;
-          })
-        );
-        setShowMemberModal(false);
-        setMemberForm({ committeeName: "", name: "", role: "", linkedinUrl: "", avatar: "" });
+        if (res.ok) {
+          setGovernance((prev) =>
+            prev.map((g) => {
+              if (g.name.toLowerCase() === editingMember.committeeName.toLowerCase()) {
+                return {
+                  ...g,
+                  members: g.members.map((m) =>
+                    m.name.toLowerCase() === editingMember.name.toLowerCase()
+                      ? {
+                          name: memberForm.name.trim(),
+                          role: memberForm.role.trim(),
+                          linkedinUrl: memberForm.linkedinUrl?.trim() || undefined,
+                          avatar: memberForm.avatar?.trim() || undefined,
+                        }
+                      : m
+                  ),
+                };
+              }
+              return g;
+            })
+          );
+          resetMemberForm();
+        } else {
+          const err = await res.json();
+          alert(err.error || "Failed to update member.");
+        }
       } else {
-        const err = await res.json();
-        alert(err.error || "Failed to add member.");
+        const res = await fetch("/api/admin/governance", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "add_member",
+            committeeName: cName,
+            memberName: memberForm.name.trim(),
+            role: memberForm.role.trim(),
+            linkedinUrl: memberForm.linkedinUrl?.trim() || "",
+            avatar: memberForm.avatar?.trim() || "",
+          }),
+        });
+
+        if (res.ok) {
+          setGovernance((prev) =>
+            prev.map((g) => {
+              if (g.name.toLowerCase() === cName.toLowerCase()) {
+                return {
+                  ...g,
+                  members: [...g.members, { name: memberForm.name.trim(), role: memberForm.role.trim(), linkedinUrl: memberForm.linkedinUrl?.trim() || undefined, avatar: memberForm.avatar?.trim() || undefined }],
+                };
+              }
+              return g;
+            })
+          );
+          resetMemberForm();
+        } else {
+          const err = await res.json();
+          alert(err.error || "Failed to add member.");
+        }
       }
     } catch {
-      alert("Error adding member.");
+      alert("Error saving member.");
     } finally {
       setSubmitting(false);
     }
@@ -2008,6 +2257,14 @@ function ERPGovernanceTab({ initialGovernance }: { initialGovernance: Governance
               <div style={{ display: "flex", gap: 8 }}>
                 <button
                   className="adm-btn adm-btn-outline"
+                  style={{ padding: "4px 8px" }}
+                  title="Edit Committee"
+                  onClick={() => handleEditCommittee(comm)}
+                >
+                  <Edit size={13} />
+                </button>
+                <button
+                  className="adm-btn adm-btn-outline"
                   style={{ padding: "4px 10px", fontSize: 12 }}
                   onClick={() => {
                     setSelectedCommittee(comm.name);
@@ -2055,13 +2312,22 @@ function ERPGovernanceTab({ initialGovernance }: { initialGovernance: Governance
                       <span style={{ fontSize: 12, color: "var(--ciel-gold-bright)" }}>{m.role}</span>
                     </div>
                   </div>
-                  <button
-                    style={{ background: "none", border: "none", color: "#FF8080", cursor: "pointer", padding: 4 }}
-                    onClick={() => handleDeleteMember(comm.name, m.name)}
-                    title="Remove Member"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                    <button
+                      style={{ background: "none", border: "none", color: "var(--ciel-gold-bright)", cursor: "pointer", padding: 4 }}
+                      onClick={() => handleEditMember(comm.name, m)}
+                      title="Edit Member"
+                    >
+                      <Edit size={14} />
+                    </button>
+                    <button
+                      style={{ background: "none", border: "none", color: "#FF8080", cursor: "pointer", padding: 4 }}
+                      onClick={() => handleDeleteMember(comm.name, m.name)}
+                      title="Remove Member"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -2069,18 +2335,20 @@ function ERPGovernanceTab({ initialGovernance }: { initialGovernance: Governance
         ))}
       </div>
 
-      {/* Modal Add Committee */}
+      {/* Modal Add/Edit Committee */}
       {showCommitteeModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: 20 }}>
           <div style={{ background: "var(--charcoal-card)", border: "1px solid var(--ciel-gold-border)", borderRadius: "var(--radius-lg)", padding: 28, width: "100%", maxWidth: 480 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ color: "var(--text-white)", fontSize: 18, margin: 0 }}>Add Governance Committee</h3>
-              <button style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }} onClick={() => setShowCommitteeModal(false)}>
+              <h3 style={{ color: "var(--text-white)", fontSize: 18, margin: 0 }}>
+                {editingCommittee ? "Edit Governance Committee" : "Add Governance Committee"}
+              </h3>
+              <button style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }} onClick={resetCommForm}>
                 <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleAddCommittee} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <form onSubmit={handleAddOrEditCommittee} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
                 <label className="field-label">Committee Name *</label>
                 <input required className="input" placeholder="" value={commForm.name} onChange={(e) => setCommForm({ ...commForm, name: e.target.value })} />
@@ -2092,9 +2360,9 @@ function ERPGovernanceTab({ initialGovernance }: { initialGovernance: Governance
               </div>
 
               <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 10 }}>
-                <button type="button" className="adm-btn adm-btn-outline" onClick={() => setShowCommitteeModal(false)}>Cancel</button>
+                <button type="button" className="adm-btn adm-btn-outline" onClick={resetCommForm}>Cancel</button>
                 <button type="submit" className="adm-btn adm-btn-primary" disabled={submitting}>
-                  {submitting ? "Adding..." : "Add Committee"}
+                  {submitting ? (editingCommittee ? "Saving..." : "Adding...") : (editingCommittee ? "Save Changes" : "Add Committee")}
                 </button>
               </div>
             </form>
@@ -2102,18 +2370,20 @@ function ERPGovernanceTab({ initialGovernance }: { initialGovernance: Governance
         </div>
       )}
 
-      {/* Modal Add Member */}
+      {/* Modal Add/Edit Member */}
       {showMemberModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: 20 }}>
           <div style={{ background: "var(--charcoal-card)", border: "1px solid var(--ciel-gold-border)", borderRadius: "var(--radius-lg)", padding: 28, width: "100%", maxWidth: 480 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ color: "var(--text-white)", fontSize: 18, margin: 0 }}>Add Member to Governance Committee</h3>
-              <button style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }} onClick={() => setShowMemberModal(false)}>
+              <h3 style={{ color: "var(--text-white)", fontSize: 18, margin: 0 }}>
+                {editingMember ? "Edit Member in Committee" : "Add Member to Governance Committee"}
+              </h3>
+              <button style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }} onClick={resetMemberForm}>
                 <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleAddMember} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <form onSubmit={handleAddOrEditMember} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
                 <label className="field-label">Target Committee *</label>
                 <select
@@ -2228,9 +2498,9 @@ function ERPGovernanceTab({ initialGovernance }: { initialGovernance: Governance
               </div>
 
               <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 10 }}>
-                <button type="button" className="adm-btn adm-btn-outline" onClick={() => setShowMemberModal(false)}>Cancel</button>
+                <button type="button" className="adm-btn adm-btn-outline" onClick={resetMemberForm}>Cancel</button>
                 <button type="submit" className="adm-btn adm-btn-primary" disabled={submitting}>
-                  {submitting ? "Adding..." : "Add Member"}
+                  {submitting ? (editingMember ? "Saving..." : "Adding...") : (editingMember ? "Save Changes" : "Add Member")}
                 </button>
               </div>
             </form>
@@ -2502,6 +2772,7 @@ function ERPProjectsTab({ initialProjects = [] }: { initialProjects?: VenturePro
 function ERPEventsTab({ initialEvents = [] }: { initialEvents?: CielEventItem[] }) {
   const [events, setEvents] = useState<CielEventItem[]>(initialEvents);
   const [isAdding, setIsAdding] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<CielEventItem | null>(null);
   const [uploadingPoster, setUploadingPoster] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const posterInputRef = useRef<HTMLInputElement>(null);
@@ -2517,6 +2788,35 @@ function ERPEventsTab({ initialEvents = [] }: { initialEvents?: CielEventItem[] 
     desc: "",
     posterUrl: "",
   });
+
+  function resetEventForm() {
+    setForm({ title: "", category: "Hackathon", date: "", startTime: "", endTime: "", time: "", venue: "", desc: "", posterUrl: "" });
+    setIsAdding(false);
+    setEditingEvent(null);
+  }
+
+  function handleEditClick(ev: CielEventItem) {
+    setEditingEvent(ev);
+    let startTime = "";
+    let endTime = "";
+    if (ev.time && ev.time.includes("-")) {
+      const parts = ev.time.split("-").map((p) => p.trim());
+      startTime = parts[0] || "";
+      endTime = parts[1] || "";
+    }
+    setForm({
+      title: ev.title,
+      category: ev.category || "Hackathon",
+      date: ev.date || "",
+      startTime,
+      endTime,
+      time: ev.time || "",
+      venue: ev.venue || "",
+      desc: ev.desc || "",
+      posterUrl: ev.posterUrl || "",
+    });
+    setIsAdding(true);
+  }
 
   async function handlePosterUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -2540,7 +2840,7 @@ function ERPEventsTab({ initialEvents = [] }: { initialEvents?: CielEventItem[] 
     }
   }
 
-  async function handleAddEvent(e: React.FormEvent) {
+  async function handleAddOrEditEvent(e: React.FormEvent) {
     e.preventDefault();
     if (!form.title || !form.date) {
       alert("Title and Date are required");
@@ -2553,24 +2853,42 @@ function ERPEventsTab({ initialEvents = [] }: { initialEvents?: CielEventItem[] 
         ? (form.endTime ? `${form.startTime} - ${form.endTime}` : form.startTime)
         : form.time;
 
-      const res = await fetch("/api/admin/events", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          time: timeFormatted,
-        }),
-      });
-      const json = await res.json();
-      if (res.ok && json.event) {
-        setEvents((prev) => [json.event, ...prev]);
-        setForm({ title: "", category: "Hackathon", date: "", startTime: "", endTime: "", time: "", venue: "", desc: "", posterUrl: "" });
-        setIsAdding(false);
+      if (editingEvent) {
+        const res = await fetch("/api/admin/events", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: editingEvent.id,
+            ...form,
+            time: timeFormatted,
+          }),
+        });
+        const json = await res.json();
+        if (res.ok && json.event) {
+          setEvents((prev) => prev.map((e) => (e.id === editingEvent.id ? json.event : e)));
+          resetEventForm();
+        } else {
+          alert(json.error || "Failed to update event");
+        }
       } else {
-        alert(json.error || "Failed to add event");
+        const res = await fetch("/api/admin/events", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...form,
+            time: timeFormatted,
+          }),
+        });
+        const json = await res.json();
+        if (res.ok && json.event) {
+          setEvents((prev) => [json.event, ...prev]);
+          resetEventForm();
+        } else {
+          alert(json.error || "Failed to add event");
+        }
       }
     } catch {
-      alert("Error adding event");
+      alert("Error saving event");
     } finally {
       setSubmitting(false);
     }
@@ -2595,15 +2913,23 @@ function ERPEventsTab({ initialEvents = [] }: { initialEvents?: CielEventItem[] 
           <h2>Events &amp; Hackathons Management</h2>
           <p>Configure campus competitions, workshops, and upload optional posters</p>
         </div>
-        <button className="adm-btn adm-btn-primary" onClick={() => setIsAdding(!isAdding)}>
+        <button
+          className="adm-btn adm-btn-primary"
+          onClick={() => {
+            if (isAdding) resetEventForm();
+            else setIsAdding(true);
+          }}
+        >
           <Plus size={16} /> {isAdding ? "Close Form" : "Add New Event"}
         </button>
       </div>
 
       {isAdding && (
         <div className="adm-table-wrap" style={{ padding: 24, marginBottom: 24 }}>
-          <h3 style={{ fontSize: 16, color: "var(--text-white)", marginBottom: 16 }}>Add New Event</h3>
-          <form onSubmit={handleAddEvent} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <h3 style={{ fontSize: 16, color: "var(--text-white)", marginBottom: 16 }}>
+            {editingEvent ? "Edit Event" : "Add New Event"}
+          </h3>
+          <form onSubmit={handleAddOrEditEvent} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
               <div>
                 <label className="field-label">Event Title *</label>
@@ -2769,9 +3095,9 @@ function ERPEventsTab({ initialEvents = [] }: { initialEvents?: CielEventItem[] 
             </div>
 
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-              <button type="button" className="adm-btn adm-btn-outline" onClick={() => setIsAdding(false)}>Cancel</button>
+              <button type="button" className="adm-btn adm-btn-outline" onClick={resetEventForm}>Cancel</button>
               <button type="submit" className="adm-btn adm-btn-primary" disabled={submitting}>
-                {submitting ? "Saving..." : "Publish Event"}
+                {submitting ? "Saving..." : (editingEvent ? "Save Changes" : "Publish Event")}
               </button>
             </div>
           </form>
@@ -2816,9 +3142,14 @@ function ERPEventsTab({ initialEvents = [] }: { initialEvents?: CielEventItem[] 
                   </td>
                   <td>{ev.venue}</td>
                   <td>
-                    <button className="adm-icon-btn text-danger" title="Delete Event" onClick={() => handleDelete(ev.id)}>
-                      <Trash2 size={16} />
-                    </button>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button className="adm-icon-btn" title="Edit Event" onClick={() => handleEditClick(ev)}>
+                        <Edit size={16} />
+                      </button>
+                      <button className="adm-icon-btn text-danger" title="Delete Event" onClick={() => handleDelete(ev.id)}>
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -2837,6 +3168,7 @@ function ERPEventsTab({ initialEvents = [] }: { initialEvents?: CielEventItem[] 
 function ERPDownloadsTab({ initialDownloads = [] }: { initialDownloads?: DownloadItem[] }) {
   const [downloads, setDownloads] = useState<DownloadItem[]>(initialDownloads);
   const [isAdding, setIsAdding] = useState(false);
+  const [editingDoc, setEditingDoc] = useState<DownloadItem | null>(null);
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const docInputRef = useRef<HTMLInputElement>(null);
@@ -2849,6 +3181,25 @@ function ERPDownloadsTab({ initialDownloads = [] }: { initialDownloads?: Downloa
     description: "",
     fileUrl: "",
   });
+
+  function resetDocForm() {
+    setForm({ title: "", category: "policy", format: "PDF", fileSize: "1.5 MB", description: "", fileUrl: "" });
+    setIsAdding(false);
+    setEditingDoc(null);
+  }
+
+  function handleEditClick(doc: DownloadItem) {
+    setEditingDoc(doc);
+    setForm({
+      title: doc.title,
+      category: doc.category || "policy",
+      format: doc.format || "PDF",
+      fileSize: doc.fileSize || "1.5 MB",
+      description: doc.description || "",
+      fileUrl: doc.fileUrl || "",
+    });
+    setIsAdding(true);
+  }
 
   async function handleDocFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -2877,7 +3228,7 @@ function ERPDownloadsTab({ initialDownloads = [] }: { initialDownloads?: Downloa
     }
   }
 
-  async function handleAddDoc(e: React.FormEvent) {
+  async function handleAddOrEditDoc(e: React.FormEvent) {
     e.preventDefault();
     if (!form.title || !form.description) {
       alert("Title and Description are required");
@@ -2886,21 +3237,38 @@ function ERPDownloadsTab({ initialDownloads = [] }: { initialDownloads?: Downloa
     setSubmitting(true);
 
     try {
-      const res = await fetch("/api/admin/downloads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const json = await res.json();
-      if (res.ok && json.download) {
-        setDownloads((prev) => [json.download, ...prev]);
-        setForm({ title: "", category: "policy", format: "PDF", fileSize: "1.5 MB", description: "", fileUrl: "" });
-        setIsAdding(false);
+      if (editingDoc) {
+        const res = await fetch("/api/admin/downloads", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: editingDoc.id,
+            ...form,
+          }),
+        });
+        const json = await res.json();
+        if (res.ok && json.download) {
+          setDownloads((prev) => prev.map((d) => (d.id === editingDoc.id ? json.download : d)));
+          resetDocForm();
+        } else {
+          alert(json.error || "Failed to update document");
+        }
       } else {
-        alert(json.error || "Failed to add document");
+        const res = await fetch("/api/admin/downloads", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+        const json = await res.json();
+        if (res.ok && json.download) {
+          setDownloads((prev) => [json.download, ...prev]);
+          resetDocForm();
+        } else {
+          alert(json.error || "Failed to add document");
+        }
       }
     } catch {
-      alert("Error adding document");
+      alert("Error saving document");
     } finally {
       setSubmitting(false);
     }
@@ -2925,15 +3293,23 @@ function ERPDownloadsTab({ initialDownloads = [] }: { initialDownloads?: Downloa
           <h2>Policy Manuals &amp; Documents Repository</h2>
           <p>Upload and manage institutional policies, IPR handbooks, and pitch templates</p>
         </div>
-        <button className="adm-btn adm-btn-primary" onClick={() => setIsAdding(!isAdding)}>
+        <button
+          className="adm-btn adm-btn-primary"
+          onClick={() => {
+            if (isAdding) resetDocForm();
+            else setIsAdding(true);
+          }}
+        >
           <Plus size={16} /> {isAdding ? "Close Form" : "Upload New Policy Document"}
         </button>
       </div>
 
       {isAdding && (
         <div className="adm-table-wrap" style={{ padding: 24, marginBottom: 24 }}>
-          <h3 style={{ fontSize: 16, color: "var(--text-white)", marginBottom: 16 }}>Upload Policy Manual or Document</h3>
-          <form onSubmit={handleAddDoc} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <h3 style={{ fontSize: 16, color: "var(--text-white)", marginBottom: 16 }}>
+            {editingDoc ? "Edit Policy Manual or Document" : "Upload Policy Manual or Document"}
+          </h3>
+          <form onSubmit={handleAddOrEditDoc} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
               <div>
                 <label className="field-label">Document Title *</label>
@@ -2974,9 +3350,9 @@ function ERPDownloadsTab({ initialDownloads = [] }: { initialDownloads?: Downloa
             </div>
 
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-              <button type="button" className="adm-btn adm-btn-outline" onClick={() => setIsAdding(false)}>Cancel</button>
+              <button type="button" className="adm-btn adm-btn-outline" onClick={resetDocForm}>Cancel</button>
               <button type="submit" className="adm-btn adm-btn-primary" disabled={submitting}>
-                {submitting ? "Saving..." : "Publish Document"}
+                {submitting ? "Saving..." : (editingDoc ? "Save Changes" : "Publish Document")}
               </button>
             </div>
           </form>
@@ -3016,6 +3392,9 @@ function ERPDownloadsTab({ initialDownloads = [] }: { initialDownloads?: Downloa
                           <Download size={16} />
                         </a>
                       ) : null}
+                      <button className="adm-icon-btn" title="Edit Document" onClick={() => handleEditClick(doc)}>
+                        <Edit size={16} />
+                      </button>
                       <button className="adm-icon-btn text-danger" title="Delete Document" onClick={() => handleDelete(doc.id)}>
                         <Trash2 size={16} />
                       </button>

@@ -68,7 +68,7 @@ export function SiteFooter() {
             <ul>
               <li><Link href="/about">Vision &amp; Mission</Link></li>
               <li><Link href="/governance">Governance Structure</Link></li>
-              <li><Link href="/student-council">Student Innovation Council</Link></li>
+              <li><Link href="/student-council">SIC &amp; Student Functional Committee</Link></li>
               <li><Link href="/mentors">Mentors Directory</Link></li>
               <li><Link href="/events">Events &amp; Workshops</Link></li>
             </ul>

@@ -173,6 +173,7 @@ export type StudentCouncilLeadItem = {
   avatar?: string;
   linkedinUrl?: string;
   category?: "council" | "functional";
+  institute?: string;
 };
 
 export type GovernanceMemberItem = {

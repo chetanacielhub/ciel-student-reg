@@ -168,6 +168,42 @@ export async function deleteMentor(id: string): Promise<boolean> {
   return true;
 }
 
+export async function updateMentor(
+  id: string,
+  updates: Partial<Omit<MentorItem, "id">>
+): Promise<MentorItem | null> {
+  const store = await ensureStore();
+  const index = store.mentors.findIndex((m) => m.id === id);
+  if (index === -1) return null;
+
+  const updatedMentor: MentorItem = {
+    ...store.mentors[index],
+    ...updates,
+    id,
+  };
+  store.mentors[index] = updatedMentor;
+  await saveStore(store);
+
+  try {
+    const supabase = createAdminClient();
+    const updatePayload: Record<string, any> = {};
+    if (updates.name !== undefined) updatePayload.name = updates.name;
+    if (updates.designation !== undefined) updatePayload.designation = updates.designation;
+    if (updates.organization !== undefined) updatePayload.organization = updates.organization;
+    if (updates.category !== undefined) updatePayload.category = updates.category;
+    if (updates.expertise !== undefined) updatePayload.expertise = updates.expertise;
+    if (updates.avatar !== undefined) updatePayload.avatar = updates.avatar;
+    if (updates.linkedinUrl !== undefined) updatePayload.linkedin_url = updates.linkedinUrl;
+
+    await supabase.from("mentors").update(updatePayload).eq("id", id);
+  } catch {
+    // Ignore Supabase error if table/columns don't match
+  }
+
+  return updatedMentor;
+}
+
+
 // ─── STUDENT INNOVATION COUNCIL ──────────────────────────────────────────
 
 export async function getStudentCouncilLeads(): Promise<StudentCouncilLeadItem[]> {
@@ -175,10 +211,12 @@ export async function getStudentCouncilLeads(): Promise<StudentCouncilLeadItem[]
   const localCouncil = (store.studentCouncil || []).map((sc) => ({
     ...sc,
     category: (sc.category || "council") as "council" | "functional",
+    institute: sc.institute || undefined,
   }));
   const localFunctional = (store.studentFunctional || []).map((sc) => ({
     ...sc,
     category: "functional" as const,
+    institute: sc.institute || undefined,
   }));
   const itemsMap = new Map<string, StudentCouncilLeadItem>();
 
@@ -194,15 +232,27 @@ export async function getStudentCouncilLeads(): Promise<StudentCouncilLeadItem[]
       data.forEach((sc: any) => {
         const isFunctional = sc.category === "functional" || (typeof sc.role === "string" && sc.role.startsWith("[Functional]"));
         const role = typeof sc.role === "string" ? sc.role.replace(/^\[Functional\]\s*/, "") : sc.role;
+        
+        let institute = sc.institute;
+        let cleanBranch = sc.branch || "";
+        if (!institute && typeof cleanBranch === "string" && cleanBranch.includes("[")) {
+          const m = cleanBranch.match(/\[(.*?)\]/);
+          if (m && m[1]) {
+            institute = m[1];
+            cleanBranch = cleanBranch.replace(/\s*\[.*?\]\s*$/, "");
+          }
+        }
+
         const item: StudentCouncilLeadItem = {
           id: String(sc.id),
           name: sc.name,
           role,
-          branch: sc.branch,
+          branch: cleanBranch,
           year: sc.year,
           avatar: sc.avatar || sc.name.split(" ").map((n: string) => n[0]).join(""),
           linkedinUrl: sc.linkedin_url || sc.linkedinUrl,
           category: (isFunctional ? "functional" : (sc.category || "council")) as "council" | "functional",
+          institute: institute || undefined,
         };
         itemsMap.set(sc.name.toLowerCase().trim(), item);
       });
@@ -222,15 +272,20 @@ export async function addStudentCouncilLead(lead: Omit<StudentCouncilLeadItem, "
     id: generatedId,
     avatar: lead.avatar || lead.name.split(" ").map((n) => n[0]).join(""),
     category: isFunctional ? "functional" : "council",
+    institute: lead.institute || undefined,
   };
 
   try {
     const supabase = createAdminClient();
+    const branchWithInst = newLead.institute
+      ? `${newLead.branch} [${newLead.institute}]`
+      : newLead.branch;
+
     await supabase.from("student_council").insert({
       id: generatedId,
       name: newLead.name,
       role: isFunctional && !newLead.role.startsWith("[Functional]") ? `[Functional] ${newLead.role}` : newLead.role,
-      branch: newLead.branch,
+      branch: branchWithInst,
       year: newLead.year,
       avatar: newLead.avatar,
       linkedin_url: newLead.linkedinUrl,
@@ -270,6 +325,127 @@ export async function deleteStudentCouncilLead(id: string): Promise<boolean> {
   }
   await saveStore(store);
   return true;
+}
+
+export async function updateStudentCouncilLead(
+  id: string,
+  updates: Partial<Omit<StudentCouncilLeadItem, "id">>
+): Promise<StudentCouncilLeadItem | null> {
+  const store = await ensureStore();
+
+  let existing: StudentCouncilLeadItem | undefined;
+  let wasFunctional = false;
+
+  const councilList = store.studentCouncil || [];
+  const councilIdx = councilList.findIndex((sc) => sc.id === id || sc.name === id);
+  if (councilIdx !== -1) {
+    existing = councilList[councilIdx];
+    wasFunctional = false;
+  } else {
+    const funcList = store.studentFunctional || [];
+    const funcIdx = funcList.findIndex((sc) => sc.id === id || sc.name === id);
+    if (funcIdx !== -1) {
+      existing = funcList[funcIdx];
+      wasFunctional = true;
+    }
+  }
+
+  if (!existing) {
+    // If not found in file store yet, get leads and try to synthesize
+    const leads = await getStudentCouncilLeads();
+    existing = leads.find((l) => l.id === id || l.name.toLowerCase() === id.toLowerCase());
+    if (!existing) return null;
+    wasFunctional = existing.category === "functional";
+  }
+
+  const targetCategory = updates.category || (wasFunctional ? "functional" : "council");
+
+  const updatedLead: StudentCouncilLeadItem = {
+    ...existing,
+    ...updates,
+    id: existing.id || id,
+    category: targetCategory,
+  };
+
+  // Remove from both local arrays
+  if (store.studentCouncil) {
+    store.studentCouncil = store.studentCouncil.filter((sc) => sc.id !== id && sc.name !== existing!.name);
+  }
+  if (store.studentFunctional) {
+    store.studentFunctional = store.studentFunctional.filter((sc) => sc.id !== id && sc.name !== existing!.name);
+  }
+
+  // Insert into targeted category array
+  if (targetCategory === "functional") {
+    if (!store.studentFunctional) store.studentFunctional = [];
+    store.studentFunctional.push(updatedLead);
+  } else {
+    if (!store.studentCouncil) store.studentCouncil = [];
+    store.studentCouncil.push(updatedLead);
+  }
+
+  await saveStore(store);
+
+  try {
+    const supabase = createAdminClient();
+    const branchWithInst = updatedLead.institute
+      ? `${updatedLead.branch} [${updatedLead.institute}]`
+      : updatedLead.branch;
+    const isFunc = updatedLead.category === "functional";
+    const roleFormatted = isFunc && !updatedLead.role.startsWith("[Functional]")
+      ? `[Functional] ${updatedLead.role}`
+      : updatedLead.role;
+
+    await supabase
+      .from("student_council")
+      .update({
+        name: updatedLead.name,
+        role: roleFormatted,
+        branch: branchWithInst,
+        year: updatedLead.year,
+        avatar: updatedLead.avatar,
+        linkedin_url: updatedLead.linkedinUrl,
+      })
+      .or(`id.eq.${id},name.eq.${id}`);
+  } catch (err) {
+    console.error("Supabase update student council error:", err);
+  }
+
+  return updatedLead;
+}
+
+
+export async function getInstitutesCouncilData() {
+  const { INSTITUTES_DATA, normalizeInstituteName } = await import("@/data/institutes-council-data");
+  const allLeads = await getStudentCouncilLeads();
+
+  return INSTITUTES_DATA.map((inst) => {
+    // Filter dynamic leads that belong to this institute
+    const matchedLeads = allLeads.filter((lead) => {
+      if (lead.institute) {
+        return normalizeInstituteName(lead.institute) === inst.name;
+      }
+      return false;
+    });
+
+    const dynamicSic = matchedLeads.filter((l) => l.category !== "functional");
+    const dynamicFunctional = matchedLeads.filter((l) => l.category === "functional");
+
+    // Merge default and dynamic leads with uniqueness by name
+    const sicMap = new Map<string, StudentCouncilLeadItem>();
+    inst.defaultSicLeads.forEach((l) => sicMap.set(l.name.toLowerCase().trim(), l));
+    dynamicSic.forEach((l) => sicMap.set(l.name.toLowerCase().trim(), l));
+
+    const funcMap = new Map<string, StudentCouncilLeadItem>();
+    inst.defaultFunctionalLeads.forEach((l) => funcMap.set(l.name.toLowerCase().trim(), l));
+    dynamicFunctional.forEach((l) => funcMap.set(l.name.toLowerCase().trim(), l));
+
+    return {
+      ...inst,
+      sicLeads: Array.from(sicMap.values()),
+      functionalLeads: Array.from(funcMap.values()),
+    };
+  });
 }
 
 // ─── GOVERNANCE ───────────────────────────────────────────────────────────
@@ -506,6 +682,119 @@ export async function deleteGovernanceCommittee(committeeName: string): Promise<
   await saveStore(store);
   return true;
 }
+
+export async function updateGovernanceMember(
+  committeeName: string,
+  originalMemberName: string,
+  updates: {
+    name?: string;
+    role?: string;
+    avatar?: string;
+    linkedinUrl?: string;
+    newCommitteeName?: string;
+  }
+): Promise<boolean> {
+  const store = await ensureStore();
+  const comm = store.governance.find((g) => g.name.toLowerCase() === committeeName.toLowerCase());
+  if (!comm) return false;
+
+  const memberIdx = comm.members.findIndex((m) => m.name.toLowerCase() === originalMemberName.toLowerCase());
+  if (memberIdx === -1) return false;
+
+  const existingMember = comm.members[memberIdx];
+  const updatedMember = {
+    ...existingMember,
+    name: updates.name !== undefined ? updates.name : existingMember.name,
+    role: updates.role !== undefined ? updates.role : existingMember.role,
+    avatar: updates.avatar !== undefined ? updates.avatar : existingMember.avatar,
+    linkedinUrl: updates.linkedinUrl !== undefined ? updates.linkedinUrl : existingMember.linkedinUrl,
+  };
+
+  const targetCommName = updates.newCommitteeName || committeeName;
+  if (targetCommName.toLowerCase() !== committeeName.toLowerCase()) {
+    comm.members.splice(memberIdx, 1);
+    const targetComm = store.governance.find((g) => g.name.toLowerCase() === targetCommName.toLowerCase());
+    if (targetComm) {
+      targetComm.members.push(updatedMember);
+    } else {
+      store.governance.push({
+        name: targetCommName,
+        description: "CIEL Standing Governance Committee",
+        members: [updatedMember],
+      });
+    }
+  } else {
+    comm.members[memberIdx] = updatedMember;
+  }
+
+  await saveStore(store);
+
+  try {
+    const supabase = createAdminClient();
+    const { data: comms } = await supabase.from("governance_committees").select("id").eq("name", committeeName).maybeSingle();
+    let targetCommId = comms?.id;
+    if (targetCommName.toLowerCase() !== committeeName.toLowerCase()) {
+      const { data: targetC } = await supabase.from("governance_committees").select("id").eq("name", targetCommName).maybeSingle();
+      if (targetC?.id) targetCommId = targetC.id;
+    }
+
+    if (comms?.id) {
+      await supabase
+        .from("governance_members")
+        .update({
+          committee_id: targetCommId,
+          name: updatedMember.name,
+          role: updatedMember.role,
+          avatar: updatedMember.avatar || null,
+          linkedin_url: updatedMember.linkedinUrl || null,
+        })
+        .eq("committee_id", comms.id)
+        .eq("name", originalMemberName);
+    } else {
+      await supabase
+        .from("governance_members")
+        .update({
+          name: updatedMember.name,
+          role: updatedMember.role,
+          avatar: updatedMember.avatar || null,
+          linkedin_url: updatedMember.linkedinUrl || null,
+        })
+        .eq("name", originalMemberName);
+    }
+  } catch {
+    // Ignore
+  }
+
+  return true;
+}
+
+export async function updateGovernanceCommittee(
+  originalName: string,
+  updates: { name?: string; description?: string }
+): Promise<boolean> {
+  const store = await ensureStore();
+  const comm = store.governance.find((g) => g.name.toLowerCase() === originalName.toLowerCase());
+  if (!comm) return false;
+
+  if (updates.name) comm.name = updates.name;
+  if (updates.description !== undefined) comm.description = updates.description;
+
+  await saveStore(store);
+
+  try {
+    const supabase = createAdminClient();
+    const payload: Record<string, any> = {};
+    if (updates.name) payload.name = updates.name;
+    if (updates.description !== undefined) payload.description = updates.description;
+
+    await supabase.from("governance_committees").update(payload).eq("name", originalName);
+  } catch {
+    // Ignore
+  }
+
+  return true;
+}
+
 
 
 // ─── VENTURE PROJECTS & INNOVATION JOURNEY ───────────────────────────────
@@ -1006,6 +1295,25 @@ export async function deleteCielEvent(id: string): Promise<boolean> {
   return true;
 }
 
+export async function updateCielEvent(
+  id: string,
+  updates: Partial<Omit<CielEventItem, "id">>
+): Promise<CielEventItem | null> {
+  const store = await ensureStore();
+  if (!store.events) store.events = [];
+  const index = store.events.findIndex((e) => e.id === id);
+  if (index === -1) return null;
+
+  const updated: CielEventItem = {
+    ...store.events[index],
+    ...updates,
+    id,
+  };
+  store.events[index] = updated;
+  await saveStore(store);
+  return updated;
+}
+
 // ─── NEWS & ANNOUNCEMENTS MANAGEMENT ─────────────────────────────────────
 
 export async function getNewsItems(): Promise<NewsItem[]> {
@@ -1059,6 +1367,25 @@ export async function deleteNewsItem(id: string): Promise<boolean> {
   return true;
 }
 
+export async function updateNewsItem(
+  id: string,
+  updates: Partial<Omit<NewsItem, "id">>
+): Promise<NewsItem | null> {
+  const store = await ensureStore();
+  if (!store.news) return null;
+  const index = store.news.findIndex((n) => n.id === id);
+  if (index === -1) return null;
+
+  const updated: NewsItem = {
+    ...store.news[index],
+    ...updates,
+    id,
+  };
+  store.news[index] = updated;
+  await saveStore(store);
+  return updated;
+}
+
 // ─── POLICY MANUALS & DOCUMENTS MANAGEMENT ────────────────────────────────
 
 export async function getDownloadDocs(): Promise<DownloadItem[]> {
@@ -1087,6 +1414,27 @@ export async function deleteDownloadDoc(id: string): Promise<boolean> {
   }
   return true;
 }
+
+export async function updateDownloadDoc(
+  id: string,
+  updates: Partial<Omit<DownloadItem, "id">>
+): Promise<DownloadItem | null> {
+  const store = await ensureStore();
+  if (!store.downloads || store.downloads.length === 0) store.downloads = [...CIEL_DOWNLOADS];
+  const index = store.downloads.findIndex((d) => d.id === id);
+  if (index === -1) return null;
+
+  const updated: DownloadItem = {
+    ...store.downloads[index],
+    ...updates,
+    updatedAt: new Date().toISOString().split("T")[0],
+    id,
+  };
+  store.downloads[index] = updated;
+  await saveStore(store);
+  return updated;
+}
+
 
 // ─── GOOGLE FORMS MANAGEMENT ────────────────────────────────────────────────
 
