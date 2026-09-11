@@ -9,6 +9,8 @@ export async function POST(req: NextRequest) {
   const creds = getAdminCredentials();
 
   if (
+    !creds.password ||
+    !password ||
     username.trim().toLowerCase() !== creds.username.trim().toLowerCase() ||
     password !== creds.password
   ) {

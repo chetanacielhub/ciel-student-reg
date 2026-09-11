@@ -23,36 +23,39 @@ const SECRET_KEY =
 
 /** Get configured authorized accounts from server environment */
 export function getAuthorizedEmpUsers(): (EmpUser & { password: string })[] {
-  return [
+  const users: (EmpUser & { password: string })[] = [
     {
       id: "emp-1",
-      email: (process.env.EMPLOYEE_1_EMAIL || "samad@ciel.org").trim().toLowerCase(),
-      password: process.env.EMPLOYEE_1_PASSWORD || "Samad@2026",
-      name: process.env.EMPLOYEE_1_NAME || "Samad",
+      email: (process.env.EMPLOYEE_1_EMAIL || "").trim().toLowerCase(),
+      password: process.env.EMPLOYEE_1_PASSWORD || "",
+      name: process.env.EMPLOYEE_1_NAME || "Employee 1",
       role: "employee",
     },
     {
       id: "emp-2",
-      email: (process.env.EMPLOYEE_2_EMAIL || "vishnu@ciel.org").trim().toLowerCase(),
-      password: process.env.EMPLOYEE_2_PASSWORD || "Vishnu@2026",
-      name: process.env.EMPLOYEE_2_NAME || "Vishnu",
+      email: (process.env.EMPLOYEE_2_EMAIL || "").trim().toLowerCase(),
+      password: process.env.EMPLOYEE_2_PASSWORD || "",
+      name: process.env.EMPLOYEE_2_NAME || "Employee 2",
       role: "employee",
     },
     {
       id: "emp-3",
-      email: (process.env.EMPLOYEE_3_EMAIL || "noor@ciel.org").trim().toLowerCase(),
-      password: process.env.EMPLOYEE_3_PASSWORD || "Noor@2026",
-      name: process.env.EMPLOYEE_3_NAME || "Noor",
+      email: (process.env.EMPLOYEE_3_EMAIL || "").trim().toLowerCase(),
+      password: process.env.EMPLOYEE_3_PASSWORD || "",
+      name: process.env.EMPLOYEE_3_NAME || "Employee 3",
       role: "employee",
     },
     {
       id: "emp-admin",
-      email: (process.env.EMPLOYEE_ADMIN_EMAIL || "dhiraj@ciel.org").trim().toLowerCase(),
-      password: process.env.EMPLOYEE_ADMIN_PASSWORD || "Dhiraj@2026",
-      name: process.env.EMPLOYEE_ADMIN_NAME || "Dhiraj",
+      email: (process.env.EMPLOYEE_ADMIN_EMAIL || "").trim().toLowerCase(),
+      password: process.env.EMPLOYEE_ADMIN_PASSWORD || "",
+      name: process.env.EMPLOYEE_ADMIN_NAME || "Employee Admin",
       role: "admin",
     },
   ];
+
+  // Return only configured accounts that have both an email and password specified
+  return users.filter((u) => u.email.length > 0 && u.password.length > 0);
 }
 
 /** Generate a signed session token for an employee user */
@@ -151,7 +154,7 @@ export function authenticateEmpCredentials(
       u.name.toLowerCase() === inputClean
   );
 
-  if (!matched) return null;
+  if (!matched || !matched.password || !passwordInput) return null;
 
   // Verify password using timing safe comparison
   const passBuf = Buffer.from(passwordInput);

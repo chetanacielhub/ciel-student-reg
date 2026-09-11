@@ -5,11 +5,11 @@ import { NextResponse } from "next/server";
 const COOKIE_NAME = "ciel_admin_session";
 const SESSION_TOKEN = "authenticated"; // simple flag
 
-/** Credentials come from env, with safe defaults */
+/** Credentials come from env */
 export function getAdminCredentials() {
   return {
-    username: process.env.ADMIN_USERNAME ?? "admin",
-    password: process.env.ADMIN_PASSWORD ?? "ciel@2026",
+    username: process.env.ADMIN_USERNAME || "admin",
+    password: process.env.ADMIN_PASSWORD || "",
   };
 }
 
