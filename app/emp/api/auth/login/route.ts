@@ -47,13 +47,13 @@ export async function POST(req: NextRequest) {
       redirectUrl,
     });
 
-    // Set secure HTTP-only session cookie
+    // Set secure HTTP-only session cookie — persistent until manual logout
     response.cookies.set(COOKIE_NAME, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 12, // 12 hours
+      maxAge: 60 * 60 * 24 * 365, // 1 year — persists across browser restarts
     });
 
     return response;

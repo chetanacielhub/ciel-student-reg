@@ -60,7 +60,7 @@ export function getAuthorizedEmpUsers(): (EmpUser & { password: string })[] {
 
 /** Generate a signed session token for an employee user */
 export function createSessionToken(user: EmpUser): string {
-  const expiresAt = Date.now() + 1000 * 60 * 60 * 12; // 12 hours session
+  const expiresAt = Date.now() + 1000 * 60 * 60 * 24 * 365; // 1 year — stays logged in until manual logout
   const payload: EmpSessionData = {
     id: user.id,
     email: user.email,
