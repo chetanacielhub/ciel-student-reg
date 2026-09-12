@@ -6,6 +6,7 @@ const playfair = Playfair_Display({
   subsets: ["latin"],
   variable: "--font-serif",
   display: "swap",
+  preload: false, // Not used on all routes — suppress global preload warnings
 });
 
 const inter = Inter({
@@ -19,6 +20,7 @@ const cormorant = Cormorant_Garamond({
   weight: ["400", "500", "600", "700"],
   variable: "--font-cormorant",
   display: "swap",
+  preload: false, // Not used on all routes — suppress global preload warnings
 });
 
 export const metadata: Metadata = {
