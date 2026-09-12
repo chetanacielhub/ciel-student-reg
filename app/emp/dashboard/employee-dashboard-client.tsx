@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { EmpSessionData } from "@/lib/emp-auth";
 import { EmpThemeToggle } from "../emp-theme-toggle";
 import { Logo } from "@/components/ui/logo";
+import { EmpInstallButton } from "@/components/ui/emp-install-prompt";
 import {
   AttendanceRecord,
   TaskRecord,
@@ -493,6 +494,7 @@ ${monthlyReportForm.support_needed || "None requested"}`;
               </span>
             </div>
           </div>
+          <EmpInstallButton />
           <EmpThemeToggle />
           <button onClick={handleLogout} className="emp-topbar-logout" title="Sign out">
             <LogOut size={16} />

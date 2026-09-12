@@ -2209,6 +2209,46 @@
 
 /* ─── PWA INSTALL PROMPT ─────────────────────────────────────────────────── */
 
+/* ── Topbar "Add to Home Screen" button ─────────────────────────────────── */
+.emp-install-topbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #f59e0b;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  font-family: var(--emp-font);
+  letter-spacing: 0.01em;
+}
+.emp-install-topbar-btn:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: rgba(245, 158, 11, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.2);
+}
+.emp-install-topbar-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+.emp-install-topbar-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+/* Hide the text label on very small screens, keep only icon */
+.emp-install-btn-label {
+  display: inline;
+}
+@media (max-width: 640px) {
+  .emp-install-btn-label { display: none; }
+  .emp-install-topbar-btn { padding: 7px 9px; }
+}
+
 /* Slide-up banner at bottom of screen */
 @keyframes emp-pwa-slide-up {
   from { opacity: 0; transform: translateY(100%); }

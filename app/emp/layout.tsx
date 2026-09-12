@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import "./emp.css";
-import { EmpInstallPrompt } from "@/components/ui/emp-install-prompt";
 
 export default function EmpLayout({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
@@ -30,9 +29,6 @@ export default function EmpLayout({ children }: { children: React.ReactNode }) {
 
       <div className="emp-portal" data-theme={theme}>
         {children}
-
-        {/* Add to Home Screen prompt */}
-        <EmpInstallPrompt />
       </div>
     </>
   );

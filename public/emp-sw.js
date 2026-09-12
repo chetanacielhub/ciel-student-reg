@@ -1,5 +1,5 @@
-// CIEL Employee Portal — Service Worker v1.0
-const CACHE_NAME = "ciel-emp-v1";
+// CIEL Employee Portal — Service Worker v2.0
+const CACHE_NAME = "ciel-emp-v2";
 
 // App shell pages to pre-cache on install
 const PRECACHE_URLS = [
@@ -37,7 +37,7 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// ── Fetch: network-first for API, cache-first for assets ─────────────────────
+// ── Fetch: smart strategy by request type ────────────────────────────────
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -45,12 +45,28 @@ self.addEventListener("fetch", (event) => {
   // Skip non-GET and cross-origin requests
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
 
+  // HTML navigation requests (page loads) → always network-first
+  // This ensures normal Refresh (F5) always gets fresh HTML from the server
+  if (request.mode === "navigate" || request.headers.get("accept")?.includes("text/html")) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request)) // Offline fallback only
+    );
+    return;
+  }
+
   // API routes → network-first, fallback to cache
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/emp/api/")) {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // Don't cache error responses
           if (!response || response.status !== 200) return response;
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
@@ -61,7 +77,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Everything else → cache-first, fallback to network
+  // Static assets (JS, CSS, images, fonts) → cache-first for performance
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
