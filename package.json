@@ -7,9 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "ingest:knowledge": "tsx scripts/ingest-knowledge.ts"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@supabase/ssr": "0.12.3",
     "@supabase/supabase-js": "2.110.7",
     "framer-motion": "^12.43.0",
