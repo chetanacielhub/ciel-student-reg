@@ -50,12 +50,12 @@
   --radius-xl: 28px;
 
   /* Typography Variables */
-  --font-serif-family: var(--font-serif), "Playfair Display", Georgia, serif;
-  --font-sans-family: var(--font-sans), "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-cormorant-family: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  --font-sans-family: var(--font-sans), "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif-family: var(--font-sans-family);
+  --font-cormorant-family: var(--font-sans-family);
 }
 
-* {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -70,11 +70,82 @@ html {
   scroll-margin-top: 115px;
 }
 
+/* ==========================================================================
+   CIEL SIGNATURE THEMED SCROLLBAR
+   ========================================================================== */
+
+/* Standard CSS (Firefox / modern browsers) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 175, 55, 0.45) #08090D;
+}
+
+body.light-theme,
+body.light-theme *,
+[data-theme="light"],
+[data-theme="light"] * {
+  scrollbar-color: rgba(184, 134, 11, 0.45) #F1F5F9;
+}
+
+/* WebKit / Chromium (Chrome, Edge, Safari, Brave) */
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+::-webkit-scrollbar-track {
+  background: #08090D;
+}
+
+body.light-theme ::-webkit-scrollbar-track,
+[data-theme="light"] ::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #D4AF37 0%, #A17412 100%);
+  border-radius: 999px;
+  border: 2px solid #08090D;
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #F5D77F 0%, #D4AF37 100%);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #FFF4B8;
+}
+
+body.light-theme ::-webkit-scrollbar-thumb,
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #C29023 0%, #996515 100%);
+  border-color: #F1F5F9;
+}
+
+body.light-theme ::-webkit-scrollbar-thumb:hover,
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #D4AF37 0%, #B8860B 100%);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+body,
+button,
+input,
+select,
+textarea,
+optgroup {
+  font-family: var(--font-sans-family);
+}
+
 body {
   min-height: 100vh;
   color: var(--text-primary);
   background-color: #08090D;
-  font-family: var(--font-sans-family);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
@@ -525,8 +596,10 @@ h1,
 h2,
 h3,
 h4,
+h5,
+h6,
 .font-serif {
-  font-family: var(--font-serif-family);
+  font-family: var(--font-sans-family);
   letter-spacing: -0.02em;
   font-weight: 700;
   color: var(--text-white);
@@ -1186,6 +1259,124 @@ body.light-theme .event-meta-row,
 .card-list li svg {
   color: var(--ciel-gold);
   flex-shrink: 0;
+}
+
+/* ==========================================================================
+   VISION & MISSION EQUAL-HEIGHT BALANCED CARDS
+   ========================================================================== */
+
+.vision-mission-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 32px;
+  align-items: stretch;
+}
+
+.vision-mission-col {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.vision-mission-card {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  justify-content: flex-start;
+  padding: 40px 36px !important;
+  border: 1px solid var(--ciel-gold-border);
+  border-radius: var(--radius-md);
+  background: linear-gradient(160deg, #151822 0%, #0E1017 100%);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.light-theme .vision-mission-card,
+[data-theme="light"] .vision-mission-card {
+  background: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.06), 0 0 15px rgba(184, 134, 11, 0.06) !important;
+}
+
+.vision-mission-card:hover {
+  border-color: var(--ciel-gold-bright);
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+}
+
+.vision-mission-card .card-icon-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid var(--ciel-gold-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ciel-gold-bright);
+  margin-bottom: 22px;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.vision-mission-card:hover .card-icon-wrap {
+  background: var(--ciel-gold);
+  color: #000000;
+  box-shadow: 0 0 24px rgba(212, 175, 55, 0.45);
+}
+
+.vision-mission-card h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 14px 0;
+  color: var(--text-white);
+  line-height: 1.3;
+}
+
+body.light-theme .vision-mission-card h3,
+[data-theme="light"] .vision-mission-card h3 {
+  color: #0F172A !important;
+}
+
+.vision-mission-card p {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--text-secondary);
+  margin: 0 0 24px 0;
+  flex: 1 1 auto;
+}
+
+body.light-theme .vision-mission-card p,
+[data-theme="light"] .vision-mission-card p {
+  color: #475569 !important;
+}
+
+.vision-mission-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ciel-gold-bright);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+body.light-theme .vision-mission-tag,
+[data-theme="light"] .vision-mission-tag {
+  border-top-color: #F1F5F9 !important;
+}
+
+@media (max-width: 768px) {
+  .vision-mission-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
 }
 
 /* Timeline Component */
