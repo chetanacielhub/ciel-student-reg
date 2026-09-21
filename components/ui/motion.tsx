@@ -11,15 +11,19 @@ interface MotionProps extends HTMLMotionProps<"div"> {
   style?: React.CSSProperties;
 }
 
-export function FadeIn({ children, delay = 0, duration = 0.5, className = "", style, ...props }: MotionProps) {
+export function FadeIn({ children, delay = 0, duration = 0.45, className = "", style, ...props }: MotionProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
+      viewport={{ once: true, margin: "0px 0px 80px 0px" }}
       transition={{ duration, delay, ease: [0.16, 1, 0.3, 1] }}
-      className={className}
-      style={style}
+      className={`ciel-motion-fade ${className}`.trim()}
+      style={{
+        WebkitBackfaceVisibility: "hidden",
+        backfaceVisibility: "hidden",
+        ...style,
+      }}
       {...props}
     >
       {children}
@@ -27,15 +31,19 @@ export function FadeIn({ children, delay = 0, duration = 0.5, className = "", st
   );
 }
 
-export function ScaleIn({ children, delay = 0, duration = 0.5, className = "", style, ...props }: MotionProps) {
+export function ScaleIn({ children, delay = 0, duration = 0.45, className = "", style, ...props }: MotionProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.94 }}
+      initial={{ opacity: 0, scale: 0.96 }}
       whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ once: true }}
+      viewport={{ once: true, margin: "0px 0px 80px 0px" }}
       transition={{ duration, delay, ease: [0.16, 1, 0.3, 1] }}
-      className={className}
-      style={style}
+      className={`ciel-motion-scale ${className}`.trim()}
+      style={{
+        WebkitBackfaceVisibility: "hidden",
+        backfaceVisibility: "hidden",
+        ...style,
+      }}
       {...props}
     >
       {children}
@@ -48,18 +56,22 @@ export function StaggerContainer({ children, className = "", style, ...props }: 
     <motion.div
       initial="hidden"
       whileInView="show"
-      viewport={{ once: true, margin: "-50px" }}
+      viewport={{ once: true, margin: "0px 0px 80px 0px" }}
       variants={{
         hidden: { opacity: 0 },
         show: {
           opacity: 1,
           transition: {
-            staggerChildren: 0.12,
+            staggerChildren: 0.08,
           },
         },
       }}
-      className={className}
-      style={style}
+      className={`ciel-motion-stagger ${className}`.trim()}
+      style={{
+        WebkitBackfaceVisibility: "hidden",
+        backfaceVisibility: "hidden",
+        ...style,
+      }}
       {...props}
     >
       {children}
@@ -71,11 +83,15 @@ export function StaggerItem({ children, className = "", style, ...props }: Motio
   return (
     <motion.div
       variants={{
-        hidden: { opacity: 0, y: 20 },
-        show: { opacity: 1, y: 0, transition: { ease: [0.16, 1, 0.3, 1], duration: 0.5 } },
+        hidden: { opacity: 0, y: 14 },
+        show: { opacity: 1, y: 0, transition: { ease: [0.16, 1, 0.3, 1], duration: 0.45 } },
       }}
-      className={className}
-      style={style}
+      className={`ciel-motion-item ${className}`.trim()}
+      style={{
+        WebkitBackfaceVisibility: "hidden",
+        backfaceVisibility: "hidden",
+        ...style,
+      }}
       {...props}
     >
       {children}
@@ -96,7 +112,7 @@ export function CounterAnimation({
   className = "",
 }: CounterAnimationProps) {
   const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: true, margin: "-20px" });
+  const isInView = useInView(ref, { once: true, margin: "0px" });
   const strVal = String(value);
   const isInfinity = strVal.includes("∞");
 
@@ -222,7 +238,7 @@ export function FloatingOrbs() {
   ] as const;
 
   return (
-    <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 0 }}>
+    <div className="hero-floating-orbs-wrap" style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 0 }}>
       {orbs.map((orb, i) => (
         <motion.div
           key={i}
@@ -251,9 +267,16 @@ export function ScrollProgressBar() {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
+    let ticking = false;
     const onScroll = () => {
-      const total = document.documentElement.scrollHeight - window.innerHeight;
-      setProgress(total > 0 ? (window.scrollY / total) * 100 : 0);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const total = document.documentElement.scrollHeight - window.innerHeight;
+          setProgress(total > 0 ? (window.scrollY / total) * 100 : 0);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -375,6 +398,7 @@ export function MorphingBlob({
 }) {
   return (
     <motion.div
+      className="hero-morph-blob"
       animate={{
         borderRadius: [
           "62% 38% 46% 54% / 60% 44% 56% 40%",

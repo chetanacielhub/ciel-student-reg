@@ -9637,5 +9637,44 @@ body.light-theme .portrait-role,
   justify-content: center;
 }
 
+/* ==========================================================================
+   MOBILE & TOUCH FLICKER PREVENTION FOR SCROLL SECTIONS
+   Eliminates Framer Motion opacity: 0 popping, jitter, and flicker during scroll
+   ========================================================================== */
+@media (max-width: 768px), (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .ciel-motion-fade,
+  .ciel-motion-scale,
+  .ciel-motion-stagger,
+  .ciel-motion-item,
+  [data-motion-fade],
+  [data-motion-scale],
+  [data-motion-stagger],
+  [data-motion-item] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+    will-change: auto !important;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+
+  /* Free up mobile GPU memory from heavy continuous blur animations during scroll */
+  .hero-floating-orbs-wrap,
+  .hero-morph-blob {
+    display: none !important;
+  }
+}
+
+/* Hardware acceleration stability for desktop motion reveals */
+.ciel-motion-fade,
+.ciel-motion-scale,
+.ciel-motion-stagger,
+.ciel-motion-item {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+
 
 
