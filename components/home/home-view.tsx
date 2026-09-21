@@ -303,9 +303,9 @@ export function HomeView({ event, pitches: initialPitches = [] }: HomeViewProps)
           </div>
         </FadeIn>
 
-        <div className="grid-2">
-          <ScaleIn delay={0.1}>
-            <article className="luxury-card">
+        <div className="grid-2 vision-mission-grid">
+          <ScaleIn delay={0.1} className="vision-mission-col">
+            <article className="luxury-card vision-mission-card">
               <div className="card-icon-wrap">
                 <Compass size={28} />
               </div>
@@ -313,11 +313,14 @@ export function HomeView({ event, pitches: initialPitches = [] }: HomeViewProps)
               <p>
                 To be a premier hub for nurturing an innovative mindset and entrepreneurial talents to produce significant, long-term solutions to global challenges.
               </p>
+              <div className="vision-mission-tag">
+                <Sparkles size={14} /> Strategic Outlook
+              </div>
             </article>
           </ScaleIn>
 
-          <ScaleIn delay={0.25}>
-            <article className="luxury-card">
+          <ScaleIn delay={0.25} className="vision-mission-col">
+            <article className="luxury-card vision-mission-card">
               <div className="card-icon-wrap">
                 <Target size={28} />
               </div>
@@ -325,6 +328,9 @@ export function HomeView({ event, pitches: initialPitches = [] }: HomeViewProps)
               <p>
                 Cultivating an ecosystem that allows individuals to translate ideas into significant initiatives through experiential learning, interdisciplinary collaboration, and strategic partnerships to generate long-term economic and social growth.
               </p>
+              <div className="vision-mission-tag">
+                <Rocket size={14} /> Institutional Engine
+              </div>
             </article>
           </ScaleIn>
         </div>

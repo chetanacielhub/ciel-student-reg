@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Compass, Eye, Layers, Presentation, Shield, Target, Tv, Users, Award, GraduationCap } from "lucide-react";
+import { Compass, Eye, Layers, Presentation, Shield, Target, Tv, Users, Award, GraduationCap, Sparkles, Rocket } from "lucide-react";
 import { getGovernanceCommittees, getStudentCouncilLeads } from "@/lib/dynamic-store";
 import { LinkedInIcon } from "@/components/ui/linkedin-icon";
 
@@ -39,8 +39,8 @@ export default async function AboutPage() {
       </div>
 
       {/* Vision & Mission Grid */}
-      <div id="vision-mission" className="grid-2" style={{ gap: 36, marginBottom: 72 }}>
-        <article className="luxury-card">
+      <div id="vision-mission" className="grid-2 vision-mission-grid" style={{ marginBottom: 72 }}>
+        <article className="luxury-card vision-mission-card">
           <div className="card-icon-wrap">
             <Eye size={28} />
           </div>
@@ -48,9 +48,12 @@ export default async function AboutPage() {
           <p>
             To be a premier hub for nurturing an innovative mindset and entrepreneurial talents to produce significant, long-term solutions to global challenges.
           </p>
+          <div className="vision-mission-tag">
+            <Sparkles size={14} /> Strategic Outlook
+          </div>
         </article>
 
-        <article className="luxury-card">
+        <article className="luxury-card vision-mission-card">
           <div className="card-icon-wrap">
             <Target size={28} />
           </div>
@@ -58,6 +61,9 @@ export default async function AboutPage() {
           <p>
             Cultivating an ecosystem that allows individuals to translate ideas into significant initiatives through experiential learning, interdisciplinary collaboration, and strategic partnerships to generate long-term economic and social growth.
           </p>
+          <div className="vision-mission-tag">
+            <Rocket size={14} /> Institutional Engine
+          </div>
         </article>
       </div>
 

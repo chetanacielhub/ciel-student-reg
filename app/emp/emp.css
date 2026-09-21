@@ -2,7 +2,7 @@
  * CIEL Employee Portal — Professional Design System v3.0
  * ============================================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 /* ─── CSS VARIABLES ──────────────────────────────────────────────────────── */
 :root {
@@ -31,7 +31,7 @@
   --emp-radius-sm: 8px;
   --emp-sidebar-w: 240px;
   --emp-topbar-h: 64px;
-  --emp-font: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --emp-font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --emp-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.4);
   --emp-shadow-lg: 0 20px 60px -10px rgba(0, 0, 0, 0.6);
 }
@@ -63,6 +63,42 @@
 }
 .emp-portal *, .emp-dash-root *, .emp-login-page * {
   box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(245, 158, 11, 0.45) #070d1a;
+}
+
+.emp-portal[data-theme="light"] * {
+  scrollbar-color: rgba(217, 119, 6, 0.45) #f0f4f8;
+}
+
+.emp-portal ::-webkit-scrollbar,
+.emp-dash-root ::-webkit-scrollbar,
+.emp-login-page ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.emp-portal ::-webkit-scrollbar-track,
+.emp-dash-root ::-webkit-scrollbar-track,
+.emp-login-page ::-webkit-scrollbar-track {
+  background: #070d1a;
+}
+
+.emp-portal[data-theme="light"] ::-webkit-scrollbar-track {
+  background: #f0f4f8;
+}
+
+.emp-portal ::-webkit-scrollbar-thumb,
+.emp-dash-root ::-webkit-scrollbar-thumb,
+.emp-login-page ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #f59e0b 0%, #b45309 100%);
+  border-radius: 999px;
+  border: 2px solid #070d1a;
+}
+
+.emp-portal[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #d97706 0%, #92400e 100%);
+  border-color: #f0f4f8;
 }
 
 /* ─── ANIMATIONS ─────────────────────────────────────────────────────────── */
