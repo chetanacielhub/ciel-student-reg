@@ -5619,7 +5619,7 @@ video {
 }
 
 .ref-hero-title {
-  font-family: var(--font-serif-family);
+  font-family: var(--font-serif), "Playfair Display", Georgia, serif;
   font-size: clamp(52px, 7vw, 92px);
   font-weight: 800;
   line-height: 0.95;
