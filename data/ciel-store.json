@@ -186,6 +186,270 @@
   ],
   "gallery": [
     {
+      "id": "img-1790936892985",
+      "filename": "1790936891002-IMG_7020.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936891002-IMG_7020.jpg",
+      "title": "IMG_7020.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:28:12.985Z"
+    },
+    {
+      "id": "img-1790936890913",
+      "filename": "1790936887975-IMG_3008.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936887975-IMG_3008.jpg",
+      "title": "IMG_3008.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:28:10.914Z"
+    },
+    {
+      "id": "img-1790936887875",
+      "filename": "1790936884309-IMG_2938.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936884309-IMG_2938.jpg",
+      "title": "IMG_2938.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:28:07.876Z"
+    },
+    {
+      "id": "img-1790936870904",
+      "filename": "1790936866082-IMG_2842.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936866082-IMG_2842.jpg",
+      "title": "IMG_2842.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:27:50.904Z"
+    },
+    {
+      "id": "img-1790936800350",
+      "filename": "1790936798703-IMG_7020.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936798703-IMG_7020.jpg",
+      "title": "IMG_7020.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:26:40.350Z"
+    },
+    {
+      "id": "img-1790936794644",
+      "filename": "1790936792947-IMG_2938.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936792947-IMG_2938.jpg",
+      "title": "IMG_2938.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:26:34.644Z"
+    },
+    {
+      "id": "img-1790936792846",
+      "filename": "1790936790511-IMG_2898.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936790511-IMG_2898.jpg",
+      "title": "IMG_2898.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:26:32.846Z"
+    },
+    {
+      "id": "img-1790936788666",
+      "filename": "1790936786398-IMG_7049.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936786398-IMG_7049.jpg",
+      "title": "IMG_7049.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:26:28.666Z"
+    },
+    {
+      "id": "img-1790936785962",
+      "filename": "1790936780140-IMG_7048.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936780140-IMG_7048.jpg",
+      "title": "IMG_7048.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:26:25.963Z"
+    },
+    {
+      "id": "img-1790936778747",
+      "filename": "1790936750812-IMG_7023.jpg",
+      "url": "/gallery/1790936750812-IMG_7023.jpg",
+      "title": "IMG_7023.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:26:18.747Z"
+    },
+    {
+      "id": "img-1790936750597",
+      "filename": "1790936740109-IMG_3011.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936740109-IMG_3011.jpg",
+      "title": "IMG_3011.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:25:50.597Z"
+    },
+    {
+      "id": "img-1790936740029",
+      "filename": "1790936736688-IMG_2999.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936736688-IMG_2999.jpg",
+      "title": "IMG_2999.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:25:40.029Z"
+    },
+    {
+      "id": "img-1790936736512",
+      "filename": "1790936732240-IMG_2993.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936732240-IMG_2993.jpg",
+      "title": "IMG_2993.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:25:36.512Z"
+    },
+    {
+      "id": "img-1790936732036",
+      "filename": "1790936727788-IMG_2986.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936727788-IMG_2986.jpg",
+      "title": "IMG_2986.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:25:32.036Z"
+    },
+    {
+      "id": "img-1790936727703",
+      "filename": "1790936723719-IMG_2962.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936723719-IMG_2962.jpg",
+      "title": "IMG_2962.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:25:27.703Z"
+    },
+    {
+      "id": "img-1790936723294",
+      "filename": "1790936671741-IMG_2957.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936671741-IMG_2957.jpg",
+      "title": "IMG_2957.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:25:23.294Z"
+    },
+    {
+      "id": "img-1790936671279",
+      "filename": "1790936666675-IMG_2946.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936666675-IMG_2946.jpg",
+      "title": "IMG_2946.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:24:31.279Z"
+    },
+    {
+      "id": "img-1790936666603",
+      "filename": "1790936662898-IMG_2926.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936662898-IMG_2926.jpg",
+      "title": "IMG_2926.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:24:26.603Z"
+    },
+    {
+      "id": "img-1790936662764",
+      "filename": "1790936658997-IMG_2917.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936658997-IMG_2917.jpg",
+      "title": "IMG_2917.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:24:22.764Z"
+    },
+    {
+      "id": "img-1790936658875",
+      "filename": "1790936656612-IMG_2907.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936656612-IMG_2907.jpg",
+      "title": "IMG_2907.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:24:18.875Z"
+    },
+    {
+      "id": "img-1790936656527",
+      "filename": "1790936655163-IMG_2887.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936655163-IMG_2887.jpg",
+      "title": "IMG_2887.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:24:16.527Z"
+    },
+    {
+      "id": "img-1790936654610",
+      "filename": "1790936650421-IMG_2866.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936650421-IMG_2866.jpg",
+      "title": "IMG_2866.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:24:14.610Z"
+    },
+    {
+      "id": "img-1790936650272",
+      "filename": "1790936647024-IMG_2864.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936647024-IMG_2864.jpg",
+      "title": "IMG_2864.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:24:10.272Z"
+    },
+    {
+      "id": "img-1790936646907",
+      "filename": "1790936645241-IMG_2849.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936645241-IMG_2849.jpg",
+      "title": "IMG_2849.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:24:06.907Z"
+    },
+    {
+      "id": "img-1790936645152",
+      "filename": "1790936643038-IMG_2840.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936643038-IMG_2840.jpg",
+      "title": "IMG_2840.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:24:05.152Z"
+    },
+    {
+      "id": "img-1790936642920",
+      "filename": "1790936641549-IMG_2833.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936641549-IMG_2833.jpg",
+      "title": "IMG_2833.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:24:02.920Z"
+    },
+    {
+      "id": "img-1790936641471",
+      "filename": "1790936639195-IMG_2814.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936639195-IMG_2814.jpg",
+      "title": "IMG_2814.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:24:01.471Z"
+    },
+    {
+      "id": "img-1790936639077",
+      "filename": "1790936636405-IMG_2792.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936636405-IMG_2792.jpg",
+      "title": "IMG_2792.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:23:59.077Z"
+    },
+    {
+      "id": "img-1790936636192",
+      "filename": "1790936622460-IMG_2786.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936622460-IMG_2786.jpg",
+      "title": "IMG_2786.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:23:56.192Z"
+    },
+    {
+      "id": "img-1790936622167",
+      "filename": "1790936615757-IMG_2783.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936615757-IMG_2783.jpg",
+      "title": "IMG_2783.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:23:42.167Z"
+    },
+    {
+      "id": "img-1790936615480",
+      "filename": "1790936610248-IMG_0568.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936610248-IMG_0568.jpg",
+      "title": "IMG_0568.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:23:35.480Z"
+    },
+    {
+      "id": "img-1790936610136",
+      "filename": "1790936606887-IMG_0560.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936606887-IMG_0560.jpg",
+      "title": "IMG_0560.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:23:30.136Z"
+    },
+    {
+      "id": "img-1790936606770",
+      "filename": "1790936602139-IMG_0559.jpg",
+      "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1790936602139-IMG_0559.jpg",
+      "title": "IMG_0559.jpg",
+      "category": "general",
+      "created_at": "2026-10-02T10:23:26.770Z"
+    },
+    {
       "id": "img-1789131654747",
       "filename": "1789131653594-IMG_0891_JPG.jpg",
       "url": "https://axjbuxbmfbskqfcmewdn.supabase.co/storage/v1/object/public/gallery/1789131653594-IMG_0891_JPG.jpg",
